@@ -1,0 +1,269 @@
+﻿using Leoz_25.Controllers;
+using Leoz_25.Infra;
+using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using System.Globalization;
+
+namespace Leoz_25.Areas.Admin.Controllers
+{
+	[Area("Admin")]
+	public class ProjectController : BaseController<ResponseModel<Project>>
+	{
+		public ProjectController(IRepositoryWrapper repository) : base(repository) { }
+
+		// GET: Admin/Project
+		public ActionResult Index()
+		{
+			CommonViewModel.ObjList = _context.Using<Project>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
+
+			var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+
+			if (listEmployee != null && listEmployee.Count > 0 && CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
+				foreach (var item in CommonViewModel.ObjList)
+					item.CoordinatorName = listEmployee.Where(x => x.Id == item.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();
+
+			return View(CommonViewModel);
+		}
+
+		//[CustomAuthorizeAttribute(AccessType_Enum.Read)]
+		public ActionResult Partial_AddEditForm(long Id = 0)
+		{
+			CommonViewModel.Obj = new Project() { StartDate = DateTime.Now };
+
+			if (Id > 0) CommonViewModel.Obj = _context.Using<Project>().GetByCondition(x => x.Id == Id && Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).FirstOrDefault();
+
+			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+			var listEmployee = _context.Using<Employee>().GetByCondition(x => (x.IsActive == true || x.Id == (CommonViewModel.Obj != null ? CommonViewModel.Obj.CoordinatorId : -1))
+									&& Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+
+			if (listEmployee != null && listEmployee.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listEmployee.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname)).ToList());
+
+			return PartialView("_Partial_AddEditForm", CommonViewModel);
+		}
+
+		[HttpPost]
+		//[CustomAuthorizeAttribute(AccessType_Enum.Write)]
+		public ActionResult Save(Project viewModel)
+		{
+			try
+			{
+				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate.Ticks).FirstOrDefault();
+
+				if (subscription == null)
+				{
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = "You are not subscribe any plan.";
+
+					return Json(CommonViewModel);
+				}
+
+				if (viewModel != null && viewModel != null)
+				{
+					#region Validation
+
+					if (string.IsNullOrEmpty(viewModel.Name))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Project name.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (viewModel.Id == 0 && string.IsNullOrEmpty(viewModel.StartDate_Text))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Password.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (_context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.Id != viewModel.Id)
+						.Any(x => x.Name.Trim().ToLower() == viewModel.Name.Trim().ToLower()))
+					{
+						CommonViewModel.Message = "Project already exist. Please try another Project name(s).";
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					try
+					{
+						using (var transaction = _context.BeginTransaction())
+						{
+							try
+							{
+								if (!string.IsNullOrEmpty(viewModel.StartDate_Text)) { try { viewModel.StartDate = DateTime.ParseExact(viewModel.StartDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+								if (!string.IsNullOrEmpty(viewModel.HandoverDate_Text)) { try { viewModel.HandoverDate = DateTime.ParseExact(viewModel.HandoverDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+
+								Project obj = _context.Using<Project>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+								if (obj != null)
+								{
+									obj.Name = viewModel.Name;
+									obj.Description = viewModel.Description;
+									obj.StartDate = viewModel.StartDate;
+									obj.HandoverDate = viewModel.HandoverDate;
+									obj.LocationLink = viewModel.LocationLink;
+									obj.Address = viewModel.Address;
+									obj.CityId = viewModel.CityId;
+									obj.StateId = viewModel.StateId;
+									obj.CountryId = viewModel.CountryId;
+									obj.CoordinatorId = viewModel.CoordinatorId;
+									obj.SiteDetails = viewModel.SiteDetails;
+									obj.IsActive = viewModel.IsActive;
+
+									_context.Using<Project>().Update(obj);
+								}
+								else
+								{
+									viewModel.VendorId = Logged_In_VendorId;
+									var _obj = _context.Using<Project>().Add(viewModel);
+									viewModel.Id = _obj.Id;
+								}
+
+								CommonViewModel.IsConfirm = true;
+								CommonViewModel.IsSuccess = true;
+								CommonViewModel.StatusCode = ResponseStatusCode.Success;
+								CommonViewModel.Message = "Record saved successfully ! ";
+
+								CommonViewModel.RedirectURL = Url.Action("Index", "Project", new { area = "Admin" });
+
+								transaction.Commit();
+
+								return Json(CommonViewModel);
+							}
+							catch (Exception ex) { transaction.Rollback(); }
+						}
+
+					}
+					catch (Exception ex) { }
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+		[HttpPost]
+		//[CustomAuthorizeAttribute(AccessType_Enum.Delete)]
+		public ActionResult DeleteConfirmed(long Id)
+		{
+			try
+			{
+				var objProject = _context.Using<Project>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+
+				if (objProject != null)
+				{
+					_context.Using<Project>().Delete(objProject);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "Data deleted successfully ! ";
+
+					CommonViewModel.RedirectURL = Url.Action("Index", "Project", new { area = "Admin" });
+
+					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
+		public ActionResult ProjectDetail()
+		{
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => ((Logged_In_CustomerId <= 0 ? true : x.UserId == Logged_In_CustomerId)) && x.IsActive == true && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).ToList();
+
+			if (listCustomer != null && listCustomer.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
+
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							   join y in listCustomer on x.CustomerId equals y.Id
+							   join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							   where z.IsActive == true
+							   select new { ProjectId = z.Id, ProjectName = z.Name }).ToList();
+
+			if (listProject != null && listProject.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listProject.Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
+
+			return View(CommonViewModel);
+		}
+
+		[HttpPost]
+		public ActionResult GetProjectByCustomerId(long CustomerId = 0)
+		{
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							   join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							   where z.IsActive == true
+							   select new { Value = z.Id, Text = z.Name }).ToList();
+
+			return Json(listProject);
+		}
+
+		[HttpPost]
+		public ActionResult GetProjectDetail(long CustomerId = 0, long ProjectId = 0)
+		{
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							  where z.IsActive == true
+							  select new Project
+							  {
+								  //VendorId = z.VendorId,
+								  Name = z.Name,
+								  Description = z.Description,
+								  StartDate = z.StartDate,
+								  HandoverDate = z.HandoverDate,
+								  Address = z.Address,
+								  CityId = z.CityId,
+								  StateId = z.StateId,
+								  CountryId = z.CountryId,
+								  LocationLink = z.LocationLink,
+								  CoordinatorId = z.CoordinatorId,
+								  CoordinatorName = z.CoordinatorName,
+								  SiteDetails = z.SiteDetails,
+								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
+								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  IsActive = z.IsActive
+							  }).FirstOrDefault();
+
+			var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+
+			if (listEmployee != null && listEmployee.Count > 0 && objProject != null)
+				objProject.CoordinatorName = listEmployee.Where(x => x.Id == objProject.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();
+
+			return Json(objProject);
+		}
+
+	}
+
+}

@@ -1,0 +1,239 @@
+﻿@model ResponseModel<UserMenuAccess>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+}
+
+
+<!-- start page title -->
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<div class="page-title-right">				
+			</div>
+            <h4 class="page-title">Access</h4>
+		</div>
+	</div>
+</div>
+<!-- end page title -->
+
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row no-gooters">
+            <section class="col-md-12">
+                <div class="card">
+                    <div class="card-body" style="margin: 5px !important;">
+                        <form id="formSave" action="@Url.Action("Save","Access", new {  area = "Admin"})" method="post">
+                            <div class="row no-gutters">
+                                <div class="col-sm-12">
+
+                                    <div class="form-group row">
+                                        <label for="Obj.RoleId" class="col-sm-2 col-form-label text-end">Role</label>
+                                        <div class="col-sm-6">
+                                            <select id="ddlRole" name="Obj.RoleId" class="form-control form-control-sm select2" onchange="fnChange_GetUsers(this)">
+                                                <option value="0" selected>-- Select --</option>
+                                                @if (Model.SelectListItems != null)
+                                                {
+                                                    foreach (var item in Model.SelectListItems.Where(x => x.Group == "R"))
+                                                    {
+                                                        <option value="@item.Value">@item.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label for="Obj.UserId" class="col-sm-2 col-form-label text-end">User</label>
+                                        <div class="col-sm-6">
+                                            <select id="ddlUser" name="Obj.UserId" class="form-control form-control-sm select2">
+                                                <option value="0" selected>-- Select --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label for="Obj.IsActive" class="col-sm-2 col-form-label text-end">Status</label>
+                                        <div class="col-sm-6">
+                                            <div class="form-check form-check-inline form-control border-0">
+                                                <input type="checkbox" class="form-check-input" id="switch_Status" checked
+                                                       onchange="fnChange_Switch(this, 'label_Switch_Status')">
+                                                <label role="button" class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active" : "Inactive")</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="row no-gutters mb-3">
+                                <div class="col-sm-12 text-center">
+                                    <button type="button" class="btn btn-info px-5 divformSave_Hide" onclick="fnExecute()">Execute</button>
+                                    <button type="submit" class="btn btn-success btnSubmit d-none divformSave_Display">Save</button>
+                                    <button type="button" class="btn btn-danger d-none divformSave_Display" onclick="fnClose()">Cancel</button>
+                                </div>
+                            </div>
+
+                            <div class="row no-gutters" id="divformSave"></div>
+
+                            <div class="clearfix"></div>
+                        </form>
+
+                        <div class="clearfix"></div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script type="text/javascript">
+		var dataTableMain = null;
+		$(document).ready(function () {
+
+		});
+
+        function fnChange_Switch_Custom($this, no) {
+
+            if ($('input[type="checkbox"][id="switch_Check_' + no + '"]').hasClass("checkboxAll")) {
+
+            var attr_true = $("#label_Switch_Check_" + no).attr('data-true');
+            var attr_false = $("#label_Switch_Check_" + no).attr('data-false');
+
+            if ($this.checked) {
+                $("#label_Switch_Check_" + no).html(attr_true);  // checked
+            }
+            else {
+                $("#label_Switch_Check_" + no).html(attr_false);  // unchecked
+			}
+
+				$('#table_Access tbody tr#tr_' + no + ' input[type="checkbox"][id!="switch_Check_' + no + '"]').prop("checked", $this.checked);
+				$('#table_Access tbody tr#tr_' + no + ' input[type="checkbox"][id!="switch_Check_' + no + '"]').trigger('change');
+            }
+        }
+
+        function fnChange_Switch_Success($this, $labelId) {
+
+            var no = $($this).parents('tr').attr('id').replace('tr_', '');
+
+            $('input[type="checkbox"][id="switch_Check_' + no + '"]').removeClass("checkboxAll");
+            $('input[type="checkbox"][id="switch_Check_' + no + '"]').prop("checked",
+                ($('#table_Access tbody tr#tr_' + no + ' input[type="checkbox"][id!="switch_Check_' + no + '"]:checked').length ==
+                $('#table_Access tbody tr#tr_' + no + ' input[type="checkbox"][id!="switch_Check_' + no + '"]').length));
+
+
+            $('input[type="checkbox"][id="switch_Check_' + no + '"]').addClass("checkboxAll")
+
+            //if ($labelId.indexOf('label_Switch_Check_') >= 0) {
+
+            //	$.each($('#table_Access tbody tr#' + $labelId.replace('label_Switch_Check_', 'tr_') + ' input[type="checkbox"]:not("#' + $this.id + '")'), function (key, input) {
+            //		$(input).prop('checked', true);
+            //	});
+
+            //	$('#table_Access tbody tr#' + $labelId.replace('label_Switch_Check_', 'tr_') + ' input[type="checkbox"]').prop("checked", $this.checked);
+            //	$('#table_Access tbody tr#' + $labelId.replace('label_Switch_Check_', 'tr_') + ' input[type="checkbox"]').trigger('change');
+            //}
+
+
+        }
+
+		function fnChange_GetUsers() {
+
+			$('#ddlUser').removeAttr('onchange');
+
+			fnClose();
+			fnGetUserList();
+
+			$('#ddlUser').attr('onchange', 'fnClose()');
+
+		}
+
+		function fnGetUserList() {
+			fnClose();
+
+			var RoleId = $("#ddlRole option:selected").val();
+			var IsActive = $("#switch_Status").is(':checked');
+
+			var ddlUser = $("#ddlUser");
+			ddlUser.empty();
+			ddlUser.append('<option value="0">-- Select --</option>');
+
+				$.ajax({
+					type: "POST",
+					url: "@Url.Action("GetSelectList_User", "Access")",
+					data: { RoleId: RoleId, IsActive: IsActive },
+					success: function (response) {
+						ShowLoader(false);
+						if (response != null && response.length > 0) {
+							$.each(response, function () {
+								ddlUser.append($("<option></option>").val(this['Value']).html(this['Text']));
+							});
+						}
+
+						$("#ddlUser").trigger('change');
+						$('.select2').select2();
+
+						//fnExecute();
+					},
+					failure: function (xhr) {
+						ShowLoader(false);
+						console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
+					},
+					error: function (xhr) {
+						ShowLoader(false);
+						console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
+					}
+				});
+		}
+
+		function fnExecute() {
+
+			var RoleId = $("#ddlRole option:selected").val();
+			var UserId = $("#ddlUser option:selected").val();
+			var IsActive = $("#switch_Status").is(':checked');
+
+			if (RoleId == 'undefined' || RoleId == null || RoleId.trim() == "" || !(parseInt(RoleId) > 0)) {
+				CommonAlert_Error('Please select Role');
+				return false;
+			}
+
+			if (UserId == 'undefined' || UserId == null || UserId.trim() == "" || !(parseInt(UserId) > 0)) {
+				CommonAlert_Error('Please select User');
+				return false;
+			}
+
+			fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Access", new {  area = "Admin" })?RoleId=' + RoleId + '&UserId=' + UserId);
+		}
+
+		function fnParialView_Loaded_Success($id, $IsAlert) {
+            debugger;
+			$('.divformSave_Hide').addClass('d-none');
+			$('.divformSave_Display').removeClass('d-none');
+
+			$('#example').DataTable({
+				scrollY: '450px',
+				scrollCollapse: true,
+				searching: false,
+				sorting: false,
+				paging: false,
+				info: false,
+				ordering: false
+			});
+		}
+
+		function fnClose() {
+			$('#divformSave').html('');
+			$('.divformSave_Hide').removeClass('d-none');
+			$('.divformSave_Display').addClass('d-none');
+		}
+
+		function fnFormData_Saved_Success(response) {
+
+		}
+
+    </script>
+}

@@ -1,0 +1,88 @@
+﻿@model ResponseModel<Package>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+	<div class="card card-info">
+
+		<div class="card-header">
+			<h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit" : "Create") Package</h3>
+			<input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+		</div>
+
+		<div class="card-body form-horizontal">
+			<div class="row no-gutters">
+				<div class="col-12">
+					<div class="form-group row">
+						<label for="Name" class="col-2 col-form-label text-end">Name</label>
+						<div class="col-sm-4">
+							<input type="text" id="Name" name="Name" class="form-control form-control-sm" value="@Model.Obj.Name"
+								   data-required data-msg="The Package Name field is required." autocomplete="off">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="Price" class="col-2 col-form-label text-end">Price</label>
+						<div class="col-sm-1">
+							<input type="text" id="Price" name="Price" class="form-control form-control-sm text-right decimal-number2" value="@Model.Obj.Price"
+								   data-required data-msg="The Package Price field is required." autocomplete="off">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="Price" class="col-2 col-form-label text-end">Select Option</label>
+						<div class="col-sm-6">
+							<div class="form-group clearfix">
+								<div class="icheck-primary d-inline ml-2 mr-3">
+									<input type="radio" id="radioIsYearly" name="Option" value="IsYearly" @(Model.Obj.IsYearly ? "checked" : "")>
+									<label for="radioIsYearly" class="ml-1"> Is Yearly </label>
+								</div>
+								<div class="icheck-primary d-inline ml-2">
+									<input type="radio" id="radioIsProjectBased" name="Option" value="IsProjectBased" @(Model.Obj.IsProjectBased ? "checked" : "")>
+									<label for="radioIsProjectBased" class="ml-1"> Project Based </label>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="DurationInDays" class="col-2 col-form-label text-end IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">Duration In Days</label>
+						<div class="col-sm-1 IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">
+							<input type="text" id="DurationInDays" name="DurationInDays" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.DurationInDays" data-value="@Model.Obj.DurationInDays" autocomplete="off">
+						</div>
+						<label for="ProjectLimit" class="col-2 col-form-label text-end IsProjectBased" style="display: @(Model.Obj.IsProjectBased ? "block" : "none");">Project Limit</label>
+						<div class="col-sm-1 IsProjectBased" style="display: @(Model.Obj.IsProjectBased ? "block" : "none");">
+							<input type="text" id="ProjectLimit" name="ProjectLimit" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.ProjectLimit" data-value="@Model.Obj.ProjectLimit" autocomplete="off">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="Description" class="col-2 col-form-label text-end ">Description</label>
+						<div class="col-sm-8">
+							<textarea id="Description" name="Description" rows="3" class="form-control form-control-sm" autocomplete="off">@Model.Obj.Description</textarea>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="Obj.IsActive" class="col-2 col-form-label text-end">Status</label>
+						<div class="col-sm-4">
+							<div class="form-check form-check-inline form-control border-0">
+								<input type="checkbox" class="form-check-input"
+									   id="switch_Status" name="IsActive" @(Model.Obj == null || Model.Obj.IsActive == true || Model.Obj.Id == 0 ? "checked" : "")
+									   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+								<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active" : "Inactive")</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card-footer">
+			<div class="row no-gutters">
+				<div class="col-sm-1">&nbsp;</div>
+				<div class="col-sm-6 text-left">
+					<button type="submit" class="btn btn-success btnSubmit">Save</button>
+					<button type="button" class="btn btn-danger" onclick="fnCloseParialView('divformSave', '#table_Common');">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

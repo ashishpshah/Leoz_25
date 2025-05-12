@@ -1,0 +1,105 @@
+﻿@model ResponseModel<Role>
+
+@{
+    Layout = null;
+}
+
+<div class="col-md-12">
+    <div class="card card-info">
+
+        <div class="card-header">
+            <h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit": "Create") Role</h3>
+            <input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+        </div>
+
+        <div class="card-body form-horizontal">
+            <div class="row no-gutters">
+                <div class="col-12">
+                    <div class="form-group row">
+                        <label for="Name" class="col-2 col-form-label text-end">Name</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name"
+                                   data-required data-msg="The Role Name field is required." placeholder="Role" autocomplete="off">
+                        </div>
+                    </div>
+
+                    @if (Common.IsSuperAdmin())
+                    {
+                        <div class="form-group row">
+                            <label for="IsAdmin" class="col-2 col-form-label text-end">Admin</label>
+                            <div class="col-sm-4">
+                                <div class="form-check form-check-inline form-control border-0">
+                                    <input type="checkbox" class="form-check-input"
+                                           id="switch_Admin" name="IsAdmin" @(Model.Obj == null || Model.Obj.IsAdmin == true ? "checked" : "")
+                                           onchange="fnChange_Switch(this, 'label_Switch_Admin')">
+                                    <label class="form-check-label" for="switch_Admin" id="label_Switch_Admin" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsAdmin == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active":"Inactive")</label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="form-group row">
+                        <label for="IsActive" class="col-2 col-form-label text-end">Status</label>
+                        <div class="col-sm-4">
+                            <div class="form-check form-check-inline form-control border-0">
+                                <input type="checkbox" class="form-check-input"
+                                       id="switch_Status" name="IsActive" @(Model.Obj == null || Model.Obj.IsActive == true || Model.Obj.Id == 0 ? "checked" : "")
+                                       onchange="fnChange_Switch(this, 'label_Switch_Status')">
+                                <label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active":"Inactive")</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Common.IsAdmin())
+                    {
+                        var selectedValue = Model.Obj.CreatedDate_Text.Split(',').ToList();
+
+                        <div class="form-group row">
+                            <label class="col-2 col-form-label text-end">Select Menu</label>
+                            <div class="col-sm-8 d-flex flex-wrap">
+                                <select multiple id="selectMenu" class="form-control form-control-sm select2 w-100" onchange="fnChange_Select('Menu')">
+                                    <option value="">-- Select --</option>
+                                    @if (Model.SelectListItems != null)
+                                    {
+                                        foreach (var item in Model.SelectListItems.Where(x => x.Group == "M"))
+                                        {
+                                            if (selectedValue != null && selectedValue.Any(x => x == item.Value))
+                                            {
+                                                <option value="@item.Value" selected>@item.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+
+                                <input type="text" id="inputMenu" name="CreatedDate_Text" value="@Model.Obj.CreatedDate_Text" class="d-none" />
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="row no-gutters">
+                <div class="col-sm-1">&nbsp;</div>
+                <div class="col-sm-6 text-left">
+                    <button type="submit" class="btn btn-success btnSubmit">Save</button>
+                    <button type="button" class="btn btn-danger" onclick="fnCloseParialView('divformSave', '#table_Common');">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+    </script>
+}

@@ -1,0 +1,103 @@
+﻿@model ResponseModel<User>
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+}
+
+<!-- start page title -->
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<div class="page-title-right">
+				@if (Common.IsAdmin() && Model.IsCreate == true)
+				{
+					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2 divformSave_Hide"
+							onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","User", new {  area = "Admin" })');">
+						<i class="fas fa-plus"></i> &nbsp; Add new
+					</button>
+				}
+				<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 divformSave_Display d-none" onclick="fnBackToList();">
+					<i class="fas fa-arrow-left"></i> &nbsp; Back To List
+				</button>
+			</div>
+			<h4 class="page-title">User</h4>
+		</div>
+	</div>
+</div>
+<!-- end page title -->
+
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header p-0 divformSave_Display d-none">
+				<form id="formSave" action="@Url.Action("Save","User", new {  area = "Admin"})" method="post">
+					<div class="row no-gutters" id="divformSave"></div>
+				</form>
+			</div>
+			<div class="card-body">
+				<div class="row no-gooters">
+					<div class="col-md-12 my-1">
+						<div class="responsive-table-plugin">
+							<div class="table-rep-plugin">
+								<div class="table-responsive" data-pattern="priority-columns">
+									<table class="table table-sm table-bordered table-striped dt-responsive nowrap w-100 table_Common_SrNo divformSave_Hide">
+										<thead>
+											<tr><th>#</th><th>User Name</th><th>Role</th>@* <th>Email</th><th>Mobile no</th> *@<th>Action</th></tr>
+										</thead>
+										<tbody>
+
+											@if (Model.ObjList != null)
+											{
+												foreach (var item in Model.ObjList)
+												{
+													<tr>
+														@*<td></td>*@
+														<td></td>
+														<td>@item.UserName</td>
+														<td>@item.User_Role</td>
+														@* <td>@item.EmailId</td>
+												<td>@item.MobileNo</td> *@
+
+														<td>
+															<div class="btn-group">
+																@if (Common.IsAdmin() && item.Id != Common.LoggedUser_Id() && Model.IsUpdate == true)
+																{
+																	<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+																			onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","User", new {  area = "Admin" })?Id=@item.Id');">
+																		<i class="ri-pencil-fill"></i>
+																	</button>
+																}
+																@if (Common.IsAdmin() && item.Id != Common.LoggedUser_Id() && Model.IsDelete == true && item.IsDeleted == false)
+																{
+																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","User", new {  area = "Admin" })?Id=@item.Id');">
+																		<i class="ri-delete-bin-2-line"></i>
+																	</button>
+																}
+															</div>
+														</td>
+													</tr>
+												}
+											}
+										</tbody>
+									</table>
+								</div> <!-- end .table-responsive -->
+
+							</div> <!-- end .table-rep-plugin-->
+						</div> <!-- end .responsive-table-plugin-->
+					</div>
+
+					<div class="clearfix"></div>
+				</div>
+			</div> <!-- end card body-->
+		</div> <!-- end card -->
+	</div><!-- end col-->
+</div> <!-- end row-->
+@section Scripts {
+	<script type="text/javascript">
+		
+	</script>
+}

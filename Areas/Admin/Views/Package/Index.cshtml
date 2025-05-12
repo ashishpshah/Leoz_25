@@ -1,0 +1,121 @@
+﻿@model ResponseModel<Package>
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+}
+
+
+<!-- start page title -->
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<div class="page-title-right">
+				@if (Model.IsCreate == true)
+				{
+					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2 divformSave_Hide" 
+					onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Package", new {  area = "Admin" })');">
+						<i class="fas fa-plus"></i> &nbsp; Add new
+					</button>
+				}
+				<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 divformSave_Display d-none" onclick="fnBackToList();">
+					<i class="fas fa-arrow-left"></i> &nbsp; Back To List
+				</button>
+			</div>
+			<h4 class="page-title">Package</h4>
+		</div>
+	</div>
+</div>
+<!-- end page title -->
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header p-0 divformSave_Display d-none">
+				<form id="formSave" action="@Url.Action("Save","Package", new {  area = "Admin"})" method="post">
+					<div class="row no-gutters" id="divformSave"></div>
+				</form>
+			</div>
+			<div class="card-body">
+				<div class="row no-gooters">
+					<div class="col-md-12 my-1">
+						<div class="responsive-table-plugin">
+							<div class="table-rep-plugin">
+								<div class="table-responsive" data-pattern="priority-columns">
+									<table class="table table-sm table-bordered table-striped dt-responsive nowrap w-100 table_Common_SrNo divformSave_Hide">
+									<thead>
+										<tr><th class="no_sorting">#</th><th>Name</th><th width="10%">Price</th><th width="5%">Duration In Days</th><th width="5%">Project Limit</th><th>Description</th><th width="5%">Status</th><th>Action</th></tr>
+									</thead>
+									<tbody>
+
+										@if (Model.ObjList != null)
+										{
+											foreach (var item in Model.ObjList.OrderBy(x => x.Id))
+											{
+												<tr>
+													<td></td>
+													<td>@item.Name</td>
+													<td>@item.Price</td>
+													<td>@item.DurationInDays</td>
+													<td>@item.ProjectLimit</td>
+													<td>@item.Description</td>
+													<td class="text-center"><span class="badge bg-@(item.IsActive == true ? "success" : "danger")">@(item.IsActive == true ? "Active" : "Inactive")</span></td>
+													<td>
+														<div class="btn-group">
+															@if (@* Model.IsUpdate ==  *@true)
+															{
+																<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+																		onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Package", new {  area = "Admin" })?Id=@item.Id');">
+																	<i class="ri-pencil-fill"></i>
+																</button>
+															}
+															@if (@* Model.IsDelete == true &&  *@item.IsDeleted == false)
+															{
+																<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+																		onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","Package", new {  area = "Admin" })?Id=@item.Id');">
+																	<i class="ri-delete-bin-2-line"></i>
+																</button>
+															}
+														</div>
+													</td>
+												</tr>
+											}
+										}
+									</tbody>
+								</table>
+								</div> <!-- end .table-responsive -->
+
+							</div> <!-- end .table-rep-plugin-->
+						</div> <!-- end .responsive-table-plugin-->
+					</div>
+
+					<div class="clearfix"></div>
+				</div>
+			</div> <!-- end card body-->
+		</div> <!-- end card -->
+	</div><!-- end col-->
+</div> <!-- end row-->
+@section Scripts {
+	<script type="text/javascript">
+
+		$(document).on('change', "input[name='Option']", function () {
+
+			$(".IsProjectBased input").val($(".IsProjectBased input").attr('data-value')).trigger('change');
+			$(".IsYearly input").val($(".IsYearly input").attr('data-value')).trigger('change');
+
+			if ($("#radioIsYearly").is(":checked")) {
+				$(".IsYearly").show();
+				$(".IsProjectBased").hide();
+			}
+			else if ($("#radioIsProjectBased").is(":checked")) {
+				$(".IsProjectBased").show();
+				$(".IsYearly").hide();
+			}
+
+		});
+
+	</script>
+}
+
+

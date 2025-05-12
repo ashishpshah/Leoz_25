@@ -1,0 +1,92 @@
+﻿@model ResponseModel<Menu>
+
+@{ Layout = null; }
+
+<div class="col-md-12">
+    <div class="card card-info">
+
+        <div class="card-header">
+            <h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit": "Create") Menu</h3>
+            <input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+        </div>
+
+        <div class="card-body form-horizontal">
+            <div class="row no-gutters">
+                <div class="col-12">
+                    <div class="form-group row">
+                        <label for="Name" class="col-sm-2 col-form-label text-end">Name</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name"
+                                   data-required data-msg="The Menu Name field is required." placeholder="Menu" autocomplete="off">
+                        </div>
+                        <label for="ParentId" class="col-sm-2 col-form-label text-end">Parent Menu</label>
+                        <div class="col-sm-4">
+                            <select id="ParentId" name="ParentId" class="form-control select2 w-100">
+                                <option value="0">-- Select --</option>
+                                @if (Model.SelectListItems != null && Model.SelectListItems.Count > 0)
+                                {
+                                    foreach (SelectListItem_Custom item in Model.SelectListItems)
+                                    {
+                                        if (item.Value == Model.Obj.ParentId.ToString())
+                                        {
+                                            <option value="@item.Value" selected>@item.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="Controller" class="col-sm-2 col-form-label text-end">Controller</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" id="Controller" name="Controller" value="@Model.Obj.Controller" autocomplete="off">
+                        </div>
+                        <label for="Area" class="col-sm-2 col-form-label text-end">Area</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" id="Area" name="Area" value="@Model.Obj.Area" placeholder="Area" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="Url" class="col-sm-2 col-form-label text-end">Url</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control form-control-sm" id="Url" name="Url" value="@Model.Obj.Url" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="Obj.IsActive" class="col-sm-2 col-form-label text-end">Status</label>
+                        <div class="col-sm-4">
+                            <div class="form-check form-check-inline form-control border-0">
+                                <input type="checkbox" class="form-check-input"
+                                       id="switch_Status" name="IsActive" @(Model.Obj == null || Model.Obj.IsActive == true || Model.Obj.Id == 0 ? "checked" : "")
+                                       onchange="fnChange_Switch(this, 'label_Switch_Status')">
+                                <label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active":"Inactive")</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="row no-gutters">
+                <div class="col-sm-1">&nbsp;</div>
+                <div class="col-sm-6 text-left">
+                    <button type="submit" class="btn btn-success btnSubmit">Save</button>
+                    <button type="button" class="btn btn-danger" onclick="fnCloseParialView('divformSave', '#table_Common');">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+    </script>
+}

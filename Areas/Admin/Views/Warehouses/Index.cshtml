@@ -1,0 +1,150 @@
+﻿@model ResponseModel<Warehouses>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Warehouses</h1>
+            </div>
+            <div class="col-sm-6">
+                <div class="float-sm-right">
+                    @if (Common.IsAdmin() && Model.IsCreate == true)
+                    {
+                        <button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2" onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Warehouses", new {  area = "Admin" })');">
+                            <i class="fas fa-plus"></i> &nbsp; Add new
+                        </button>
+                    }
+                    <button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 d-none" onclick="fnBackToList();">
+                        <i class="fas fa-arrow-left"></i> &nbsp; Back To List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row no-gooters">
+            <section class="col-md-12">
+                <div class="card">
+                    <div class="card-header p-0 divformSave_Display d-none">
+                        <form id="formSave" action="@Url.Action("Save","Warehouses", new {  area = "Admin"})" method="post">
+                            <div class="row no-gutters" id="divformSave"></div>
+                            <div class="clearfix"></div>
+                            <hr />
+                        </form>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row no-gooters">
+                            <div class="col-md-12 my-1">
+                                <table class="table table-bordered table-striped table_Common_SrNo divformSave_Hide">
+                                    <thead>
+                                        <tr>
+                                            @*<th>#</th>*@
+                                            <th>#</th>
+                                            <th>Warehouses Name</th>
+                                            <th>ContactPerson</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @if (Model.ObjList != null)
+                                        {
+                                            foreach (var item in Model.ObjList)
+                                            {
+                                                <tr>
+                                                    @*<td></td>*@
+                                                    <td></td>
+                                                    <td>@item.WarehouseName</td>
+                                                    <td>@item.ContactPerson</td>
+                                                    <td>@item.Email</td>
+                                                    <td>@item.Phone</td>
+                                                    <td>@item.City</td>
+                                                    <td>@item.Address</td>
+                                                    <td>
+                                                        @* <div class="btn-group">
+                                                            @if (Common.IsAdmin() && Model.IsUpdate == true)
+                                                            {
+                                                                <button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+                                                                        onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Warehouses", new {  area = "Admin" })?Id=@item.Id');">
+                                                                    <i class="ri-pencil-fill"></i>
+                                                                </button>
+                                                            }
+                                                            @if (Common.IsAdmin() && Model.IsDelete == true && item.IsDeleted == false)
+                                                            {
+                                                                <button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+                                                                        onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","Warehouses", new {  area = "Admin" })?Id=@item.Id');">
+                                                                    <i class="ri-delete-bin-2-line"></i>
+                                                                </button>
+                                                            }
+                                                        </div> *@
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+
+       function fnChange_City(StateId) {
+            debugger;
+
+            ShowLoader(true);
+            var stateDropdown = $("#City_Id");
+            stateDropdown.empty();
+            stateDropdown.append('<option value="0">-- Select --</option>');
+
+            var $url = '@Url.Action("GetCity", "Warehouses")?ParentId=' + StateId;
+
+            $.ajax({
+                url: $url,
+                type: 'GET',
+                data: {},
+                dataType: "json",
+                success: function (response) {
+                    ShowLoader(false);
+                    $.each(response, function (index, state) {
+                        stateDropdown.append('<option value="' + state.Value + '">' + state.Text + '</option>');
+                    });
+                },
+                failure: function () {
+                    ShowLoader(false);
+                    CommonAlert_Error(null);
+                },
+                error: function () {
+                    ShowLoader(false);
+                    CommonAlert_Error(null);
+                }
+            });
+        }
+
+    </script>
+}
+  
+
+

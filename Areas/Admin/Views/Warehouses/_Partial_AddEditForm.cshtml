@@ -1,0 +1,147 @@
+﻿@model ResponseModel<Warehouses>
+
+@{ Layout = null; }
+
+<div class="col-md-12">
+    <div class="card card-info">
+        <div class="card-body">
+            <div class="panel-divider">
+                <span>Pesonal Details</span>
+                <div class="row no-gutters p-0 m-0 pt-3">
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="Warehouse Name" class="col-sm-3 col-form-label text-end">Warehouse Name</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="WarehouseName" name="WarehouseName" value="@Model.Obj.WarehouseName" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="Contact Person" class="col-sm-3 col-form-label text-end">Contact Person</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="Pincode" name="Pincode" value="@Model.Obj.Pincode" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row d-flex align-items-center">
+                            <label for="Phone" class="col-sm-3 col-form-label text-end">Phone</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="Phone" name="Phone" value="@Model.Obj.Phone" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="Email" class="col-sm-3 col-form-label text-end">Email</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="Email" name="Email" value="@Model.Obj.Email" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="City" class="col-sm-3 col-form-label text-end">State</label>
+                            <div class="col-sm-9">
+                                <select id="StateId" name="StateId" class="form-control form-control-sm select2" onchange="fnChange_City(this.value)">
+                                    <option value="0">-- Select --</option>
+                                    @if (Model.SelectListItems != null)
+                                    {
+                                        foreach (var item in Model.SelectListItems.Where(x => x.Group == "State"))
+                                        {
+                                            if (Model.Obj.StateId.ToString() == item.Value || Model.SelectListItems.Where(x => x.Group == "State").Count() == 1)
+                                            {
+                                                <option value="@item.Value" selected>@item.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="City" class="col-sm-3 col-form-label text-end">City</label>
+                            <div class="col-sm-9">
+                                <select id="City_Id" name="City_Id" class="form-control form-control-sm select2">
+                                    <option value="0">-- Select --</option>
+                                    @if (Model.SelectListItems != null && Model.Obj.Id > 0)
+                                    {
+                                        foreach (var item in Model.SelectListItems.Where(x => x.Group == "CIty"))
+                                        {
+                                            if (Model.Obj.StateId.ToString() == item.Value || Model.SelectListItems.Where(x => x.Group == "City").Count() == 1)
+                                            {
+                                                <option value="@item.Value" selected>@item.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12" style="margin: 0rem !important; padding-right: 300px;">
+                        <div class="form-group row">
+                            <label for="Address" class="col-2 col-form-label text-end">Address</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-sm" id="Address" name="Address" value="@Model.Obj.Address" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="Pincode" class="col-sm-3 col-form-label text-end">Pincode</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="Pincode" name="Pincode" value="@Model.Obj.Pincode" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="GSTNumber" class="col-sm-3 col-form-label text-end">GSTNumber</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="GSTNumber" name="GSTNumber" value="@Model.Obj.GSTNumber" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6" style="margin: 0rem !important;">
+                        <div class="form-group row">
+                            <label for="Phone" class="col-sm-3 col-form-label text-end">Capacity</label>
+                            <div class="col-sm-9">
+                                <input type="text" data-altType="text" class="form-control form-control-sm" id="Phone" name="Phone" value="@Model.Obj.Phone" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-footer">
+        <div class="row no-gutters">
+            <div class="col-sm-1">&nbsp;</div>
+            <div class="col-sm-6 text-left">
+                <button type="submit" class="btn btn-success btnSubmit">Save</button>
+                <a href="@Url.Action("Index","Warehouses", new {  area = "Admin" })" class="btn btn-danger">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+    </script>
+}

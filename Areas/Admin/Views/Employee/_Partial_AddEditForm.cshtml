@@ -1,0 +1,178 @@
+﻿@model ResponseModel<Employee>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+	<div class="card card-info">
+
+		<div class="card-header">
+			<h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit" : "Create") Employee</h3>
+			<input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+			<input type="text" class="form-control d-none" id="UserId" name="UserId" value="@(Model.Obj != null && Model.Obj.UserId > 0 ? Model.Obj.UserId.ToString() : "")">
+		</div>
+
+		<div class="card-body form-horizontal">
+			<div class="panel-divider">
+				<span>Credencial Details</span>
+				<div class="row no-gutters p-0 m-0">
+					<div class="col-6">
+						<div class="form-group row">
+							<label for="UserName" class="col-sm-2 col-form-label text-end">Username</label>
+							<div class="col-sm-6">
+								<input type="text" class="form-control form-control-sm" id="UserName" name="UserName" value="@Model.Obj.UserName" autocomplete="off">
+							</div>
+						</div>
+
+						@if (Model.Obj != null && Model.Obj.Id > 0)
+						{
+							<div class="form-group row">
+								<label for="IsPassword_Reset" class="col-sm-2 col-form-label text-end">Password Reset</label>
+								<div class="col-sm-6">
+									<div class="form-check form-check-inline form-control border-0">
+										<input type="checkbox" class="form-check-input" id="switch_Password_Reset"
+											   name="IsPassword_Reset" onchange="fnChange_Switch(this, 'label_Switch_Password_Reset')">
+										<label class="form-check-label" for="switch_Password_Reset" id="label_Switch_Password_Reset" data-true="Yes" data-false="No">No</label>
+									</div>
+								</div>
+							</div>
+
+						}
+						else
+						{
+							<div class="form-group row">
+								<label for="Password" class="col-2 col-form-label text-end">Password</label>
+								<div class="col-6">
+									<div class="input-group input-group-merge">
+										<input type="password" id="Password" name="Password" class="form-control form-control-sm" placeholder="********" autocomplete="off">
+										<div class="input-group-text input-group-text-sm" data-password="true">
+											<span class="password-eye"></span>
+										</div>
+									</div>
+								</div>
+							</div>
+						}
+
+					</div>
+
+					<div class="col-6">
+
+						<div class="form-group row">
+							<label for="ddlUserType" class="col-sm-2 col-form-label text-end">Type</label>
+							<div class="col-sm-6">
+								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
+									<option value="0">-- Select --</option>
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems)
+										{
+											if (Convert.ToString(Model.Obj.UserType) == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+									}
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="IsActive" class="col-sm-2 col-form-label text-end">Status</label>
+							<div class="col-sm-6">
+								<div class="form-check form-check-inline form-control border-0">
+									<input type="checkbox" class="form-check-input" id="switch_Status"
+										   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
+										   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+									<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
+										@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
+									</label>
+								</div>
+							</div>
+						</div>
+
+						@* <div class="form-group row">
+							<label class="col-sm-2 col-form-label text-end">Datepicker</label>
+							<div class="col-sm-6">
+								<input type="date" name="Date_Text" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+							</div>
+						</div> *@
+
+					</div>
+				</div>
+			</div>
+			<div class="panel-divider">
+				<span>Pesonal Details</span>
+				<div class="row no-gutters p-0 m-0 pt-3">
+					<div class="col-sm-4" style="margin: 0rem !important;">
+						<div class="form-group row">
+							<label for="FirstName" class="col-sm-3 col-form-label text-end">Firstname</label>
+							<div class="col-sm-9">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="FirstName" name="FirstName" value="@Model.Obj.FirstName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4" style="margin: 0rem !important;">
+						<div class="form-group row">
+							<label for="MiddleName" class="col-sm-3 col-form-label text-end">Middlename</label>
+							<div class="col-sm-9">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="MiddleName" name="MiddleName" value="@Model.Obj.MiddleName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4" style="margin: 0rem !important;">
+						<div class="form-group row">
+							<label for="LastName" class="col-sm-3 col-form-label text-end">Lastname</label>
+							<div class="col-sm-9">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="LastName" name="LastName" value="@Model.Obj.LastName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4" style="margin: 0rem !important;">
+						<div class="form-group row">
+							<label for="ddlUserType" class="col-sm-3 col-form-label text-end">Designation </label>
+							<div class="col-sm-9">
+								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
+									<option value="">-- Select --</option>
+									<option value="D">Doctor</option>
+									<option value="O">Other</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4" style="margin: 0rem !important;">
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label text-end">Birth Date</label>
+							<div class="col-sm-9">
+								<input type="date" name="BirthDate_Text" class="form-control form-control-sm" value="@(Model.Obj.BirthDate?.ToString("yyyy-MM-dd"))">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card-footer">
+			<div class="row no-gutters">
+				<div class="col-sm-1">&nbsp;</div>
+				<div class="col-sm-6 text-left">
+					<button type="submit" class="btn btn-success btnSubmit">Save</button>
+					@*<button type="button" class="btn btn-danger">Cancel</button>*@
+					<a href="@Url.Action("Index","Employee", new {  area = "Admin" })" class="btn btn-danger">Cancel</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+				$(document).ready(function () {
+
+		});
+	</script>
+}

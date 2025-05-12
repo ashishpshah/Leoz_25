@@ -1,0 +1,135 @@
+﻿@model ResponseModel<Project>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+	<div class="card card-info">
+
+		<div class="card-header">
+			<h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit" : "Create") Project</h3>
+			<input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+		</div>
+
+		<div class="card-body form-horizontal">
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="Name" class="col-sm-3 col-form-label text-end">Project Name</label>
+						<div class="col-sm-6">
+							<input type="text" data-altType="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name" autocomplete="off">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="Description" class="col-sm-3 col-form-label text-end">Description</label>
+						<div class="col-sm-9">
+							<textarea class="form-control form-control-sm" rows="3" id="Description" name="Description" autocomplete="off">@Model.Obj.Description</textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label class="col-sm-3 col-form-label text-end">Start Date</label>
+						<div class="col-sm-2">
+							<input type="date" name="StartDate_Text" class="form-control form-control-sm" value="@(Model.Obj.StartDate.ToString("yyyy-MM-dd"))">
+						</div>
+
+						<label class="col-sm-3 col-form-label text-end">Handover Date</label>
+						<div class="col-sm-2">
+							<input type="date" name="HandoverDate_Text" class="form-control form-control-sm" value="@(Model.Obj.HandoverDate?.ToString("yyyy-MM-dd"))">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="LocationLink" class="col-sm-3 col-form-label text-end">Google Location</label>
+						<div class="col-sm-9">
+							<input type="text" data-altType="text" class="form-control form-control-sm" id="LocationLink" name="LocationLink" value="@Model.Obj.LocationLink" autocomplete="off">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="ddlCoordinatorId" class="col-sm-3 col-form-label text-end">Coordinator</label>
+						<div class="col-sm-6">
+							<select id="ddlCoordinatorId" name="CoordinatorId" class="form-control form-control-sm select2" data-selected="@Model.Obj.CoordinatorId">
+								<option value="0">-- Select --</option>
+								@if (Model.SelectListItems != null)
+								{
+									foreach (var item in Model.SelectListItems)
+									{
+										if (Convert.ToString(Model.Obj.CoordinatorId) == item.Value)
+										{
+											<option value="@item.Value" selected>@item.Text</option>
+										}
+										else
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									}
+								}
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="SiteDetails" class="col-sm-3 col-form-label text-end">Site Details</label>
+						<div class="col-sm-9">
+							<textarea class="form-control form-control-sm" rows="3" id="SiteDetails" name="SiteDetails" autocomplete="off">@Model.Obj.SiteDetails</textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-12">
+					<div class="form-group row d-flex align-items-center">
+						<label for="IsActive" class="col-sm-3 col-form-label text-end">Status</label>
+						<div class="col-sm-6">
+							<div class="form-check form-check-inline form-control border-0">
+								<input type="checkbox" class="form-check-input" id="switch_Status"
+									   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
+									   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+								<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
+									@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card-footer">
+			<div class="row no-gutters mb-1">
+				<div class="col-sm-3">&nbsp;</div>
+				<div class="col-sm-6 text-left">
+					<button type="submit" class="btn btn-success btnSubmit">Save</button>
+					<a href="@Url.Action("Index","Project", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+	</script>
+}

@@ -1,0 +1,158 @@
+﻿@model ResponseModel<Vendor>
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+
+	var VendorId = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1 ? Common.Get_Session_Int(SessionKey.KEY_USER_ID) : 0;
+}
+
+<div class="content-header">
+	<div class="container-fluid">
+		<div class="row mb-2">
+			<div class="col-sm-6">
+				<h1 class="m-0">Vendor - User</h1>
+			</div>
+			<div class="col-sm-6">
+				<div class="float-sm-right">
+					@* @if (Common.IsAdmin() && Model.IsCreate == true) *@
+					@{
+						<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2" onclick="ShowPrompt_Users()">
+							<i class="fas fa-plus"></i> &nbsp; Add new
+						</button>
+					}
+					<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 d-none" onclick="fnBackToList();">
+						<i class="fas fa-arrow-left"></i> &nbsp; Back To List
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<section class="content">
+	<div class="container-fluid">
+		<div class="row no-gooters">
+			<section class="col-md-12">
+				<div class="card">
+					@* <div class="card-header" style="margin: 5px !important;">
+						<div class="row no-gutters">
+							<label for="VendorId" class="col-2 col-form-label text-end mr-2">Select Vendor</label>
+							<div class="col-sm-4">
+								<select id="ddlVendor" class="form-control select2 w-100" onchange="fnLoadTableData(this)">
+									<option value="0">-- Select --</option>
+									@if (Model.ObjList != null && Model.ObjList.Count > 0)
+									{
+										foreach (var item in Model.ObjList)
+										{
+											<option value="@item.Id">@item.Fullname</option>
+										}
+									}
+								</select>
+							</div>
+						</div>
+
+					</div> *@
+
+					<div class="card-body">
+						<div class="row no-gooters p-0 m-0">
+							<div class="col-md-12 my-1">
+								<table class="table table-bordered table-striped table-hover w-100" id="dataTable_Users"></table>
+							</div>
+							<div class="clearfix"></div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</div>
+</section>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () { fnLoadTableData(); });
+
+		function ShowPrompt_Users()
+		{
+			var VendorId = '@VendorId';
+			
+			debugger;
+			if (typeof VendorId != 'undefined' && VendorId != null && !isNaN(parseInt(VendorId)) && parseInt(VendorId) > 0 ) {
+				
+				Swal.fire({
+				  title: 'Select User(s)',
+				  html: '<input type="hidden" id="VendorId" value="'+VendorId+'" /><select id="ddlUsers" class="swal2-input" multiple > <option disabled>Loading...</option> </select>',
+				  confirmButtonText: 'Submit',
+				  focusConfirm: false,
+				  didOpen: () => {
+					  ShowLoader(true); 
+					$.ajax({
+					  url: '@Url.Action("GetUsers", "Vendor", new { area = "Admin" })?VendorId='+VendorId, // Adjust the URL as needed
+					  type: 'GET',
+					  success: function (data) {
+						  ShowLoader(false); 
+						  $('#VendorId').val(VendorId).trigger('change');
+						const select = $('#ddlUsers');
+						select.empty(); 
+					debugger;
+						data.forEach(user => { select.append(new Option(user.Text, user.Value)); });
+					  },
+					  error: function () {ShowLoader(false);  $('#ddlUsers').html('<option disabled>Error loading users</option>'); }
+					});
+				  },
+				  preConfirm: () => {
+					const select = document.getElementById('ddlUsers');
+					const selected = Array.from(select.selectedOptions).map(option => option.value);
+					if (selected.length === 0) { Swal.showValidationMessage('Please select at least one option'); }
+					return selected;
+				  }
+				}).then((result) => {
+					debugger;
+				  if (result.isConfirmed) {
+					  ShowLoader(false); 
+					console.log('Selected:', result.value);
+					// Do something with the selected values
+				  }
+				});
+			}
+			else{ ShowLoader(false); CommonAlert_Error($errorMessage); }
+		}
+
+		function fnLoadTableData() {
+
+			if ($.fn.DataTable.isDataTable('#dataTable_Users')) {
+				$('#dataTable_Users').DataTable().destroy();
+			}
+
+			var dataTableMain = $("#dataTable_Users").DataTable({
+					"destroy": true,
+					"pageLength": 50,
+					"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+					"sAjaxSource": "@Url.Action("GetData_Users", "Vendor", new { area = "Admin" })",
+					"bServerSide": true,
+					"bProcessing": true,
+					"bSearchable": true,
+					"scrollX": true,
+					"order": [[0, 'asc']],
+					"language": { "emptyTable": "No record found.", "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color:#2a2b2b;"></i><span class="sr-only">Loading...</span> ' },
+					//"fnServerParams": function (aoData) { aoData.push({ "name": "VendorId", "value": "@VendorId" }); },
+					//"fnCreatedRow": function (nRow, aData, iDataIndex) { },
+					"columns": [
+						{ "title": "No.", "data": "srNo", "autoWidth": false, "searchable": true, "width": "5%", "class": "text-center" },
+						{ "title": "Username", "data": "userName", "autoWidth": true, "searchable": true },
+						{ "title": "Status", "data": "password", "autoWidth": true, "searchable": true },
+						{
+							"title": "Action", "data": null, "autoWidth": false, "searchable": false, "width": "5%",
+							"render": function (data, type, row, meta) {
+								return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" '
+									+ 'onclick="fnDelete_Confirm(\'@Url.Action("DeleteConfirmed_User", "Vendor", new { area = "Admin" })?VendorId=@VendorId&UserId=' + data.userId + '\');">'
+									+ '<span><i class="ri-delete-bin-2-line"></i></span></a></div>';
+							}
+						}
+					],
+				});
+
+		}
+
+	</script>
+}

@@ -1,0 +1,216 @@
+﻿@model ResponseModel<Vendor>
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+}
+
+@section Styles {
+	<style>
+		/* box component */
+		
+		.box-center {
+			margin: 20px auto;
+		}
+		/* input [type = file]
+				----------------------------------------------- */
+		.box input[type="file"] {
+			display: block !important;
+			right: 1px;
+			top: 1px;
+			height: 34px;
+			opacity: 0;
+			width: 100%;
+			background: none;
+			position: absolute;
+			overflow: hidden;
+			z-index: 2;
+		}
+
+		.control-fileupload {
+			display: block;
+			border: 1px solid #d6d7d6;
+			background: #fff;
+			border-radius: 4px;
+			width: 100%;
+			height: 36px;
+			line-height: 36px;
+			padding: 0px 10px 2px 10px;
+			overflow: hidden;
+			position: relative;
+			/* File upload button */
+		}
+
+			.control-fileupload:before,
+			.control-fileupload input,
+			.control-fileupload label {
+				cursor: pointer !important;
+			}
+
+			.control-fileupload:before {
+				/* inherit from boostrap btn styles */
+				padding: 4px 12px;
+				margin-bottom: 0;
+				font-size: 14px;
+				color: #333333;
+				text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+				vertical-align: middle;
+				cursor: pointer;
+				background-color: #f5f5f5;
+				background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+				background-repeat: repeat-x;
+				border: 1px solid #cccccc;
+				border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+				border-bottom-color: #b3b3b3;
+				border-radius: 4px;
+				box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+				transition: color 0.2s ease;
+				/* add more custom styles*/
+				content: "Browse";
+				display: block;
+				position: absolute;
+				z-index: 1;
+				top: 2px;
+				right: 2px;
+				line-height: 20px;
+				text-align: center;
+			}
+
+			.control-fileupload:hover:before,
+			.control-fileupload:focus:before {
+				background-color: #e6e6e6;
+				color: #333333;
+				text-decoration: none;
+				background-position: 0 -15px;
+				transition: background-position 0.2s ease-out;
+			}
+
+			.control-fileupload label {
+				line-height: 24px;
+				color: #999999;
+				font-size: 14px;
+				font-weight: normal;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				position: relative;
+				z-index: 1;
+				margin-right: 90px;
+				margin-bottom: 0px;
+				cursor: text;
+			}
+
+	</style>
+}
+
+<!-- start page title -->
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<div class="page-title-right">
+				@{
+					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2"
+							onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Vendor", new {  area = "Admin" })');">
+						<i class="fas fa-plus"></i> &nbsp; Add new
+					</button>
+				}
+				<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 d-none" onclick="fnBackToList();">
+					<i class="fas fa-arrow-left"></i> &nbsp; Back To List
+				</button>
+			</div>
+			<h4 class="page-title">Vendor</h4>
+		</div>
+	</div>
+</div>
+<!-- end page title -->
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header p-0 divformSave_Display d-none">
+				<form id="formSave" action="@Url.Action("Save","Vendor", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+					<div class="row no-gutters" id="divformSave"></div>
+				</form>
+			</div>
+			<div class="card-body">
+				<div class="row no-gooters">
+					<div class="col-md-12 my-1">
+						<div class="responsive-table-plugin">
+							<div class="table-rep-plugin">
+								<div class="table-responsive" data-pattern="priority-columns">
+									<table class="table table-sm table-bordered table-striped dt-responsive nowrap w-100 table_Common_SrNo divformSave_Hide">
+										<thead>
+											<tr>
+												@*<th>#</th>*@
+												<th>#</th>
+												<th>Vendor Name</th>
+												<th>Email</th>
+												<th>Contact No.</th>
+												<th width="5%">Status</th>
+												<th>Action</th>
+											</tr>
+										</thead>
+										<tbody>
+
+											@if (Model.ObjList != null)
+											{
+												foreach (var item in Model.ObjList)
+												{
+													<tr>
+														@*<td></td>*@
+														<td></td>
+														<td>@item.Fullname</td>
+														<td>@item.Email</td>
+														<td>@item.ContactNo</td>
+														<td class="text-center"><span class="badge bg-@(item.IsActive == true ? "success" : "danger")">@(item.IsActive == true ? "Active" : "Inactive")</span></td>
+														<td>
+															<div class="btn-group">
+																@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+																@{
+																	<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+																			onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Vendor", new {  area = "Admin" })?Id=@item.Id');">
+																		<i class="ri-pencil-fill"></i>
+																	</button>
+																}
+																@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+																@{
+																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","Vendor", new {  area = "Admin" })?Id=@item.Id');">
+																		<i class="ri-delete-bin-2-line"></i>
+																	</button>
+																}
+															</div>
+														</td>
+													</tr>
+												}
+											}
+										</tbody>
+									</table>
+								</div> <!-- end .table-responsive -->
+
+							</div> <!-- end .table-rep-plugin-->
+						</div> <!-- end .responsive-table-plugin-->
+					</div>
+
+					<div class="clearfix"></div>
+				</div>
+			</div> <!-- end card body-->
+		</div> <!-- end card -->
+	</div><!-- end col-->
+</div> <!-- end row-->
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+
+		function fnParialView_Loaded_Success($id, $isAlert) {
+			$('input[type=file]').change(function () {
+				var t = $(this).val();
+				var labelText = 'File : ' + t.substr(12, t.length);
+				$(this).prev('label').text(labelText);
+			})
+		}
+	</script>
+}
