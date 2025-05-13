@@ -1,8 +1,11 @@
 ﻿using Leoz_25.Controllers;
 using Leoz_25.Infra;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Evaluation;
+using Microsoft.CodeAnalysis;
 using System.Data;
 using System.Globalization;
+using System.Xml.Linq;
 
 namespace Leoz_25.Areas.Admin.Controllers
 {
@@ -215,6 +218,191 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return View(CommonViewModel);
 		}
 
+		public ActionResult Partial_AddEditForm_Doc(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteDocId = 0)
+		{
+			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, UploadDate = DateTime.Now.Date } };
+
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							  where z.IsActive == true
+							  select new Project
+							  {
+								  //VendorId = z.VendorId,
+								  Name = z.Name,
+								  Description = z.Description,
+								  StartDate = z.StartDate,
+								  HandoverDate = z.HandoverDate,
+								  Address = z.Address,
+								  CityId = z.CityId,
+								  StateId = z.StateId,
+								  CountryId = z.CountryId,
+								  LocationLink = z.LocationLink,
+								  CoordinatorId = z.CoordinatorId,
+								  CoordinatorName = z.CoordinatorName,
+								  SiteDetails = z.SiteDetails,
+								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
+								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  IsActive = z.IsActive
+							  }).FirstOrDefault();
+
+			if (objProject == null || (string.IsNullOrEmpty(Type) && ProjectSiteDocId == 0)) return Json(null);
+
+			if (ProjectSiteDocId > 0)
+			{
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
+
+				obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+
+				return Json(obj);
+			}
+			else
+			{
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true).Distinct().ToList();
+
+				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+				{
+					foreach (var item in _CommonViewModel.ObjList)
+					{
+						item.Status_Text = item.Status == "U" ? "Upload" : item.Status == "A" ? "Approved" : "";
+					}
+				}
+
+				return PartialView("_Partial_AddEditForm_Doc", _CommonViewModel);
+			}
+		}
+
+
+		[HttpPost]
+		//[CustomAuthorizeAttribute(AccessType_Enum.Write)]
+		public ActionResult Save_Doc(ProjectSiteDoc viewModel)
+		{
+			try
+			{
+				if (viewModel != null)
+				{
+					#region Validation
+
+					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
+
+					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Uploaded Date.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (viewModel.Id == 0 && (files == null || files.Count() <= 0))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please upload file.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.Remark))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Remarks.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							if (!string.IsNullOrEmpty(viewModel.UploadDate_Text)) { try { viewModel.UploadDate = DateTime.ParseExact(viewModel.UploadDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+
+							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null)
+							{
+								obj.Remark = viewModel.Remark;
+								obj.UploadDate = viewModel.UploadDate;
+								//obj.FilePath = !string.IsNullOrEmpty(viewModel.FilePath) ? viewModel.FilePath : obj.FilePath;
+								obj.Type = viewModel.Type;
+
+								_context.Using<ProjectSiteDoc>().Update(obj);
+							}
+							else
+							{
+								viewModel.Status = "U";
+								viewModel.StatusDate = DateTime.Now;
+
+								var _obj = _context.Using<ProjectSiteDoc>().Add(viewModel);
+								viewModel.Id = _obj.Id;
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							try
+							{
+								if (files != null && files.Count() > 0 && files[0].Length > 0)
+								{
+									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "ProjectSiteDoc", $"{viewModel.ProjectId}");
+
+									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+									var file = files[0];
+									string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName); // Ensure file name is safe
+									string filePath = Path.Combine(folderPath, fileName);
+
+									// Save the file
+									using (var stream = new FileStream(filePath, FileMode.Create))
+									{
+										file.CopyTo(stream);
+									}
+
+									obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+									if (obj != null)
+									{
+										obj.FilePath = filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/");
+
+										_context.Using<ProjectSiteDoc>().Update(obj);
+									}
+								}
+							}
+							catch (Exception)
+							{
+								CommonViewModel.Message = "Issue in Uploading Image/PDF.";
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+							}
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+
 		[HttpPost]
 		public ActionResult GetProjectByCustomerId(long CustomerId = 0)
 		{
@@ -263,6 +451,38 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			return Json(objProject);
 		}
+
+
+		[HttpPost]
+		//[CustomAuthorizeAttribute(AccessType_Enum.Delete)]
+		public ActionResult DeleteConfirmed_Doc(long Id)
+		{
+			try
+			{
+				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+				if (objProject != null)
+				{
+					_context.Using<ProjectSiteDoc>().Delete(objProject);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "Data deleted successfully ! ";
+
+					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
 
 	}
 

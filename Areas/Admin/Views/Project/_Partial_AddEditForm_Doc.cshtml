@@ -1,0 +1,107 @@
+﻿@model ResponseModel<ProjectSiteDoc>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+
+	<form id="formSave" action="@Url.Action("Save_Doc","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+		<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+			<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+			<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+			<input type="text" class="form-control d-none" name="Type" value="@(Model.Obj != null ? Model.Obj.Type : "")">
+			<div class="row mb-1">
+				<label for="UploadDate_Text" class="col-2 col-form-label text-end">Upload Date</label>
+				<div class="col-4">
+					<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="UploadFile" class="col-2 col-form-label text-end">Upload File</label>
+				<div class="col-6">
+					<span class="control-fileupload">
+						<input type="file" id="UploadFile" accept="image/png, image/gif, image/jpeg, application/pdf" class="form-control">
+					</span>
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="Remark" class="col-2 col-form-label text-end">Remarks</label>
+				<div class="col-9">
+					<input type="text" class="form-control" name="Remark">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label class="col-2 col-form-label text-end">&nbsp;</label>
+				<div class="col-9">
+					<button type="button" class="btn btn-success btnSubmit">Save</button>
+					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+				</div>
+			</div>
+		</div>
+
+	</form>
+
+	<div class="d-flex align-items-start justify-content-between">
+		<div class="d-flex justify-content-end"> &nbsp; </div>
+		<div class="d-flex justify-content-end">
+			<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0)"> Add new record </button>
+		</div>
+	</div>
+
+	<div class="table-responsive-sm mt-3" id="divProjectSiteDocList">
+		<table class="table table-bordered table-centered mb-0">
+			<thead>
+				<tr>
+					<th width="20%">Upload Date</th>
+					<th>Remarks</th>
+					<th width="10%">Status</th>
+					<th width="10%">View File</th>
+					<th class="text-center" width="5%">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model.ObjList != null)
+				{
+					foreach (var item in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks))
+					{
+						<tr>
+							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy)</td>
+							<td>@item.Remark</td>
+							<td>@item.Status_Text</td>
+							<td><a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a></td>
+							<td>
+								<div class="btn-group">
+									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+									@{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteDoc(@item.Id);">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+									@{
+										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc","Project", new {  area = "Admin" })?Id=@item.Id');">
+											<i class="ri-delete-bin-2-line"></i>
+										</button>
+									}
+								</div>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+					$(document).ready(function () {
+
+		});
+	</script>
+}

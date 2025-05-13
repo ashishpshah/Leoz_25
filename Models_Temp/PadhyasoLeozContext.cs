@@ -15,7 +15,9 @@ public partial class PadhyasoLeozContext : DbContext
     {
     }
 
-    public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
+    public virtual DbSet<ProjectSiteDoc> ProjectSiteDocs { get; set; }
+
+    public virtual DbSet<ProjectSiteDoc1> ProjectSiteDocs1 { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -25,9 +27,14 @@ public partial class PadhyasoLeozContext : DbContext
     {
         modelBuilder.HasDefaultSchema("padhyaso_Leoz");
 
-        modelBuilder.Entity<CustomerProjectMapping>(entity =>
+        modelBuilder.Entity<ProjectSiteDoc>(entity =>
         {
-            entity.ToTable("CustomerProjectMapping", "dbo");
+            entity.ToTable("Project_Site_Doc", "dbo");
+        });
+
+        modelBuilder.Entity<ProjectSiteDoc1>(entity =>
+        {
+            entity.ToTable("Project_Site_Doc");
         });
 
         OnModelCreatingPartial(modelBuilder);

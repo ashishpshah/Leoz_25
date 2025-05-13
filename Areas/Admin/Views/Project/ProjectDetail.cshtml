@@ -142,73 +142,12 @@
 					<div class="clearfix"></div>
 				</div>
 
-				<div class="row no-gutters m-5 px-5" id="divProjectSiteDoc" style="display:none">
-					<div class="card border-primary border">
-						<div class="card-body">
-							<div class="d-flex align-items-start justify-content-between">
-								<div class="d-flex">
-									<h5 class="card-title text-primary">Special title treatment</h5>
-								</div>
-								<div class="">
-									<button role="button" class="btn btn-danger btn-sm" onclick="fnClose_ProjectSiteDoc()"> <i class="ri-close-fill"></i> </button>
-								</div>
-							</div>
-							<form id="formProjectSiteDoc" class="form-horizontal">
-								<input type="text" class="form-control d-none" id="Type" name="Type">
-								<div class="row mb-3">
-									<label for="UploadDate_Text" class="col-2 col-form-label text-end">Upload Date</label>
-									<div class="col-2">
-										<input type="date" name="UploadDate_Text" class="form-control"
-											   data-value="@(DateTime.Now.Date.ToString("yyyy-MM-dd"))">
-									</div>
-								</div>
-								<div class="row mb-3">
-									<label for="UploadFile" class="col-2 col-form-label text-end">Upload File</label>
-									<div class="col-6">
-										<span class="control-fileupload">
-											<input type="file" id="UploadFile" accept="image/png, image/gif, image/jpeg, application/pdf" class="form-control">
-										</span>
-									</div>
-									<div class="col-2">
-										<button type="button" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> <span> View</span> </button>
-									</div>
-								</div>
-								<div class="row mb-3">
-									<label for="Remark" class="col-2 col-form-label text-end">Remarks</label>
-									<div class="col-9">
-										<input type="text" class="form-control" id="Remark">
-									</div>
-								</div>
-								<div class="justify-content-end row">
-									<div class="col-10">
-										<button type="submit" class="btn btn-info">Save</button>
-									</div>
-								</div>
-							</form>
-
-							<div class="table-responsive-sm mt-3" id="divProjectSiteDocList">
-								<table class="table table-bordered table-centered mb-0">
-									<thead>
-										<tr>
-											<th>Upload Date</th>
-											<th>Upload File</th>
-											<th>Remarks</th>
-											<th class="text-center">Action</th>
-										</tr>
-									</thead>
-									<tbody> </tbody>
-								</table>
-							</div>
-						</div> <!-- end card-body-->
-					</div>
-				</div>
-
 				<div class="row d-flex align-items-center justify-content-center mt-4" id="divProjectDetailOption" style="display:none">
 					<div class="col-10">
 						<div class="container py-5">
 							<div class="row g-4">
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM">
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
 										<p class="mb-1">Estimate</p>
 										<p class="mb-1">Payment Terms</p>
 										<p class="mb-0">Material Specifications</p>
@@ -216,35 +155,35 @@
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D">FINAL 3D</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">FINAL 3D</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW">DRAWINGS</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">DRAWINGS</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC">CLIENT SCOPE OF WORK</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">CLIENT SCOPE OF WORK</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB">MOOD BOARD</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">MOOD BOARD</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE">SITE UPDATES</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">SITE UPDATES</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND">PENDING SELECTION & WORK</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">PENDING SELECTION & WORK</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO">MATERIAL PROCUREMENT</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">MATERIAL PROCUREMENT</div>
 								</div>
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP">WORK COMPLITION REPORT</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">WORK COMPLITION REPORT</div>
 								</div>
 
 							</div>
@@ -261,7 +200,7 @@
 		$(document).ready(function () {
 
 			$('#divProjectDetailOption').css('display', 'none');
-			$('#divProjectSiteDoc').css('display', 'none');
+			//$('#divProjectSiteDoc').css('display', 'none');
 
 			let change = '@(Logged_In_CustomerId > 0 ? "1" : "")'
 
@@ -269,67 +208,162 @@
 				$("#ddlProject").trigger('change');
 
 			$('.box').on('click', function () {
-				debugger;
 				ShowLoader(true);
-				$('#divProjectSiteDoc').css('display', 'none');
+				//$('#divProjectSiteDoc').css('display', 'none');
 
 				const _this = $(this);
 
-				setTimeout(function () {
+				$('.box').attr('data-active', false);
+				$(this).attr('data-active', true);
 
-					var CustomerId = $('#ddlCustomer option:selected').val();
-					if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
-						|| (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)) {
-						var ProjectId = $('#ddlProject option:selected').val();
+				const boxType = _this.attr('data-type').trim();
 
-						if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
-						else { CommonAlert_Error('Please select Project', null); return false; }
-					}
-					else { CommonAlert_Error('Please select Customer', null); return false; }
-
-					const boxType = _this.attr('data-type').trim();
-
-					$('#divProjectDetailOption').css('display', 'none');
-					$('#divProjectSiteDoc').css('display', 'block');
-
-					var title = 'Estimate Payment Terms Material Specifications List (Customer)';
-
-					if (boxType == 'EPM') title = 'Estimate Payment Terms Material Specifications List (Customer)';
-					else if (boxType == 'F3D') title = 'FINAL 3D';
-					else if (boxType == 'DRW') title = 'DRAWINGS';
-					else if (boxType == 'WCLTSC') title = 'CLIENT SCOPE OF WORK';
-					else if (boxType == 'MB') title = 'MOOD BOARD';
-					else if (boxType == 'SITE') title = 'SITE UPDATES';
-					else if (boxType == 'WPEND') title = 'PENDING SELECTION & WORK';
-					else if (boxType == 'MPRO') title = 'MATERIAL PROCUREMENT';
-					else if (boxType == 'WCOMP') title = 'WORK COMPLITION REPORT';
-
-					$('#divProjectSiteDoc .card-title').text(title);
-					$('#divProjectSiteDoc form input#Type').val(boxType).trigger('change');
-
-					debugger;
-					$('#divProjectSiteDoc input[type="date"]').val($('#divProjectSiteDoc input[type="date"]').attr('data-value')).trigger('change');
-
-					// Optional: add navigation logic here
-					// Example: window.location.href = boxType.toLowerCase().replace(/\s+/g, '-') + '.html';
-
-					ShowLoader(false);
-				}, 1000);
+				fnOpenModal(boxType);
 			});
 
 		});
 
+		function fnOpenModal(boxType) {
+			ShowLoader(true);
+
+			var CustomerId = $('#ddlCustomer option:selected').val();
+			var ProjectId = $('#ddlProject option:selected').val();
+			if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
+				|| (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)) {
+				if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
+				else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
+			}
+			else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
+
+			// $('#divProjectDetailOption').css('display', 'none');
+			// $('#divProjectSiteDoc').css('display', 'block');
+
+			var title = 'Estimate Payment Terms Material Specifications List (Customer)';
+
+			if (boxType == 'EPM') title = 'Estimate Payment Terms Material Specifications List (Customer)';
+			else if (boxType == 'F3D') title = 'FINAL 3D';
+			else if (boxType == 'DRW') title = 'DRAWINGS';
+			else if (boxType == 'WCLTSC') title = 'CLIENT SCOPE OF WORK';
+			else if (boxType == 'MB') title = 'MOOD BOARD';
+			else if (boxType == 'SITE') title = 'SITE UPDATES';
+			else if (boxType == 'WPEND') title = 'PENDING SELECTION & WORK';
+			else if (boxType == 'MPRO') title = 'MATERIAL PROCUREMENT';
+			else if (boxType == 'WCOMP') title = 'WORK COMPLITION REPORT';
+
+			// $('#divProjectSiteDoc .card-title').text(title);
+			// $('#divProjectSiteDoc form input#Type').val(boxType).trigger('change');
+
+			// debugger;
+			// $('#divProjectSiteDoc input[type="date"]').val($('#divProjectSiteDoc input[type="date"]').attr('data-value')).trigger('change');
+
+			var $url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
+
+			fnShow_Modal($url, title, false, 'html', false, false, false);
+
+			// Optional: add navigation logic here
+			// Example: window.location.href = boxType.toLowerCase().replace(/\s+/g, '-') + '.html';
+
+			ShowLoader(false);
+		}
+
+		function fnShow_Modal_Success($url, $title) {
+			debugger;
+			$('#largeModal').css('display', 'block');
+			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
+			$('#largeModal .modal-footer').css('display', 'none');
+			$('#largeModal .modal-body .btn-add').css('display', 'block');
+		}
+
+		function fnAddEdit_ProjectSiteDoc($id) {
+			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
+			$('#largeModal .modal-body .btn-add').css('display', 'none');
+
+			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+
+				var CustomerId = $('#ddlCustomer option:selected').val();
+				var ProjectId = $('#ddlProject option:selected').val();
+				if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
+					|| (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)) {
+					if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
+					else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
+				}
+				else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
+
+				var $url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&ProjectSiteDocId=" + $id;
+
+				ShowLoader(true);
+
+				$.ajax({
+					type: 'GET',
+					url: $url,
+					data: null,
+					cache: false,
+					contentType: false,
+					processData: false,
+					dataType: "json",
+					success: function (response) {
+						try {
+							ShowLoader(false);
+							if (typeof response != 'undefined' && response != null && response != '') {
+								$('#formSave input[name="Id"]').val(response['Id']).trigger('change');
+								$('#formSave input[name="ProjectId"]').val(response['ProjectId']).trigger('change');
+								$('#formSave input[name="Type"]').val(response['Type']).trigger('change');
+								$('#formSave input[name="UploadDate_Text"]').val(response['UploadDate_Text']).trigger('change');
+								$('#formSave input[name="Remark"]').val(response['Remark']).trigger('change');
+							}
+							else {
+								ShowLoader(false); CommonAlert_Error(response.Message, null);
+							}
+						} catch { ShowLoader(false); window.location.reload(); }
+					},
+					failure: function (response) { ShowLoader(false); CommonAlert_Error(null) },
+					error: function (response) { ShowLoader(false); CommonAlert_Error(null) }
+				});
+			}
+		}
+
 		function fnClose_ProjectSiteDoc() {
-			$('#divProjectSiteDoc form input').val(null).trigger('change');
-			$('#divProjectDetailOption').css('display', 'block');
-			$('#divProjectSiteDoc').css('display', 'none');
+			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
+			$('#largeModal .modal-body .btn-add').css('display', 'block');
+		}
+
+		function fnSubmitForm_Success(response, $id) {
+
+			try {
+				if (response.StatusCode === 1) {
+					const boxType = $($('.box[data-active="true"]')).attr('data-type').trim();
+					fnOpenModal(boxType);
+				}
+				else {
+					CommonAlert_Error(response.Message, null)
+				}
+			} catch {
+				fnClose_ProjectSiteDoc()
+			}
+		}
+
+		function fnDelete_Success(response) {
+
+			try {
+				if (response.StatusCode === 1) {
+					const boxType = $($('.box[data-active="true"]')).attr('data-type').trim();
+					fnOpenModal(boxType);
+				}
+				else {
+					CommonAlert_Error(response.Message, null)
+				}
+			} catch {
+				fnClose_ProjectSiteDoc()
+			}
 		}
 
 		function fnChange_GetProjects($this) {
 
 			$('#divProjectDetail dd').text('');
 			$('#divProjectDetailOption').css('display', 'none');
-			$('#divProjectSiteDoc').css('display', 'none');
+			//$('#divProjectSiteDoc').css('display', 'none');
 
 			var CustomerId = $($this).find('option:selected').val();
 
@@ -376,7 +410,7 @@
 
 			$('#divProjectDetail dd').text('');
 			$('#divProjectDetailOption').css('display', 'none');
-			$('#divProjectSiteDoc').css('display', 'none');
+			//$('#divProjectSiteDoc').css('display', 'none');
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $($this).find('option:selected').val();

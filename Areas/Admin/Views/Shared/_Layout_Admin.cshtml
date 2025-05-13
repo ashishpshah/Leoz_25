@@ -37,8 +37,8 @@
 
 	<style type="text/css">
 		/* .table > :not(caption) > * > * {
-									padding: .35rem 0.95rem !important;
-								} */
+															padding: .35rem 0.95rem !important;
+														} */
 
 		.input-group-text-sm {
 			min-height: calc(1.5em + .56rem + calc(var(--tz-border-width) * 2));
@@ -105,10 +105,10 @@
 			}
 
 		/* @@media (min-width: 576px) {
-																									.form-group.row > .text-right {
-																										text-align: left !important;
-																									}
-																								} */
+																															.form-group.row > .text-right {
+																																text-align: left !important;
+																															}
+																														} */
 	</style>
 
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -171,7 +171,7 @@
 					<li class="dropdown">
 						<a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#" role="button"
 						   aria-haspopup="false" aria-expanded="false">
-							
+
 							<span class="d-lg-block d-none">
 								<h5 class="my-0 fw-normal">@Common.Get_Session(SessionKey.KEY_USER_NAME)  <i class="ri-arrow-down-s-line d-none d-sm-inline-block align-middle"></i></h5>
 							</span>
@@ -335,6 +335,25 @@
 					@RenderBody()
 					<hr />
 
+					<!-- Modal -->
+					<div class="modal fade" id="largeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+						 aria-labelledby="largeModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-lg">
+							@* <form class="form-horizontal modal-form" enctype="multipart/form-data"> *@
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="largeModalLabel">Modal title</h5>
+										<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+									</div> <!-- end modal header -->
+									<div class="modal-body"> </div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-secondary modal-btn-close" data-bs-dismiss="modal">Close</button>
+										<button type="button" class="btn btn-success modal-btn-save btnSubmit">Save</button>
+									</div> <!-- end modal footer -->
+								</div> <!-- end modal content-->
+							@* </form> *@
+						</div> <!-- end modal dialog-->
+					</div> <!-- end modal-->
 				</div> <!-- container -->
 
 			</div> <!-- content -->

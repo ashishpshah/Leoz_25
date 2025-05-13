@@ -431,20 +431,20 @@ $(document).ready(function () {
 
     $('.modal').on('shown.bs.modal', function (e) {
 
-        $('body').append('<div class="modal-backdrop fade show" id="div-modal-backdrop"></div>')
+        //$('body').append('<div class="modal-backdrop fade show" id="div-modal-backdrop"></div>')
 
     });
 
     $('.modal').on('hide.bs.modal', function (e) {
 
-        $('body #div-modal-backdrop').remove();
+        //$('body #div-modal-backdrop').remove();
 
         $('div.loader-overlay').remove();
-        if (!($(document.activeElement)[0].type == 'button' && $($(document.activeElement)[0]).hasClass('close')))
-            e.preventDefault();
+        //if (!($(document.activeElement)[0].type == 'button' && $($(document.activeElement)[0]).hasClass('close')))
+        //    e.preventDefault();
 
-        //$('#defaultModal').modal('hide'); // Close the modal
-        $('.modal-backdrop').removeClass('show'); // Close the modal
+        ////$('#defaultModal').modal('hide'); // Close the modal
+        //$('.modal-backdrop').removeClass('show'); // Close the modal
     });
 
     try { fnLoadCommonTable('#table_Common'); } catch { }
@@ -1663,7 +1663,7 @@ function CommonConfirmed_Success(msg, functionName, functionParams) { //params =
         showDenyButton: false,
         showCancelButton: false,
         confirmButtonText: 'OK',
-        timer: 1000,
+        //timer: 1000,
     }).then((result) => {
 
         if (typeof functionName != 'undefined' && functionName != null && functionName != '')
@@ -1990,9 +1990,12 @@ function fnLoadCommonTable_Buttons($selector) {
     $($selector + " thead th.no_sorting").removeClass('sorting_desc');
 }
 
-function fnShow_Modal($url, $title, $hasTable, $type, $noAlert = false) {
+function fnShow_Modal($url, $title, $hasTable, $type, $IsSave = false, $IsClose = false, $noAlert = false) {
 
     $('div.loader-overlay').remove();
+    $('body #div-modal-backdrop').remove();
+    $('#largeModal .modal-btn-save').css('display', 'block');
+    $('#largeModal .modal-btn-close').css('display', 'block');
     ShowLoader(true);
 
     if ($('#largeModal').hasClass('show')) $('#largeModal').hide(); //$('#largeModal').modal('hide');
@@ -2006,10 +2009,9 @@ function fnShow_Modal($url, $title, $hasTable, $type, $noAlert = false) {
             dataType: $type,
             success: function (response) {
 
-                if (typeof response == 'undefined' || response == null || response == 'null' || response.length <= 0) {
+                if (typeof response == 'undefined' || response == null || response == '' || response == 'null' || response.length <= 0) {
 
-                    if ($noAlert == false)
-                        CommonAlert_Error("No any record(s) found");
+                    if ($noAlert == false) CommonAlert_Error("No any record(s) found");
                     return false;
                 }
 
@@ -2018,11 +2020,12 @@ function fnShow_Modal($url, $title, $hasTable, $type, $noAlert = false) {
                 $('#largeModal .modal-body').append(response);
 
                 $('#largeModal .modal-title').html($title);
+                $('#largeModal .modal-form').removeAttr('action');
 
+                if ($IsSave == false) $('#largeModal .modal-btn-save').css('display', 'none');
+                if ($IsClose == false) $('#largeModal .modal-btn-close').css('display', 'none');
 
                 setTimeout(function () {
-
-                    ShowLoader(false);
 
                     if ($hasTable === true) {
 
@@ -2282,6 +2285,8 @@ function fnShow_Modal($url, $title, $hasTable, $type, $noAlert = false) {
                         });
                     } catch { }
 
+
+                    ShowLoader(false);
 
                     try { fnShow_Modal_Success($url, $title); } catch { }
 

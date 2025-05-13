@@ -27,6 +27,8 @@ namespace Leoz_25.Infra
 		public virtual DbSet<VendorSubscription> VendorSubscriptions { get; set; }
 		public virtual DbSet<Project> Projects { get; set; }
 
+		public virtual DbSet<ProjectSiteDoc> ProjectSiteDocs { get; set; }
+
 		public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
 
 
@@ -50,6 +52,11 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<VendorSubscription>(entity =>
 			{
 				entity.ToTable("VendorSubscriptions", "dbo");
+			});
+
+			modelBuilder.Entity<ProjectSiteDoc>(entity =>
+			{
+				entity.ToTable("Project_Site_Doc", "dbo");
 			});
 
 			modelBuilder.Entity<Project>(entity =>
@@ -101,6 +108,7 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<RoleMenuAccess>().HasKey(e => new { e.RoleId, e.MenuId, e.IsCreate, e.IsUpdate, e.IsRead, e.IsDelete });
 			modelBuilder.Entity<VendorSubscription>().HasKey(e => new { e.Id });
 			modelBuilder.Entity<Project>().HasKey(e => new { e.Id });
+			modelBuilder.Entity<ProjectSiteDoc>().HasKey(e => new { e.Id });
 
 			base.OnModelCreating(modelBuilder);
 		}
