@@ -11,6 +11,7 @@
 		<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
 			<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
 			<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+			<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 			<input type="text" class="form-control d-none" name="Type" value="@(Model.Obj != null ? Model.Obj.Type : "")">
 			<div class="row mb-1">
 				<label for="UploadDate_Text" class="col-2 col-form-label text-end">Upload Date</label>

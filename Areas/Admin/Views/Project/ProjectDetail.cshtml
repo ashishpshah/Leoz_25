@@ -97,7 +97,7 @@
 				</div>
 			</div>
 			<div class="card-body">
-				<div class="row no-gutters" id="divProjectDetail">
+				<div class="row no-gutters d-none" id="divProjectDetail">
 					<h4 class="header-title">Project Detail</h4>
 					<div class="col-md-6 my-1">
 						<dl class="row mb-0">
@@ -142,7 +142,7 @@
 					<div class="clearfix"></div>
 				</div>
 
-				<div class="row d-flex align-items-center justify-content-center mt-4" id="divProjectDetailOption" style="display:none">
+				<div class="row d-flex align-items-center justify-content-center mt-4 d-none" id="divProjectDetailOption">
 					<div class="col-10">
 						<div class="container py-5">
 							<div class="row g-4">
@@ -199,9 +199,6 @@
 	<script type="text/javascript">
 		$(document).ready(function () {
 
-			$('#divProjectDetailOption').css('display', 'none');
-			//$('#divProjectSiteDoc').css('display', 'none');
-
 			let change = '@(Logged_In_CustomerId > 0 ? "1" : "")'
 
 			if (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)
@@ -209,7 +206,6 @@
 
 			$('.box').on('click', function () {
 				ShowLoader(true);
-				//$('#divProjectSiteDoc').css('display', 'none');
 
 				const _this = $(this);
 
@@ -235,9 +231,6 @@
 			}
 			else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
 
-			// $('#divProjectDetailOption').css('display', 'none');
-			// $('#divProjectSiteDoc').css('display', 'block');
-
 			var title = 'Estimate Payment Terms Material Specifications List (Customer)';
 
 			if (boxType == 'EPM') title = 'Estimate Payment Terms Material Specifications List (Customer)';
@@ -250,24 +243,20 @@
 			else if (boxType == 'MPRO') title = 'MATERIAL PROCUREMENT';
 			else if (boxType == 'WCOMP') title = 'WORK COMPLITION REPORT';
 
-			// $('#divProjectSiteDoc .card-title').text(title);
-			// $('#divProjectSiteDoc form input#Type').val(boxType).trigger('change');
-
-			// debugger;
-			// $('#divProjectSiteDoc input[type="date"]').val($('#divProjectSiteDoc input[type="date"]').attr('data-value')).trigger('change');
-
 			var $url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
 
-			fnShow_Modal($url, title, false, 'html', false, false, false);
+			if (boxType == 'WPEND') $url = "@Url.Action("Partial_AddEditForm_WP", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
+			else if (boxType == 'MPRO') $url = "@Url.Action("Partial_AddEditForm_MP", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
+			else if (boxType == 'WCOMP') $url = "@Url.Action("Partial_AddEditForm_WC", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
 
-			// Optional: add navigation logic here
-			// Example: window.location.href = boxType.toLowerCase().replace(/\s+/g, '-') + '.html';
+			fnShow_Modal($url, title, false, 'html', false, false, false);
 
 			ShowLoader(false);
 		}
 
 		function fnShow_Modal_Success($url, $title) {
-			debugger;
+
+			$('#largeModal .modal-dialog').addClass('modal-fullscreen');
 			$('#largeModal').css('display', 'block');
 			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
 			$('#largeModal .modal-footer').css('display', 'none');
@@ -276,6 +265,7 @@
 
 		function fnAddEdit_ProjectSiteDoc($id) {
 			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
 			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
@@ -322,9 +312,63 @@
 				});
 			}
 		}
+		
+		function fnAddEdit_ProjectSiteMP($id) {
+			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
+			$('#largeModal .modal-body .btn-add').css('display', 'none');
+
+			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+
+				var CustomerId = $('#ddlCustomer option:selected').val();
+				var ProjectId = $('#ddlProject option:selected').val();
+				if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
+					|| (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)) {
+					if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
+					else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
+				}
+				else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
+
+				var $url = "@Url.Action("Partial_AddEditForm_MP", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&ProjectSiteMatId=" + $id;
+
+				ShowLoader(true);
+
+				$.ajax({
+					type: 'GET',
+					url: $url,
+					data: null,
+					cache: false,
+					contentType: false,
+					processData: false,
+					dataType: "json",
+					success: function (response) {
+						try {
+							ShowLoader(false);
+							if (typeof response != 'undefined' && response != null && response != '') {
+
+								$('#formSave input[name="Id"]').val(response['Id']).trigger('change');
+								$('#formSave input[name="ProjectId"]').val(response['ProjectId']).trigger('change');
+
+								$('#formSave input[name="MaterialFor"]').val(response['MaterialFor']).trigger('change');
+								$('#formSave input[name="MaterialName"]').val(response['MaterialName']).trigger('change');
+								$('#formSave input[name="Qty"]').val(response['Qty']).trigger('change');
+								$('#formSave select[name="UOM"]').val(response['UOM']).trigger('change');
+							}
+							else {
+								ShowLoader(false); CommonAlert_Error(response.Message, null);
+							}
+						} catch { ShowLoader(false); window.location.reload(); }
+					},
+					failure: function (response) { ShowLoader(false); CommonAlert_Error(null) },
+					error: function (response) { ShowLoader(false); CommonAlert_Error(null) }
+				});
+			}
+		}
 
 		function fnClose_ProjectSiteDoc() {
 			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
+			$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
 			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
 			$('#largeModal .modal-body .btn-add').css('display', 'block');
 		}
@@ -336,12 +380,9 @@
 					const boxType = $($('.box[data-active="true"]')).attr('data-type').trim();
 					fnOpenModal(boxType);
 				}
-				else {
-					CommonAlert_Error(response.Message, null)
-				}
-			} catch {
-				fnClose_ProjectSiteDoc()
-			}
+				else CommonAlert_Error(response.Message, null);
+
+			} catch { fnClose_ProjectSiteDoc(); }
 		}
 
 		function fnDelete_Success(response) {
@@ -351,19 +392,15 @@
 					const boxType = $($('.box[data-active="true"]')).attr('data-type').trim();
 					fnOpenModal(boxType);
 				}
-				else {
-					CommonAlert_Error(response.Message, null)
-				}
-			} catch {
-				fnClose_ProjectSiteDoc()
-			}
+				else CommonAlert_Error(response.Message, null);
+			} catch { fnClose_ProjectSiteDoc(); }
 		}
 
 		function fnChange_GetProjects($this) {
 
 			$('#divProjectDetail dd').text('');
-			$('#divProjectDetailOption').css('display', 'none');
-			//$('#divProjectSiteDoc').css('display', 'none');
+			$('#divProjectDetail').addClass('d-none');
+			$('#divProjectDetailOption').addClass('d-none');
 
 			var CustomerId = $($this).find('option:selected').val();
 
@@ -409,8 +446,8 @@
 		function fnChange_GetProjectDetails($this) {
 
 			$('#divProjectDetail dd').text('');
-			$('#divProjectDetailOption').css('display', 'none');
-			//$('#divProjectSiteDoc').css('display', 'none');
+			$('#divProjectDetail').addClass('d-none');
+			$('#divProjectDetailOption').addClass('d-none');
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $($this).find('option:selected').val();
@@ -428,7 +465,7 @@
 					dataType: "json",
 					success: function (response) {
 						ShowLoader(false);
-						//debugger;
+
 						if (response != null) {
 
 							$('#ProjectName').text(response['Name']);
@@ -438,11 +475,12 @@
 							$('#Address').text(response['Address']);
 
 							$('#Coordinator').text(response['CoordinatorName']);
-							$('#SiteDetail').text(response['SiteDetail']);
+							$('#SiteDetail').text(response['SiteDetails']);
 							$('#Status').text((response['IsActive'] == true ? 'Active' : 'Inactive'));
 							$('#LocationLink').text(response['LocationLink']);
 
-							$('#divProjectDetailOption').css('display', 'block');
+							$('#divProjectDetail').removeClass('d-none');
+							$('#divProjectDetailOption').removeClass('d-none');
 						}
 					},
 					failure: function (xhr) {

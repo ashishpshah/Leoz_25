@@ -29,12 +29,21 @@ namespace Leoz_25.Infra
 
 		public virtual DbSet<ProjectSiteDoc> ProjectSiteDocs { get; set; }
 
+		public virtual DbSet<ProjectSiteMaterial> ProjectSiteMaterials { get; set; }
+
 		public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
+
+		public virtual DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			//modelBuilder.HasDefaultSchema("padhyaso_Leoz");
+
+			modelBuilder.Entity<UnitsOfMeasurement>(entity =>
+			{
+				entity.ToTable("UnitsOfMeasurement", "dbo");
+			});
 
 			modelBuilder.Entity<CustomerProjectMapping>(entity =>
 			{
@@ -57,6 +66,15 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<ProjectSiteDoc>(entity =>
 			{
 				entity.ToTable("Project_Site_Doc", "dbo");
+			});
+
+			modelBuilder.Entity<ProjectSiteMaterial>(entity =>
+			{
+				entity.ToTable("Project_Site_Material", "dbo");
+
+				entity.Property(e => e.MaterialFor).HasColumnName("Material_For");
+				entity.Property(e => e.MaterialName).HasColumnName("Material_Name");
+				entity.Property(e => e.Qty).HasColumnType("decimal(18, 2)");
 			});
 
 			modelBuilder.Entity<Project>(entity =>

@@ -218,9 +218,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return View(CommonViewModel);
 		}
 
+
+
 		public ActionResult Partial_AddEditForm_Doc(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteDocId = 0)
 		{
-			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, UploadDate = DateTime.Now.Date } };
+			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
 			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
 
@@ -251,7 +253,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSiteDocId > 0)
 			{
-				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
 				obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
@@ -259,7 +261,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -273,9 +275,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 		}
 
-
 		[HttpPost]
-		//[CustomAuthorizeAttribute(AccessType_Enum.Write)]
 		public ActionResult Save_Doc(ProjectSiteDoc viewModel)
 		{
 			try
@@ -402,6 +402,206 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
+		[HttpPost]
+		public ActionResult DeleteConfirmed_Doc(long Id)
+		{
+			try
+			{
+				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+				if (objProject != null)
+				{
+					_context.Using<ProjectSiteDoc>().Delete(objProject);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "Data deleted successfully ! ";
+
+					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
+
+		public ActionResult Partial_AddEditForm_MP(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
+		{
+			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, CustomerId = CustomerId } };
+
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							  where z.IsActive == true
+							  select new Project
+							  {
+								  //VendorId = z.VendorId,
+								  Name = z.Name,
+								  Description = z.Description,
+								  StartDate = z.StartDate,
+								  HandoverDate = z.HandoverDate,
+								  Address = z.Address,
+								  CityId = z.CityId,
+								  StateId = z.StateId,
+								  CountryId = z.CountryId,
+								  LocationLink = z.LocationLink,
+								  CoordinatorId = z.CoordinatorId,
+								  CoordinatorName = z.CoordinatorName,
+								  SiteDetails = z.SiteDetails,
+								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
+								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  IsActive = z.IsActive
+							  }).FirstOrDefault();
+
+			if (objProject == null || (string.IsNullOrEmpty(Type) && ProjectSiteMatId == 0)) return Json(null);
+
+			if (ProjectSiteMatId > 0)
+			{
+				var obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == ProjectSiteMatId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+
+				return Json(obj);
+			}
+			else
+			{
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).Distinct().ToList();
+
+				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+				{
+					foreach (var item in _CommonViewModel.ObjList)
+					{
+						item.Status_Text = item.Status == "S" ? "Submitted" : item.Status == "A" ? "Approved" : "";
+					}
+				}
+
+				_CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+				var listUOM = _context.Using<UnitsOfMeasurement>().GetAll().ToList();
+
+				if (listUOM != null && listUOM.Count() > 0) _CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.Code, x.Name, x.Category)).ToList());
+
+				return PartialView("_Partial_AddEditForm_MP", _CommonViewModel);
+			}
+		}
+
+		[HttpPost]
+		public ActionResult Save_MP(ProjectSiteMaterial viewModel)
+		{
+			try
+			{
+				if (viewModel != null)
+				{
+					#region Validation
+
+					if (string.IsNullOrEmpty(viewModel.MaterialFor))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Material For.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.MaterialName))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Material Name.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null)
+							{
+								obj.MaterialFor = viewModel.MaterialFor;
+								obj.MaterialName = viewModel.MaterialName;
+
+								obj.Qty = viewModel.Qty;
+								obj.UOM = viewModel.UOM;
+
+								_context.Using<ProjectSiteMaterial>().Update(obj);
+							}
+							else
+							{
+								viewModel.Status = "S";
+								viewModel.StatusDate = DateTime.Now;
+
+								var _obj = _context.Using<ProjectSiteMaterial>().Add(viewModel);
+								viewModel.Id = _obj.Id;
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+		[HttpPost]
+		public ActionResult DeleteConfirmed_MP(long Id)
+		{
+			try
+			{
+				var objProject = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+				if (objProject != null)
+				{
+					_context.Using<ProjectSiteMaterial>().Delete(objProject);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "Data deleted successfully ! ";
+
+					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
+
+
 
 		[HttpPost]
 		public ActionResult GetProjectByCustomerId(long CustomerId = 0)
@@ -451,38 +651,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			return Json(objProject);
 		}
-
-
-		[HttpPost]
-		//[CustomAuthorizeAttribute(AccessType_Enum.Delete)]
-		public ActionResult DeleteConfirmed_Doc(long Id)
-		{
-			try
-			{
-				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
-
-				if (objProject != null)
-				{
-					_context.Using<ProjectSiteDoc>().Delete(objProject);
-
-					CommonViewModel.IsConfirm = true;
-					CommonViewModel.IsSuccess = true;
-					CommonViewModel.StatusCode = ResponseStatusCode.Success;
-					CommonViewModel.Message = "Data deleted successfully ! ";
-
-					return Json(CommonViewModel);
-				}
-
-			}
-			catch (Exception ex) { }
-
-			CommonViewModel.IsSuccess = false;
-			CommonViewModel.StatusCode = ResponseStatusCode.Error;
-			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
-
-			return Json(CommonViewModel);
-		}
-
 
 	}
 

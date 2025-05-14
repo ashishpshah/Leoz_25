@@ -1,0 +1,135 @@
+﻿@model ResponseModel<ProjectSiteMaterial>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+
+	<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+		<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+			<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+			<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+			<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
+
+			<div class="row mb-1">
+				<label for="MaterialFor" class="col-2 col-form-label text-end">Material For</label>
+				<div class="col-6">
+					<input type="text" name="MaterialFor" class="form-control" value="@Model.Obj.MaterialFor">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="MaterialName" class="col-2 col-form-label text-end">Material Name</label>
+				<div class="col-6">
+					<input type="text" name="MaterialName" class="form-control" value="@Model.Obj.MaterialName">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="Qty" class="col-2 col-form-label text-end">Quantity</label>
+				<div class="col-3">
+					<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="UOM" class="col-2 col-form-label text-end">UOM</label>
+				<div class="col-3">
+					<select name="UOM" class="form-control form-control-sm select2">
+							<option value="">-- Select --</option>
+							@if (Model.SelectListItems != null)
+							{
+								var grouped = Model.SelectListItems.GroupBy(i => i.Group).Select(g => new SelectListGroup { Name = g.Key });
+
+								foreach (var group in grouped)
+								{
+									<optgroup label="@group.Name">
+										@foreach (var item in Model.SelectListItems.Where(x=>x.Group == group.Name))
+										{
+											if (Model.Obj.UOM == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+                                    </optgroup>
+								}
+							}
+					</select>
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label class="col-2 col-form-label text-end">&nbsp;</label>
+				<div class="col-9">
+					<button type="button" class="btn btn-success btnSubmit">Save</button>
+					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+				</div>
+			</div>
+		</div>
+
+	</form>
+
+	<div class="d-flex align-items-start justify-content-between">
+		<div class="d-flex justify-content-end"> &nbsp; </div>
+		<div class="d-flex justify-content-end">
+			<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteMP(0)"> Add new record </button>
+		</div>
+	</div>
+
+	<div class="table-responsive-sm mt-3" id="divProjectSiteMPList">
+		<table class="table table-bordered table-centered mb-0">
+			<thead>
+				<tr>
+					<th>Material For</th>
+					<th>Material Name</th>
+					<th width="10%">Qty</th>
+					<th width="10%">Status</th>
+					<th class="text-center" width="5%">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model.ObjList != null)
+				{
+					foreach (var item in Model.ObjList)
+					{
+						<tr>
+							<td>@item.MaterialFor</td>
+							<td>@item.MaterialName</td>
+							<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
+							<td>@item.Status_Text</td>
+							<td>
+								<div class="btn-group">
+									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+									@{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+									@{
+										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
+											<i class="ri-delete-bin-2-line"></i>
+										</button>
+									}
+								</div>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+	</script>
+}

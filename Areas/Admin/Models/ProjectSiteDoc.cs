@@ -6,6 +6,7 @@ public partial class ProjectSiteDoc : EntitiesBase
 {
     public override long Id { get; set; }
     public long ProjectId { get; set; }
+    public long CustomerId { get; set; }
 
     public DateTime UploadDate { get; set; }
 
