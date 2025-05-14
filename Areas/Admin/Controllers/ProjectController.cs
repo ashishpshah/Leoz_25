@@ -284,6 +284,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					#region Validation
 
+					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Upload Date.";
+
+						return Json(CommonViewModel);
+					}
+
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
 
 					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
@@ -601,6 +610,194 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 
+
+		public ActionResult Partial_AddEditForm_WP(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSitePendingWorkId = 0)
+		{
+			var _CommonViewModel = new ResponseModel<ProjectSitePendingWork>() { Obj = new ProjectSitePendingWork() { ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
+
+			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							  where z.IsActive == true
+							  select new Project
+							  {
+								  //VendorId = z.VendorId,
+								  Name = z.Name,
+								  Description = z.Description,
+								  StartDate = z.StartDate,
+								  HandoverDate = z.HandoverDate,
+								  Address = z.Address,
+								  CityId = z.CityId,
+								  StateId = z.StateId,
+								  CountryId = z.CountryId,
+								  LocationLink = z.LocationLink,
+								  CoordinatorId = z.CoordinatorId,
+								  CoordinatorName = z.CoordinatorName,
+								  SiteDetails = z.SiteDetails,
+								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
+								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  IsActive = z.IsActive
+							  }).FirstOrDefault();
+
+			if (objProject == null || (string.IsNullOrEmpty(Type) && ProjectSitePendingWorkId == 0)) return Json(null);
+
+			if (ProjectSitePendingWorkId > 0)
+			{
+				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+
+				obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+
+				return Json(obj);
+			}
+			else
+			{
+				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).Distinct().ToList();
+
+				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+				{
+					foreach (var item in _CommonViewModel.ObjList)
+					{
+						item.Status_Text = item.Status == "P" ? "Pending" : item.Status == "C" ? "Confirm" : "";
+					}
+				}
+
+				_CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("A", "Admin"));
+				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("C", "Customer"));
+
+				return PartialView("_Partial_AddEditForm_WP", _CommonViewModel);
+			}
+		}
+
+		[HttpPost]
+		public ActionResult Save_WP(ProjectSitePendingWork viewModel)
+		{
+			try
+			{
+				if (viewModel != null)
+				{
+					#region Validation
+
+					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Upload Date.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.PendingFrom))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Pending From.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.Remarks))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Remark.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.PendingPoint))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Pending Point.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							if (!string.IsNullOrEmpty(viewModel.UploadDate_Text)) { try { viewModel.UploadDate = DateTime.ParseExact(viewModel.UploadDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+
+							ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null)
+							{
+								obj.UploadDate = viewModel.UploadDate;
+								obj.PendingFrom = viewModel.PendingFrom;
+								obj.Remarks = viewModel.Remarks;
+								obj.PendingPoint = viewModel.PendingPoint;
+
+								_context.Using<ProjectSitePendingWork>().Update(obj);
+							}
+							else
+							{
+								viewModel.Status = "P";
+								viewModel.StatusDate = DateTime.Now;
+
+								var _obj = _context.Using<ProjectSitePendingWork>().Add(viewModel);
+								viewModel.Id = _obj.Id;
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+		[HttpPost]
+		public ActionResult DeleteConfirmed_WP(long Id)
+		{
+			try
+			{
+				var objProject = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+				if (objProject != null)
+				{
+					_context.Using<ProjectSitePendingWork>().Delete(objProject);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "Data deleted successfully ! ";
+
+					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
 
 
 		[HttpPost]

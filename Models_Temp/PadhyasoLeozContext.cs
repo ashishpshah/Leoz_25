@@ -15,7 +15,7 @@ public partial class PadhyasoLeozContext : DbContext
     {
     }
 
-    public virtual DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
+    public virtual DbSet<ProjectSitePendingWork> ProjectSitePendingWorks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -25,9 +25,12 @@ public partial class PadhyasoLeozContext : DbContext
     {
         modelBuilder.HasDefaultSchema("padhyaso_Leoz");
 
-        modelBuilder.Entity<UnitsOfMeasurement>(entity =>
+        modelBuilder.Entity<ProjectSitePendingWork>(entity =>
         {
-            entity.ToTable("UnitsOfMeasurement", "dbo");
+            entity.ToTable("Project_Site_Pending_Work", "dbo");
+
+            entity.Property(e => e.PendingFrom).HasColumnName("Pending_From");
+            entity.Property(e => e.PendingPoint).HasColumnName("Pending_Point");
         });
 
         OnModelCreatingPartial(modelBuilder);

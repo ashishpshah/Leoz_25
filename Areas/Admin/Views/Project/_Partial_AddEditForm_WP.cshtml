@@ -1,0 +1,119 @@
+﻿@model ResponseModel<ProjectSitePendingWork>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12">
+
+	<form id="formSave" action="@Url.Action("Save_WP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+		<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+			<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+			<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+			<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
+
+			<div class="row mb-1">
+				<label for="UploadDate_Text" class="col-2 col-form-label text-end">Upload Date</label>
+				<div class="col-4">
+					<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="PendingFrom" class="col-2 col-form-label text-end">Pending From</label>
+				<div class="col-9">
+					<select name="PendingFrom" class="form-control form-control-sm select2">
+						<option value="">-- Select --</option>
+						@if (Model.SelectListItems != null)
+						{
+							@foreach (var item in Model.SelectListItems)
+							{
+								<option value="@item.Value">@item.Text</option>
+							}
+						}
+					</select>
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="Remarks" class="col-2 col-form-label text-end">Remarks</label>
+				<div class="col-9">
+					<input type="text" class="form-control" name="Remarks">
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label for="PendingPoint" class="col-2 col-form-label text-end">Pending Point</label>
+				<div class="col-10">
+					<textarea rows="3" class="form-control" name="PendingPoint"></textarea>
+				</div>
+			</div>
+			<div class="row mb-1">
+				<label class="col-2 col-form-label text-end">&nbsp;</label>
+				<div class="col-9">
+					<button type="button" class="btn btn-success btnSubmit">Save</button>
+					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+				</div>
+			</div>
+		</div>
+
+	</form>
+
+	<div class="d-flex align-items-start justify-content-between">
+		<div class="d-flex justify-content-end"> &nbsp; </div>
+		<div class="d-flex justify-content-end">
+			<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteWP(0)"> Add new record </button>
+		</div>
+	</div>
+
+	<div class="table-responsive-sm mt-3" id="divProjectSiteWPList">
+		<table class="table table-bordered table-centered mb-0">
+			<thead>
+				<tr>
+					<th>Pending Point</th>
+					<th width="10%">Status</th>
+					<th width="10%">Confimatiion Date</th>
+					<th class="text-center" width="5%">Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model.ObjList != null)
+				{
+					foreach (var item in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks))
+					{
+						<tr>
+							<td>@item.PendingPoint</td>
+							<td>@item.Status_Text</td>
+							<td>@(item.Status == "C" ? item.StatusDate_Text : "")</td>
+							<td>
+								<div class="btn-group">
+									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+									@{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteWP(@item.Id);">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+									@{
+										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WP","Project", new {  area = "Admin" })?Id=@item.Id');">
+											<i class="ri-delete-bin-2-line"></i>
+										</button>
+									}
+								</div>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+	</script>
+}

@@ -31,6 +31,8 @@ namespace Leoz_25.Infra
 
 		public virtual DbSet<ProjectSiteMaterial> ProjectSiteMaterials { get; set; }
 
+		public virtual DbSet<ProjectSitePendingWork> ProjectSitePendingWorks { get; set; }
+
 		public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
 
 		public virtual DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
@@ -75,6 +77,14 @@ namespace Leoz_25.Infra
 				entity.Property(e => e.MaterialFor).HasColumnName("Material_For");
 				entity.Property(e => e.MaterialName).HasColumnName("Material_Name");
 				entity.Property(e => e.Qty).HasColumnType("decimal(18, 2)");
+			});
+
+			modelBuilder.Entity<ProjectSitePendingWork>(entity =>
+			{
+				entity.ToTable("Project_Site_Pending_Work", "dbo");
+
+				entity.Property(e => e.PendingFrom).HasColumnName("Pending_From");
+				entity.Property(e => e.PendingPoint).HasColumnName("Pending_Point");
 			});
 
 			modelBuilder.Entity<Project>(entity =>
