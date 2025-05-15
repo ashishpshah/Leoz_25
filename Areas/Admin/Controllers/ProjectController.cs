@@ -255,7 +255,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-				obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
@@ -267,7 +267,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "U" ? "Upload" : item.Status == "A" ? "Approved" : "";
+						item.Status_Text = item.Status == "U" ? "Upload" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
 					}
 				}
 
@@ -296,15 +296,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
-
-					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
-					{
-						CommonViewModel.IsSuccess = false;
-						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Uploaded Date.";
-
-						return Json(CommonViewModel);
-					}
 
 					if (viewModel.Id == 0 && (files == null || files.Count() <= 0))
 					{
@@ -414,6 +405,65 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 		[HttpPost]
+		public ActionResult Save_Doc_Status(ProjectSiteDoc viewModel)
+		{
+			try
+			{
+				if (viewModel != null && Logged_In_Customer_VendorId > 0 && viewModel.Id > 0)
+				{
+					#region Validation
+
+					if (string.IsNullOrEmpty(viewModel.Status))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Status.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null)
+							{
+								obj.Status = viewModel.Status;
+
+								_context.Using<ProjectSiteDoc>().Update(obj);
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+		[HttpPost]
 		public ActionResult DeleteConfirmed_Doc(long Id)
 		{
 			try
@@ -488,7 +538,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "S" ? "Submitted" : item.Status == "A" ? "Approved" : "";
+						item.Status_Text = item.Status == "S" ? "Submitted" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
 					}
 				}
 
@@ -650,7 +700,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
 
-				obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
@@ -662,7 +712,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "P" ? "Pending" : item.Status == "C" ? "Confirm" : "";
+						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "C" ? "Confirm" : (item.Status == "R" ? "Rejected" : ""));
 					}
 				}
 

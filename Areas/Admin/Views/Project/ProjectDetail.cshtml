@@ -263,11 +263,42 @@
 			$('#largeModal .modal-body .btn-add').css('display', 'block');
 		}
 
+		function fnChangeStatus_ProjectSiteDoc($id, $status) {
+
+			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+
+				var CustomerId = $('#ddlCustomer option:selected').val();
+				var ProjectId = $('#ddlProject option:selected').val();
+				if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
+					|| (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)) {
+					if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
+					else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
+				}
+				else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
+
+				var $url = "@Url.Action("Save_Doc_Status", "Project", new { area = "Admin" })";
+
+				ShowLoader(true);
+				
+				let $data = new FormData();
+
+				$data.append('Id', $id);
+				$data.append('CustomerId', CustomerId);
+				$data.append('ProjectId', ProjectId);
+				$data.append('Status', $status);
+
+				ajaxPost($url, $data);
+			}
+		}
+		
+		
 		function fnAddEdit_ProjectSiteDoc($id) {
 			$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
 			$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
 			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
+
+			$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', false);
 
 			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 
@@ -303,6 +334,8 @@
 
 								$('#formSave input[name="UploadDate_Text"]').val(response['UploadDate_Text']).trigger('change');
 								$('#formSave input[name="Remark"]').val(response['Remark']).trigger('change');
+
+								$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', true);
 							}
 							else {
 								ShowLoader(false); CommonAlert_Error(response.Message, null);
@@ -375,6 +408,8 @@
 			$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
+			$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', false);
+
 			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 
 				var CustomerId = $('#ddlCustomer option:selected').val();
@@ -411,6 +446,8 @@
 								$('#formSave input[name="PendingFrom"]').val(response['PendingFrom']).trigger('change');
 								$('#formSave input[name="Remarks"]').val(response['Remarks']).trigger('change');
 								$('#formSave input[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
+								
+								$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', true);
 							}
 							else {
 								ShowLoader(false); CommonAlert_Error(response.Message, null);

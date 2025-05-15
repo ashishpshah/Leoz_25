@@ -62,24 +62,20 @@
 					<th>Remarks</th>
 					<th width="10%">Status</th>
 					<th width="10%">View File</th>
-
-					@if (((long)Model.Data5) == 0)
-					{
-						<th class="text-center" width="5%">Action</th>
-					}
+					<th class="text-center" width="10%">Action</th>
 				</tr>
 			</thead>
 			<tbody>
 				@if (Model.ObjList != null)
 				{
-					foreach (var item in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks))
+					foreach (var (item, index) in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks).Select((item, index) => (item, index)))
 					{
 						<tr>
 							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy)</td>
 							<td>@item.Remark</td>
 							<td>@item.Status_Text</td>
 							<td>
-								@if (Model.ObjList.Max(x => x.UploadDate.Ticks) == item.UploadDate.Ticks)
+								@if (index == 0)
 								{
 									<a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a>
 								}
@@ -101,6 +97,24 @@
 											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc","Project", new {  area = "Admin" })?Id=@item.Id');">
 												<i class="ri-delete-bin-2-line"></i>
+											</button>
+										}
+									</div>
+								</td>
+							}
+							else
+							{
+								<td>
+									<div class="btn-group">
+										@if (item.Status == "U")
+										{
+											<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Accept"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
+												<i class="ri-checkbox-circle-line"></i> &nbsp; Approve
+											</button>
+											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Reject"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+												<i class="ri-close-circle-line"></i> &nbsp; Reject
 											</button>
 										}
 									</div>
