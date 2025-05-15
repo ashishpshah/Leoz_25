@@ -268,6 +268,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					foreach (var item in _CommonViewModel.ObjList)
 					{
 						item.Status_Text = item.Status == "U" ? "Upload" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
+						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
 
@@ -405,65 +406,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult Save_Doc_Status(ProjectSiteDoc viewModel)
-		{
-			try
-			{
-				if (viewModel != null && Logged_In_Customer_VendorId > 0 && viewModel.Id > 0)
-				{
-					#region Validation
-
-					if (string.IsNullOrEmpty(viewModel.Status))
-					{
-						CommonViewModel.IsSuccess = false;
-						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Status.";
-
-						return Json(CommonViewModel);
-					}
-
-					#endregion
-
-					#region Database-Transaction
-
-					using (var transaction = _context.BeginTransaction())
-					{
-						try
-						{
-							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
-
-							if (obj != null)
-							{
-								obj.Status = viewModel.Status;
-
-								_context.Using<ProjectSiteDoc>().Update(obj);
-							}
-
-							CommonViewModel.IsConfirm = true;
-							CommonViewModel.IsSuccess = true;
-							CommonViewModel.StatusCode = ResponseStatusCode.Success;
-							CommonViewModel.Message = "Record saved successfully ! ";
-
-							transaction.Commit();
-
-							return Json(CommonViewModel);
-						}
-						catch (Exception ex) { transaction.Rollback(); }
-					}
-
-					#endregion
-				}
-			}
-			catch (Exception ex) { }
-
-			CommonViewModel.Message = ResponseStatusMessage.Error;
-			CommonViewModel.IsSuccess = false;
-			CommonViewModel.StatusCode = ResponseStatusCode.Error;
-
-			return Json(CommonViewModel);
-		}
-
-		[HttpPost]
 		public ActionResult DeleteConfirmed_Doc(long Id)
 		{
 			try
@@ -539,6 +481,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					foreach (var item in _CommonViewModel.ObjList)
 					{
 						item.Status_Text = item.Status == "S" ? "Submitted" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
+						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
 
@@ -712,7 +655,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "C" ? "Confirm" : (item.Status == "R" ? "Rejected" : ""));
+						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "C" ? "Completed" : (item.Status == "R" ? "Rejected" : ""));
+						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
 
@@ -851,6 +795,94 @@ namespace Leoz_25.Areas.Admin.Controllers
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
 			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
+
+		[HttpPost]
+		public ActionResult Save_Doc_Status(long Id = 0, string Status = "", string Type = "")
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(Status) && Id > 0 && Logged_In_Customer_VendorId > 0)
+				{
+					#region Validation
+
+					if (string.IsNullOrEmpty(Status))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Status.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							if (Type == "DOC")
+							{
+								ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+								if (obj != null)
+								{
+									obj.Status = Status;
+									obj.StatusDate = DateTime.Now;
+
+									_context.Using<ProjectSiteDoc>().Update(obj);
+								}
+							}
+							else if (Type == "WP")
+							{
+								ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+								if (obj != null)
+								{
+									obj.Status = Status;
+									obj.StatusDate = DateTime.Now;
+
+									_context.Using<ProjectSitePendingWork>().Update(obj);
+								}
+							}
+							else if (Type == "MP")
+							{
+								ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+								if (obj != null)
+								{
+									obj.Status = Status;
+									obj.StatusDate = DateTime.Now;
+
+									_context.Using<ProjectSiteMaterial>().Update(obj);
+								}
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
 
 			return Json(CommonViewModel);
 		}
