@@ -271,6 +271,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 				}
 
+				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
+
 				return PartialView("_Partial_AddEditForm_Doc", _CommonViewModel);
 			}
 		}
@@ -280,7 +282,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null)
+				if (viewModel != null && Logged_In_Customer_VendorId == 0)
 				{
 					#region Validation
 
@@ -418,7 +420,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-				if (objProject != null)
+				if (objProject != null && Logged_In_Customer_VendorId == 0)
 				{
 					_context.Using<ProjectSiteDoc>().Delete(objProject);
 
@@ -496,6 +498,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				if (listUOM != null && listUOM.Count() > 0) _CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.Code, x.Name, x.Category)).ToList());
 
+				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
+
 				return PartialView("_Partial_AddEditForm_MP", _CommonViewModel);
 			}
 		}
@@ -505,7 +509,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null)
+				if (viewModel != null && Logged_In_Customer_VendorId == 0)
 				{
 					#region Validation
 
@@ -587,7 +591,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var objProject = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-				if (objProject != null)
+				if (objProject != null && Logged_In_Customer_VendorId == 0)
 				{
 					_context.Using<ProjectSiteMaterial>().Delete(objProject);
 
@@ -666,6 +670,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("A", "Admin"));
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("C", "Customer"));
+
+				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
 
 				return PartialView("_Partial_AddEditForm_WP", _CommonViewModel);
 			}
