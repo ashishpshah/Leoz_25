@@ -283,7 +283,7 @@
 					else if (boxType == 'WCOMP') boxType = "WC";
 					else boxType = "DOC";
 
-						var $url = "@Url.Action("Save_Doc_Status", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Id=" + $id + "&Type=" + boxType + "&Status=" + $status;
+					var $url = "@Url.Action("Save_Doc_Status", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Id=" + $id + "&Type=" + boxType + "&Status=" + $status;
 
 					ShowLoader(true);
 
