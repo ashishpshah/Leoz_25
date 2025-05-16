@@ -434,18 +434,22 @@
 						processData: false,
 						dataType: "json",
 						success: function (response) {
+						debugger;
 							try {
 								ShowLoader(false);
 								if (typeof response != 'undefined' && response != null && response != '') {
+									debugger;
 
 									$('#formSave input[name="Id"]').val(response['Id']).trigger('change');
 									$('#formSave input[name="ProjectId"]').val(response['ProjectId']).trigger('change');
 									$('#formSave input[name="CustomerId"]').val(response['CustomerId']).trigger('change');
 
 									$('#formSave input[name="UploadDate_Text"]').val(response['UploadDate_Text']).trigger('change');
-									$('#formSave input[name="PendingFrom"]').val(response['PendingFrom']).trigger('change');
+									// $('#formSave input[name="PendingFrom"]').val(response['PendingFrom']).trigger('change');
+									$('#formSave select[name="PendingFrom"]').val(response['PendingFrom']).trigger('change');
 									$('#formSave input[name="Remarks"]').val(response['Remarks']).trigger('change');
-									$('#formSave input[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
+									// $('#formSave input[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
+								    $('#formSave textarea[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
 
 									$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', true);
 								}
