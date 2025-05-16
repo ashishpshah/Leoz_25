@@ -17,68 +17,7 @@
 	  <Compile Remove="Areas\Admin\Controllers\WarehousesController.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Content Include="wwwroot\assets\vendor\datatables.net-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\css\dataTables.bootstrap5.min.css" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\favicon.ico" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\sort_asc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\sort_asc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\sort_both.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\sort_desc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\images\sort_desc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-bs5\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net-buttons\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-buttons\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\css\dataTables.bootstrap5.min.css" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\favicon.ico" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\sort_asc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\sort_asc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\sort_both.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\sort_desc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\images\sort_desc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net-bs5\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedcolumns\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\css\dataTables.bootstrap5.min.css" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\favicon.ico" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\sort_asc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\sort_asc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\sort_both.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\sort_desc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\images\sort_desc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net-bs5\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-fixedheader\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\css\dataTables.bootstrap5.min.css" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\favicon.ico" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\sort_asc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\sort_asc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\sort_both.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\sort_desc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\images\sort_desc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-bs5\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net-keytable\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-keytable\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-responsive-bs4\node_modules\datatables.net-responsive\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-responsive-bs4\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-responsive\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\css\dataTables.bootstrap5.min.css" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\favicon.ico" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\sort_asc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\sort_asc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\sort_both.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\sort_desc.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\images\sort_desc_disabled.png" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-bs5\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net-select\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select-bs5\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\datatables.net-select\node_modules\datatables.net\License.txt" />
-	  <Content Include="wwwroot\assets\vendor\jquery-datatables-checkboxes\node_modules\datatables.net\License.txt" />
-	</ItemGroup>
-
-
+	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />

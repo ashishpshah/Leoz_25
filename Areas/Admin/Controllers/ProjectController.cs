@@ -253,9 +253,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSiteDocId > 0)
 			{
-				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
+                //var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+                var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+                if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
