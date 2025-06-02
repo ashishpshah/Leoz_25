@@ -86,6 +86,7 @@ namespace Leoz_25.Infra
 				entity.Property(e => e.MaterialBrand).HasColumnName("Material_Brand");
 				entity.Property(e => e.Qty).HasColumnType("decimal(18, 2)");
 				entity.Property(e => e.Qty_Order).HasColumnType("decimal(18, 2)");
+				entity.Property(e => e.Qty_Receive).HasColumnType("decimal(18, 2)");
 			});
 
 			modelBuilder.Entity<ProjectSitePendingWork>(entity =>

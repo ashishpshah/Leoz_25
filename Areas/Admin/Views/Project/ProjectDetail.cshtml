@@ -266,7 +266,7 @@
 
 					$('#largeModal .modal-dialog').addClass('modal-fullscreen');
 					$('#largeModal').css('display', 'block');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'none');
 					$('#largeModal .modal-footer').css('display', 'none');
 					$('#largeModal .modal-body .btn-add').css('display', 'block');
 				}
@@ -305,7 +305,7 @@
 				function fnAddEdit_ProjectSiteDoc($id) {
 					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
 
 					$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
@@ -364,8 +364,10 @@
 					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
+					
+					$('#largeModal .modal-body form #divProjectSiteDoc div#divQty_Receive').css('display', 'none');
 
 					if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 
@@ -409,9 +411,18 @@
 										$('#formSave select[name="UOM"]').val(response['UOM']).trigger('change');
 
 										try {
+											$('#formSave input[name="Qty_Receive"]').val(response['Qty_Receive']).trigger('change');
+											if (typeof response['Status'] != 'undefined' && response['Status'] != null && response['Status'] != ''
+												&& (response['Status'] == 'S' || response['Status'] == 'O'))
+												$('#formSave div#divQty_Receive').css('display', 'block');
+										}
+										catch { }
+										
+										try {
 											$('#formSave input[name="Qty_Order"]').val(response['Qty_Order']).trigger('change');
 										}
 										catch { }
+
 										try {
 											if (typeof response['Status'] != 'undefined' && response['Status'] != null && response['Status'] != ''
 												&& (response['Status'] == 'S' || response['Status'] == 'O'))
@@ -436,7 +447,7 @@
 				function fnAddEdit_ProjectSiteWP($id) {
 					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
 
 					$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
@@ -502,8 +513,8 @@
 					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 					$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
-					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'none');
 					$('#largeModal .modal-body .btn-add').css('display', 'block');
 				}
 

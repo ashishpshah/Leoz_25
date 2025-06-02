@@ -20,6 +20,7 @@ public partial class ProjectSiteMaterial : EntitiesBase
 
 	public decimal Qty { get; set; }
 	public decimal? Qty_Order { get; set; }
+	public decimal? Qty_Receive { get; set; }
 
 	public string UOM { get; set; } = null!;
 
