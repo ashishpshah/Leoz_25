@@ -18,10 +18,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/Customer
 		public ActionResult Index()
 		{
-			CommonViewModel.ObjList = _context.Using<Customer>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
+			CommonViewModel.ObjList = _context.Using<Customer>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList();
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList()
-							   join z in _context.Using<Project>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
+							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   select new { CustomerId = x.CustomerId, ProjectName = z.Name }).ToList();
 
 			if (listProject != null && listProject.Count > 0 && CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
@@ -36,7 +36,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.Obj = new Customer() { };
 
-			if (Id > 0) CommonViewModel.Obj = _context.Using<Customer>().GetByCondition(x => x.Id == Id && Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).FirstOrDefault();
+			if (Id > 0) CommonViewModel.Obj = _context.Using<Customer>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
 
 			var listProjectId = new List<long>();
 
@@ -47,8 +47,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 				if (obj != null && obj.IsActive == true && obj.IsDeleted == false)
 					CommonViewModel.Obj.UserName = obj.UserName;
 
-				listProjectId = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CommonViewModel.Obj.Id && Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList()
-								 join z in _context.Using<Project>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+				listProjectId = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CommonViewModel.Obj.Id && x.VendorId == Logged_In_VendorId).Distinct().ToList()
+								 join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 								 select z.Id).ToList();
 
 				if (listProjectId != null && listProjectId.Count > 0)
@@ -61,7 +61,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
 				var listProject = _context.Using<Project>().GetByCondition(x => (x.IsActive == true || listProjectId.Contains(x.Id))
-										&& Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+										&& x.VendorId == Logged_In_VendorId).Distinct().ToList();
 
 				if (listProject != null && listProject.Count > 0)
 					CommonViewModel.SelectListItems.AddRange(listProject.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name)).ToList());
@@ -125,7 +125,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				//	return Json(CommonViewModel);
 				//}
 
-				//var listCustomer = _context.Using<Customer>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false && x.IsActive == true).ToList();
+				//var listCustomer = _context.Using<Customer>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.IsActive == true).ToList();
 
 				//if (selected_Package != null && selected_Package.IsProjectBased == true
 				//	&& ((selected_Package.ProjectLimit > 0 && !(selected_Package.ProjectLimit > (listCustomer != null ? listCustomer.Count() : 0))) || selected_Package.ProjectLimit <= 0))

@@ -15,7 +15,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/Employee
 		public ActionResult Index()
 		{
+			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+			var listUOM = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE").ToList();
+
 			CommonViewModel.ObjList = DataContext_Command.Employee_Get(0, Logged_In_VendorId).ToList();
+
+			for (int i = 0; i < CommonViewModel.ObjList?.Count(); i++)
+				CommonViewModel.ObjList[i].UserType = listUOM.FirstOrDefault(x => x.LOV_Code == CommonViewModel.ObjList[i].UserType)?.LOV_Desc;
 
 			return View(CommonViewModel);
 		}
@@ -39,21 +46,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("M", "Manager", "USER_TYPE"));
-			CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("GU", "Guest User", "USER_TYPE"));
+			var listUOM = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE").ToList();
 
-			//var listRole = (from x in _context.Using<Role>().GetAll().ToList()
-			//				where x.IsActive == true && x.Id > 1 && x.IsAdmin == false
-			//				orderby x.Name
-			//				select x).Distinct().ToList();
-
-			//if (CommonViewModel.SelectListItems == null) CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
-
-			//if (listRole != null && listRole.Count > 0)
-			//{
-			//	listRole = listRole.GroupBy(x => new { Id = x.Id, Name = x.Name }).Select(x => new Role() { Id = x.Key.Id, Name = x.Key.Name }).ToList();
-			//	CommonViewModel.SelectListItems.AddRange(listRole.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).ToList());
-			//}
+			if (listUOM != null && listUOM.Count() > 0)
+				CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.LOV_Column, x.DisplayOrder)).ToList());
 
 			return PartialView("_Partial_AddEditForm", CommonViewModel);
 		}
@@ -64,21 +60,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("M", "Manager", "USER_TYPE"));
-			CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("GU", "Guest User", "USER_TYPE"));
+			var listUOM = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE").ToList();
 
-			//var listRole = (from x in _context.Using<Role>().GetAll().ToList()
-			//				where x.IsActive == true && x.Id > 1 && x.IsAdmin == false
-			//				orderby x.Name
-			//				select x).Distinct().ToList();
-
-			//if (CommonViewModel.SelectListItems == null) CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
-
-			//if (listRole != null && listRole.Count > 0)
-			//{
-			//	listRole = listRole.GroupBy(x => new { Id = x.Id, Name = x.Name }).Select(x => new Role() { Id = x.Key.Id, Name = x.Key.Name }).ToList();
-			//	CommonViewModel.SelectListItems.AddRange(listRole.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).ToList());
-			//}
+			if (listUOM != null && listUOM.Count() > 0)
+				CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.LOV_Column, x.DisplayOrder)).ToList());
 
 			return Json(CommonViewModel.SelectListItems);
 		}
@@ -142,7 +127,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please select User type.";
+						CommonViewModel.Message = "Please select Designation.";
 
 						return Json(CommonViewModel);
 					}

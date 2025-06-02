@@ -6,8 +6,11 @@
 		public static string KEY_IS_SUPER_USER => "AuthenticatedSuperUser";
 		public static string KEY_IS_ADMIN => "AuthenticatedAdminUser";
 		public static string KEY_IS_VENDOR => "AuthenticatedVendorUser";
+		public static string KEY_VENDOR_ID => "AuthenticatedVendorId";
 		public static string KEY_IS_CUSTOMER => "AuthenticatedCustomerUser";
-		public static string KEY_IS_CUSTOMER_VENDOR_ID => "AuthenticatedCustomerVendorUserId";
+		public static string KEY_CUSTOMER_ID => "AuthenticatedCustomerId";
+		public static string KEY_EMPLOYEE_ID => "AuthenticatedEmployeeId";
+		public static string KEY_IS_EMPLOYEE => "AuthenticatedEmployeeUser";
 		public static string KEY_USER_COMPANY_ID => "AuthenticatedUser_Company";
 		public static string KEY_USER_BRANCH_ID => "AuthenticatedUser_Branch";
 		public static string KEY_USER_NAME => "AuthenticatedUser_Name";

@@ -58,7 +58,7 @@
 
 					<div class="col-6">
 
-						<div class="form-group row">
+						@* <div class="form-group row">
 							<label for="ddlUserType" class="col-sm-2 col-form-label text-end">Type</label>
 							<div class="col-sm-6">
 								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
@@ -80,7 +80,7 @@
 								</select>
 							</div>
 						</div>
-
+ *@
 						<div class="form-group row">
 							<label for="IsActive" class="col-sm-2 col-form-label text-end">Status</label>
 							<div class="col-sm-6">
@@ -96,10 +96,10 @@
 						</div>
 
 						@* <div class="form-group row">
-							<label class="col-sm-2 col-form-label text-end">Datepicker</label>
-							<div class="col-sm-6">
-								<input type="date" name="Date_Text" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")">
-							</div>
+						<label class="col-sm-2 col-form-label text-end">Datepicker</label>
+						<div class="col-sm-6">
+						<input type="date" name="Date_Text" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+						</div>
 						</div> *@
 
 					</div>
@@ -137,9 +137,20 @@
 							<label for="ddlUserType" class="col-sm-3 col-form-label text-end">Designation </label>
 							<div class="col-sm-9">
 								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
-									<option value="">-- Select --</option>
-									<option value="D">Doctor</option>
-									<option value="O">Other</option>
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems)
+										{
+											if (Convert.ToString(Model.Obj.UserType) == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+									}
 								</select>
 							</div>
 						</div>
@@ -171,7 +182,7 @@
 
 @section Scripts {
 	<script type="text/javascript">
-				$(document).ready(function () {
+		$(document).ready(function () {
 
 		});
 	</script>

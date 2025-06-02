@@ -14,12 +14,17 @@ public partial class ProjectSiteMaterial : EntitiesBase
 
 	public string MaterialName { get; set; } = null!;
 
+	public string? MaterialCode { get; set; }
+
+	public string? MaterialBrand { get; set; }
+
 	public decimal Qty { get; set; }
+	public decimal? Qty_Order { get; set; }
 
 	public string UOM { get; set; } = null!;
 
 	[NotMapped] public string UOM_Text { get; set; }
-	
+
 	public string Action { get; set; } = null!;
 
 	[NotMapped] public string Action_Text { get; set; }

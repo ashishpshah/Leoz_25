@@ -2,6 +2,11 @@
 
 @{
 	Layout = null;
+
+	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
+	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
+	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
 }
 
 <div class="col-md-12">
@@ -28,11 +33,41 @@
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="Qty" class="col-2 col-form-label text-end">Quantity</label>
+					<label for="MaterialCode" class="col-2 col-form-label text-end">Material Code</label>
 					<div class="col-3">
-						<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
+						<input type="text" name="MaterialCode" class="form-control" value="@Model.Obj.MaterialCode">
+					</div>
+					<label for="MaterialBrand" class="col-2 col-form-label text-end">Material Brand</label>
+					<div class="col-5">
+						<input type="text" name="MaterialBrand" class="form-control" value="@Model.Obj.MaterialBrand">
 					</div>
 				</div>
+
+				@if (IsEmployee)
+				{
+					<div class="row mb-1">
+						<label class="col-2 col-form-label text-end">Required Quantity</label>
+						<div class="col-3">
+							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()" readonly>
+						</div>
+					</div>
+					<div class="row mb-1">
+						<label for="Qty_Order" class="col-2 col-form-label text-end">Order Quantity</label>
+						<div class="col-3">
+							<input type="text" name="Qty_Order" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Order.ToString()">
+						</div>
+					</div>
+				}
+				else
+				{
+					<div class="row mb-1">
+						<label for="Qty" class="col-2 col-form-label text-end">Quantity</label>
+						<div class="col-3">
+							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
+						</div>
+					</div>
+				}
+
 				<div class="row mb-1">
 					<label for="UOM" class="col-2 col-form-label text-end">UOM</label>
 					<div class="col-3">
@@ -62,6 +97,29 @@
 						</select>
 					</div>
 				</div>
+
+				@if (IsEmployee)
+				{
+					<div class="row mb-1">
+						<label class="col-2 col-form-label text-end">Status</label>
+						<div class="col-3 col-form-label">
+
+							<div class="form-check form-check-inline">
+								<input type="radio" id="Ordered" name="Status" class="form-check-input" value="O" @(Model.Obj != null && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "checked" : "")>
+								<label class="form-check-label" for="Ordered">
+									Ordered
+								</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input type="radio" id="Rejected" name="Status" class="form-check-input" value="R" @(Model.Obj != null && Model.Obj.Status == "R" ? "checked" : "")>
+								<label class="form-check-label" for="Rejected">
+									Rejected
+								</label>
+							</div>
+						</div>
+					</div>
+				}
+
 				<div class="row mb-1">
 					<label class="col-2 col-form-label text-end">&nbsp;</label>
 					<div class="col-9">
@@ -86,8 +144,11 @@
 			<thead>
 				<tr>
 					<th>Material For</th>
+					<th>Material Code</th>
 					<th>Material Name</th>
+					<th>Material Brand</th>
 					<th width="10%">Qty</th>
+					<th width="10%">Actual Order <br /> Qty / Date</th>
 					<th width="10%">Status</th>
 
 					@if (((long)Model.Data5) == 0)
@@ -103,29 +164,43 @@
 					{
 						<tr>
 							<td>@item.MaterialFor</td>
+							<td>@item.MaterialCode</td>
 							<td>@item.MaterialName</td>
+							<td>@item.MaterialBrand</td>
 							<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
+							<td>
+								@if (item.Status == "O" || item.Status == "RC")
+								{
+									<span>@item.Qty_Order.ToString() &nbsp; @item.UOM_Text &nbsp;&nbsp; / <br /> @item.StatusDate_Text</span>
+								}
+							</td>
 							<td>@item.Status_Text</td>
 
 							@if (((long)Model.Data5) == 0)
 							{
-								<td>
-									<div class="btn-group">
-										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-										@{
-											<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
-													onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
-												<i class="ri-pencil-fill"></i>
-											</button>
-										}
-										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-										@{
-											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
-												<i class="ri-delete-bin-2-line"></i>
-											</button>
-										}
-									</div>
+								<td class="text-center">
+									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+									@{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+									@{
+										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
+											<i class="ri-delete-bin-2-line"></i>
+										</button>
+									}
+
+									@if (IsEmployee && item.Status == "S")
+									{
+										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
+												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
+											Order
+										</button>
+									}
 								</td>
 							}
 						</tr>

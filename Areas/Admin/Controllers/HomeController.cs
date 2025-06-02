@@ -101,18 +101,34 @@ namespace Leoz_25.Areas.Admin.Controllers
 						Common.Set_Session_Int(SessionKey.KEY_IS_ADMIN, (role.IsAdmin || obj.RoleId == 1 ? 1 : 0));
 						Common.Set_Session_Int(SessionKey.KEY_IS_VENDOR, (role.Name.ToUpper() == "VENDOR" ? 1 : 0));
 						Common.Set_Session_Int(SessionKey.KEY_IS_CUSTOMER, (role.Name.ToUpper() == "CUSTOMER" ? 1 : 0));
+						Common.Set_Session_Int(SessionKey.KEY_IS_EMPLOYEE, (role.Name.ToUpper() == "EMPLOYEE" ? 1 : 0));
 						Common.Set_Session_Int(SessionKey.KEY_IS_SUPER_USER, (obj.RoleId == 1 ? 1 : 0));
 
 						long VendorId = 0;
 
-						if (role.Name.ToUpper() == "CUSTOMER")
+						if (role.Name.ToUpper() == "VENDOR")
 						{
-							VendorId = _context.Using<Customer>().GetByCondition(x => x.UserId == obj.Id).Select(x => x.VendorId).FirstOrDefault();
-							Common.Set_Session_Int(SessionKey.KEY_IS_CUSTOMER_VENDOR_ID, VendorId);
+							var vendor = _context.Using<Vendor>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
+							VendorId = vendor != null ? vendor.Id : 0;
+						}
+						else if (role.Name.ToUpper() == "CUSTOMER")
+						{
+							VendorId = 0;
+
+							var customer = _context.Using<Customer>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
+							VendorId = customer != null ? customer.VendorId : 0;
+							Common.Set_Session_Int(SessionKey.KEY_CUSTOMER_ID, customer != null ? customer.Id : 0);
+						}
+						else if (role.Name.ToUpper() == "EMPLOYEE")
+						{
+							VendorId = 0;
+
+							var employee = _context.Using<Employee>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
+							VendorId = employee != null ? employee.VendorId : 0;
+							Common.Set_Session_Int(SessionKey.KEY_EMPLOYEE_ID, employee != null ? employee.Id : 0);
 						}
 
-						Common.Set_Session_Int(SessionKey.KEY_IS_CUSTOMER_VENDOR_ID, VendorId);
-
+						Common.Set_Session_Int(SessionKey.KEY_VENDOR_ID, VendorId);
 
 						CommonViewModel.IsSuccess = true;
 						CommonViewModel.StatusCode = ResponseStatusCode.Success;

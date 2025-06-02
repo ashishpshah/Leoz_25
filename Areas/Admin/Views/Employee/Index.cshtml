@@ -64,7 +64,7 @@
 														@*<td></td>*@
 														<td></td>
 														<td>@item.Fullname</td>
-														<td>@(item.UserType == "D" ? "Doctor" : "Other")</td>
+														<td>@item.UserType</td>
 														<td>@item.BirthDate_Text</td>
 														<td class="text-center"><span class="badge bg-@(item.IsActive == true ? "success" : "danger")">@(item.IsActive == true ? "Active" : "Inactive")</span></td>
 														<td>

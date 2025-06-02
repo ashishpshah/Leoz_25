@@ -430,9 +430,7 @@ $(document).ready(function () {
     });
 
     $('.modal').on('shown.bs.modal', function (e) {
-
-        //$('body').append('<div class="modal-backdrop fade show" id="div-modal-backdrop"></div>')
-
+        $('.modal select.select2').select2({ dropdownParent: $('.modal') });
     });
 
     $('.modal').on('hide.bs.modal', function (e) {

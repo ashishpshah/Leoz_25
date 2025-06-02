@@ -23,24 +23,37 @@ namespace Leoz_25.Controllers
 		public string ActionName = "";
 		public string AreaName = "";
 
+		public bool IsVendor { get; set; }
+		public bool IsCustomer { get; set; }
+		public bool IsEmployee { get; set; }
+
 		public long Logged_In_VendorId { get; set; }
 		public long Logged_In_CustomerId { get; set; }
-		public long Logged_In_Customer_VendorId { get; set; }
+		public long Logged_In_EmployeeId { get; set; }
 
 		public IRepositoryWrapper _context;
 
 		public BaseController()
 		{
-			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1 ? Common.Get_Session_Int(SessionKey.KEY_USER_ID) : 0; } catch { }
-			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1 ? Common.Get_Session_Int(SessionKey.KEY_USER_ID) : 0; } catch { }
-			try { Logged_In_Customer_VendorId = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER_VENDOR_ID); } catch { }
+			try { IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1; } catch { }
+			try { IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1; } catch { }
+			try { IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1; } catch { }
+
+			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_VENDOR_ID); } catch { }
+			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID); } catch { }
+			try { Logged_In_EmployeeId = Common.Get_Session_Int(SessionKey.KEY_EMPLOYEE_ID); } catch { }
+
 		}
 
 		public BaseController(IRepositoryWrapper repository)
 		{
-			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1 ? Common.Get_Session_Int(SessionKey.KEY_USER_ID) : 0; } catch { }
-			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1 ? Common.Get_Session_Int(SessionKey.KEY_USER_ID) : 0; } catch { }
-			try { Logged_In_Customer_VendorId = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER_VENDOR_ID); } catch { }
+			try { IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1; } catch { }
+			try { IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1; } catch { }
+			try { IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1; } catch { }
+
+			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_VENDOR_ID); } catch { }
+			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID); } catch { }
+			try { Logged_In_EmployeeId = Common.Get_Session_Int(SessionKey.KEY_EMPLOYEE_ID); } catch { }
 
 			_context = repository;
 			CommonViewModel = (dynamic)Activator.CreateInstance(typeof(T));

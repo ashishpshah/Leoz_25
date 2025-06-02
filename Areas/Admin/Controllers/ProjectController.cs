@@ -17,9 +17,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/Project
 		public ActionResult Index()
 		{
-			CommonViewModel.ObjList = _context.Using<Project>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
+			CommonViewModel.ObjList = _context.Using<Project>().GetByCondition(x => IsVendor == true ? x.VendorId == Logged_In_VendorId : false).ToList();
 
-			var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+			var listEmployee = _context.Using<Employee>().GetByCondition(x => IsVendor == true ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
 
 			if (listEmployee != null && listEmployee.Count > 0 && CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
 				foreach (var item in CommonViewModel.ObjList)
@@ -33,12 +33,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.Obj = new Project() { StartDate = DateTime.Now };
 
-			if (Id > 0) CommonViewModel.Obj = _context.Using<Project>().GetByCondition(x => x.Id == Id && Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).FirstOrDefault();
+			if (Id > 0) CommonViewModel.Obj = _context.Using<Project>().GetByCondition(x => x.Id == Id && IsVendor == true ? x.VendorId == Logged_In_VendorId : false).FirstOrDefault();
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
 			var listEmployee = _context.Using<Employee>().GetByCondition(x => (x.IsActive == true || x.Id == (CommonViewModel.Obj != null ? CommonViewModel.Obj.CoordinatorId : -1))
-									&& Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+									&& (IsVendor == true ? x.VendorId == Logged_In_VendorId : false)
+									&& x.UserType == "COORD").Distinct().ToList();
 
 			if (listEmployee != null && listEmployee.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listEmployee.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname)).ToList());
@@ -125,11 +126,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 									obj.SiteDetails = viewModel.SiteDetails;
 									obj.IsActive = viewModel.IsActive;
 
+									obj.VendorId = Logged_In_VendorId;
+
 									_context.Using<Project>().Update(obj);
 								}
 								else
 								{
 									viewModel.VendorId = Logged_In_VendorId;
+
 									var _obj = _context.Using<Project>().Add(viewModel);
 									viewModel.Id = _obj.Id;
 								}
@@ -197,23 +201,21 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult ProjectDetail()
 		{
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
-
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => ((Logged_In_CustomerId <= 0 ? true : x.UserId == Logged_In_CustomerId)) && x.IsActive == true && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).ToList();
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
-			if (listCustomer != null && listCustomer.Count > 0)
+			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
 				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
 							   join y in listCustomer on x.CustomerId equals y.Id
-							   join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
 							   select new { ProjectId = z.Id, ProjectName = z.Name }).ToList();
 
 			if (listProject != null && listProject.Count > 0)
-				CommonViewModel.SelectListItems.AddRange(listProject.Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
+				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
 
 			return View(CommonViewModel);
 		}
@@ -222,12 +224,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Partial_AddEditForm_Doc(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteDocId = 0)
 		{
+			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
+
 			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
-
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
-							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
 							  {
@@ -253,10 +255,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSiteDocId > 0)
 			{
-                //var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
+				//var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-                var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
-                if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
@@ -273,7 +275,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 				}
 
-				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
+				_CommonViewModel.Data5 = Logged_In_VendorId;
 
 				return PartialView("_Partial_AddEditForm_Doc", _CommonViewModel);
 			}
@@ -284,7 +286,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && Logged_In_Customer_VendorId == 0)
+				if (viewModel != null)
 				{
 					#region Validation
 
@@ -413,7 +415,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-				if (objProject != null && Logged_In_Customer_VendorId == 0)
+				if (objProject != null)
 				{
 					_context.Using<ProjectSiteDoc>().Delete(objProject);
 
@@ -436,14 +438,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 
-		public ActionResult Partial_AddEditForm_MP(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
+		public ActionResult Partial_AddEditForm_MP(long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
 		{
-			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, CustomerId = CustomerId } };
+			if (IsCustomer) return Json(null);
 
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, UOM = "No" } };
 
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
-							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var objProject = (from z in _context.Using<Project>().GetByCondition(x => x.Id == ProjectId && x.VendorId == Logged_In_VendorId).ToList()
 							  where z.IsActive == true
 							  select new Project
 							  {
@@ -469,30 +470,31 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSiteMatId > 0)
 			{
-				var obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == ProjectSiteMatId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == ProjectSiteMatId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
 
 				return Json(obj);
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).Distinct().ToList();
-
-				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
-				{
-					foreach (var item in _CommonViewModel.ObjList)
-					{
-						item.Status_Text = item.Status == "S" ? "Submitted" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
-						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
-					}
-				}
-
 				_CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
 				var listUOM = _context.Using<UnitsOfMeasurement>().GetAll().ToList();
 
 				if (listUOM != null && listUOM.Count() > 0) _CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.Code, x.Name, x.Category)).ToList());
 
-				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true).Distinct().ToList();
+
+				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+				{
+					foreach (var item in _CommonViewModel.ObjList)
+					{
+						item.Status_Text = item.Status == "S" ? "Submitted" : (item.Status == "O" ? "Ordered" : (item.Status == "RC" ? "Received" : (item.Status == "R" ? "Rejected" : "")));
+						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
+						if (!string.IsNullOrEmpty(item.UOM)) item.UOM_Text = listUOM != null ? listUOM.Where(x => x.Code == item.UOM).Select(x => x.Name).FirstOrDefault() : "";
+					}
+				}
+
+				_CommonViewModel.Data5 = Logged_In_VendorId;
 
 				return PartialView("_Partial_AddEditForm_MP", _CommonViewModel);
 			}
@@ -503,7 +505,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && Logged_In_Customer_VendorId == 0)
+				if (viewModel != null && !IsCustomer)
 				{
 					#region Validation
 
@@ -533,6 +535,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						try
 						{
+							if (IsCustomer) return Json(null);
+
 							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
 							if (obj != null)
@@ -540,7 +544,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.MaterialFor = viewModel.MaterialFor;
 								obj.MaterialName = viewModel.MaterialName;
 
+								obj.MaterialCode = viewModel.MaterialCode;
+								obj.MaterialBrand = viewModel.MaterialBrand;
+
 								obj.Qty = viewModel.Qty;
+
+								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
+								{ obj.Qty_Order = viewModel.Qty_Order; obj.Status = viewModel.Status; }
+
 								obj.UOM = viewModel.UOM;
 
 								_context.Using<ProjectSiteMaterial>().Update(obj);
@@ -583,18 +594,21 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var objProject = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
-
-				if (objProject != null && Logged_In_Customer_VendorId == 0)
+				if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && (x.UserType == "MNGR" || x.UserType == "COORD") && x.IsActive == true && x.VendorId == Logged_In_VendorId))
 				{
-					_context.Using<ProjectSiteMaterial>().Delete(objProject);
+					var objProject = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-					CommonViewModel.IsConfirm = true;
-					CommonViewModel.IsSuccess = true;
-					CommonViewModel.StatusCode = ResponseStatusCode.Success;
-					CommonViewModel.Message = "Data deleted successfully ! ";
+					if (objProject != null)
+					{
+						_context.Using<ProjectSiteMaterial>().Delete(objProject);
 
-					return Json(CommonViewModel);
+						CommonViewModel.IsConfirm = true;
+						CommonViewModel.IsSuccess = true;
+						CommonViewModel.StatusCode = ResponseStatusCode.Success;
+						CommonViewModel.Message = "Data deleted successfully ! ";
+
+						return Json(CommonViewModel);
+					}
 				}
 
 			}
@@ -611,12 +625,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Partial_AddEditForm_WP(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSitePendingWorkId = 0)
 		{
+			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
+
 			var _CommonViewModel = new ResponseModel<ProjectSitePendingWork>() { Obj = new ProjectSitePendingWork() { ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
-
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
-							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
 							  {
@@ -666,7 +680,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("A", "Admin"));
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("C", "Customer"));
 
-				_CommonViewModel.Data5 = Logged_In_Customer_VendorId;
+				_CommonViewModel.Data5 = Logged_In_VendorId;
 
 				return PartialView("_Partial_AddEditForm_WP", _CommonViewModel);
 			}
@@ -806,7 +820,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(Status) && Id > 0 && Logged_In_Customer_VendorId > 0)
+				if (!string.IsNullOrEmpty(Status) && Id > 0 && Logged_In_VendorId > 0)
 				{
 					#region Validation
 
@@ -892,10 +906,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 		[HttpPost]
 		public ActionResult GetProjectByCustomerId(long CustomerId = 0)
 		{
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
-							   join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
 							   select new { Value = z.Id, Text = z.Name }).ToList();
 
@@ -905,10 +919,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 		[HttpPost]
 		public ActionResult GetProjectDetail(long CustomerId = 0, long ProjectId = 0)
 		{
-			var _Logged_In_VendorId = (Logged_In_CustomerId <= 0) ? Logged_In_VendorId : Logged_In_Customer_VendorId;
+			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (_Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false)).Distinct().ToList()
-							  join z in _context.Using<Project>().GetByCondition(x => _Logged_In_VendorId > 0 ? x.VendorId == _Logged_In_VendorId : false).ToList() on x.ProjectId equals z.Id
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (CustomerId > 0 ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
 							  {
@@ -930,7 +944,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 								  IsActive = z.IsActive
 							  }).FirstOrDefault();
 
-			var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
+			var listEmployee = _context.Using<Employee>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList();
 
 			if (listEmployee != null && listEmployee.Count > 0 && objProject != null)
 				objProject.CoordinatorName = listEmployee.Where(x => x.Id == objProject.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();

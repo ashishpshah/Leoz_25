@@ -36,6 +36,7 @@ namespace Leoz_25.Infra
 		public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
 
 		public virtual DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
+		public virtual DbSet<LOV> LOVs { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,6 +46,11 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<UnitsOfMeasurement>(entity =>
 			{
 				entity.ToTable("UnitsOfMeasurement", "dbo");
+			});
+
+			modelBuilder.Entity<LOV>(entity =>
+			{
+				entity.ToTable("LOV", "dbo");
 			});
 
 			modelBuilder.Entity<CustomerProjectMapping>(entity =>
@@ -76,7 +82,10 @@ namespace Leoz_25.Infra
 
 				entity.Property(e => e.MaterialFor).HasColumnName("Material_For");
 				entity.Property(e => e.MaterialName).HasColumnName("Material_Name");
+				entity.Property(e => e.MaterialCode).HasColumnName("Material_Code");
+				entity.Property(e => e.MaterialBrand).HasColumnName("Material_Brand");
 				entity.Property(e => e.Qty).HasColumnType("decimal(18, 2)");
+				entity.Property(e => e.Qty_Order).HasColumnType("decimal(18, 2)");
 			});
 
 			modelBuilder.Entity<ProjectSitePendingWork>(entity =>
@@ -100,7 +109,7 @@ namespace Leoz_25.Infra
 
 				entity.Property(e => e.Id).ValueGeneratedOnAdd();
 			});
-			
+
 			modelBuilder.Entity<Employee>(entity =>
 			{
 				entity.HasKey(e => new { e.Id });
@@ -137,6 +146,7 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<VendorSubscription>().HasKey(e => new { e.Id });
 			modelBuilder.Entity<Project>().HasKey(e => new { e.Id });
 			modelBuilder.Entity<ProjectSiteDoc>().HasKey(e => new { e.Id });
+			modelBuilder.Entity<LOV>().HasNoKey();
 
 			base.OnModelCreating(modelBuilder);
 		}

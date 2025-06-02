@@ -169,14 +169,14 @@ namespace Leoz_25.Infra
 			Group = group;
 		}
 
-		public SelectListItem_Custom(string value, string text, int orderBy, string group)
+		public SelectListItem_Custom(string value, string text, string group, int orderBy)
 		{
 			Value = value;
 			Text = text;
 			OrderBy = orderBy;
 			Group = group;
 		}
-		
+
 		public SelectListItem_Custom(string value, string text, int orderBy, string otherData, string group)
 		{
 			Value = value;
