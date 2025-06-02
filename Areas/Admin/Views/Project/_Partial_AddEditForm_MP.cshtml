@@ -11,7 +11,7 @@
 
 <div class="col-md-12">
 
-	@if (((long)Model.Data5) == 0)
+	@if (IsEmployee)
 	{
 		<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -43,7 +43,7 @@
 					</div>
 				</div>
 
-				@if (IsEmployee)
+				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
 						<label class="col-2 col-form-label text-end">Required Quantity</label>
@@ -98,7 +98,7 @@
 					</div>
 				</div>
 
-				@if (IsEmployee)
+				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
 						<label class="col-2 col-form-label text-end">Status</label>
@@ -148,10 +148,10 @@
 					<th>Material Name</th>
 					<th>Material Brand</th>
 					<th width="10%">Qty</th>
-					<th width="10%">Actual Order <br /> Qty / Date</th>
-					<th width="10%">Status</th>
+					<th width="20%">Actual Order <br /> Qty / Date</th>
+					<th width="5%">Status</th>
 
-					@if (((long)Model.Data5) == 0)
+					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 					{
 						<th class="text-center" width="10%">Action</th>
 					}
@@ -171,16 +171,17 @@
 							<td>
 								@if (item.Status == "O" || item.Status == "RC")
 								{
-									<span>@item.Qty_Order.ToString() &nbsp; @item.UOM_Text &nbsp;&nbsp; / <br /> @item.StatusDate_Text</span>
+									<span>@item.Qty_Order.ToString() &nbsp; @item.UOM_Text &nbsp;&nbsp; / &nbsp; @item.StatusDate_Text</span>
 								}
 							</td>
 							<td>@item.Status_Text</td>
 
-							@if (((long)Model.Data5) == 0)
+							@if (IsEmployee)
 							{
 								<td class="text-center">
 									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-									@{
+									@if (item.Status == "S")
+									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
 											<i class="ri-pencil-fill"></i>
@@ -194,7 +195,7 @@
 										</button>
 									}
 
-									@if (IsEmployee && item.Status == "S")
+									@if (IsEmployee && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">

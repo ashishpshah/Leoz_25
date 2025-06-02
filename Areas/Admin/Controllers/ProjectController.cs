@@ -494,7 +494,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 				}
 
-				_CommonViewModel.Data5 = Logged_In_VendorId;
+				_CommonViewModel.Data5 = _context.Using<Employee>().GetByCondition(x => x.IsActive == true && x.Id == Logged_In_EmployeeId
+									&& x.VendorId == Logged_In_VendorId).Select(x => x.UserType).FirstOrDefault();
 
 				return PartialView("_Partial_AddEditForm_MP", _CommonViewModel);
 			}
@@ -547,7 +548,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.MaterialCode = viewModel.MaterialCode;
 								obj.MaterialBrand = viewModel.MaterialBrand;
 
-								obj.Qty = viewModel.Qty;
+								if (obj.Status == "S") obj.Qty = viewModel.Qty;
 
 								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
 								{ obj.Qty_Order = viewModel.Qty_Order; obj.Status = viewModel.Status; }
