@@ -275,6 +275,8 @@
 
 					if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 
+						let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+
 						var CustomerId = $('#ddlCustomer option:selected').val();
 						var ProjectId = $('#ddlProject option:selected').val();
 						if ((typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0)
@@ -301,14 +303,16 @@
 
 
 				function fnAddEdit_ProjectSiteDoc($id) {
-					$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
 
-					$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', false);
+					$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
 					if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+						
+						let change = '@(IsCustomer || IsEmployee ? "1" : "")'
 
 						var CustomerId = $('#ddlCustomer option:selected').val();
 						var ProjectId = $('#ddlProject option:selected').val();
@@ -343,7 +347,7 @@
 										$('#formSave input[name="UploadDate_Text"]').val(response['UploadDate_Text']).trigger('change');
 										$('#formSave input[name="Remark"]').val(response['Remark']).trigger('change');
 
-										$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', true);
+										$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', true);
 									}
 									else {
 										ShowLoader(false); CommonAlert_Error(response.Message, null);
@@ -357,9 +361,9 @@
 				}
 
 				function fnAddEdit_ProjectSiteMP($id) {
-					$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form input[type="radio"]').prop('checked', false).trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
 					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
 
@@ -430,14 +434,16 @@
 				}
 
 				function fnAddEdit_ProjectSiteWP($id) {
-					$('#largeModal .modal-body #divProjectSiteDoc form input').val(null).trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form select').val(null).trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body .btn-add').css('display', 'none');
 
-					$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', false);
+					$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
 					if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+						
+						let change = '@(IsCustomer || IsEmployee ? "1" : "")'
 
 						var CustomerId = $('#ddlCustomer option:selected').val();
 						var ProjectId = $('#ddlProject option:selected').val();
@@ -478,7 +484,7 @@
 										// $('#formSave input[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
 										$('#formSave textarea[name="PendingPoint"]').val(response['PendingPoint']).trigger('change');
 
-										$('#largeModal .modal-body #divProjectSiteDoc form input[name="UploadDate_Text"]').prop('readonly', true);
+										$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', true);
 									}
 									else {
 										ShowLoader(false); CommonAlert_Error(response.Message, null);
@@ -493,9 +499,9 @@
 
 				function fnClose_ProjectSiteDoc() {
 					debugger;
-					$('#largeModal .modal-body #divProjectSiteDoc form input').val('').trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form select').val('').trigger('change');
-					$('#largeModal .modal-body #divProjectSiteDoc form input[type="radio"]').prop('checked', false).trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
 					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'block');
 					$('#largeModal .modal-body #divProjectSiteDoc').css('display', 'none');
 					$('#largeModal .modal-body .btn-add').css('display', 'block');

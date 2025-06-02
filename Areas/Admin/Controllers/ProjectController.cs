@@ -228,7 +228,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
@@ -257,14 +257,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				//var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).FirstOrDefault();
 				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true && x.Type == Type).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -274,8 +274,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
-
-				_CommonViewModel.Data5 = Logged_In_VendorId;
 
 				return PartialView("_Partial_AddEditForm_Doc", _CommonViewModel);
 			}
@@ -331,7 +329,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-							if (obj != null)
+							if (obj != null && obj.Status != "R")
 							{
 								obj.Remark = viewModel.Remark;
 								obj.UploadDate = viewModel.UploadDate;
@@ -340,8 +338,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								_context.Using<ProjectSiteDoc>().Update(obj);
 							}
+							else if (obj != null && obj.Status == "R")
+							{
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								CommonViewModel.Message = "Record was rejected. Can not allow to update. ";
+
+								return Json(CommonViewModel);
+							}
 							else
 							{
+								viewModel.Type = "";
 								viewModel.Status = "U";
 								viewModel.StatusDate = DateTime.Now;
 
@@ -540,7 +547,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-							if (obj != null)
+							if (obj != null && obj.Status != "R")
 							{
 								obj.MaterialFor = viewModel.MaterialFor;
 								obj.MaterialName = viewModel.MaterialName;
@@ -556,6 +563,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.UOM = viewModel.UOM;
 
 								_context.Using<ProjectSiteMaterial>().Update(obj);
+							}
+							else if (obj != null && obj.Status == "R")
+							{
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								CommonViewModel.Message = "Record was rejected. Can not allow to update. ";
+
+								return Json(CommonViewModel);
 							}
 							else
 							{
@@ -630,7 +645,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<ProjectSitePendingWork>() { Obj = new ProjectSitePendingWork() { ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
@@ -657,7 +672,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSitePendingWorkId > 0)
 			{
-				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).FirstOrDefault();
 
 				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
@@ -665,7 +680,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -744,7 +759,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-							if (obj != null)
+							if (obj != null && obj.Status != "R")
 							{
 								obj.UploadDate = viewModel.UploadDate;
 								obj.PendingFrom = viewModel.PendingFrom;
@@ -752,6 +767,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.PendingPoint = viewModel.PendingPoint;
 
 								_context.Using<ProjectSitePendingWork>().Update(obj);
+							}
+							else if (obj != null && obj.Status == "R")
+							{
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								CommonViewModel.Message = "Record was rejected. Can not allow to update. ";
+
+								return Json(CommonViewModel);
 							}
 							else
 							{
@@ -909,7 +932,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
 							   select new { Value = z.Id, Text = z.Name }).ToList();
