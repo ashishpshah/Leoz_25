@@ -66,12 +66,16 @@
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
 						</div>
 					</div>
-					<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD" ? "":"none");">
-						<label for="Qty_Receive" class="col-2 col-form-label text-end">Receive Quantity</label>
-						<div class="col-3">
-							<input type="text" name="Qty_Receive" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Receive.ToString()">
+
+					if (Model.Data5 != null && (string)Model.Data5 == "COORD")
+					{
+						<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "":"none");">
+							<label for="Qty_Receive" class="col-2 col-form-label text-end">Receive Quantity</label>
+							<div class="col-3">
+								<input type="text" name="Qty_Receive" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Receive.ToString()">
+							</div>
 						</div>
-					</div>
+					}
 				}
 
 				<div class="row mb-1">
@@ -153,13 +157,20 @@
 					<th>Material Code</th>
 					<th>Material Name</th>
 					<th>Material Brand</th>
-					<th width="10%">Qty</th>
+					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+					{
+						<th width="10%">Qty / Received</th>
+					}
+					else
+					{
+						<th width="10%">Qty</th>
+					}
 					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 					{
 						<th width="20%">Actual Order Qty </th>
 					}
 					<th width="5%">Status</th>
-					<th width="5%">Status Date</th>
+					<th width="10%">Status Date</th>
 
 					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 					{
@@ -177,7 +188,18 @@
 							<td>@item.MaterialCode</td>
 							<td>@item.MaterialName</td>
 							<td>@item.MaterialBrand</td>
-							<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
+							@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD" && (item.Qty_Receive ?? -1) > -1)
+							{
+								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp; / &nbsp; @item.Qty_Receive.ToString() &nbsp; @item.UOM_Text</td>
+							}
+							else if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+							{
+								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp;</td>
+							}
+							else
+							{
+								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
+							}
 							@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 							{
 								<td>
@@ -202,7 +224,8 @@
 										</button>
 									}
 									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-									@{
+									@if (item.Status == "S")
+									{
 										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
 											<i class="ri-delete-bin-2-line"></i>
@@ -216,7 +239,7 @@
 											Order
 										</button>
 									}
-									@if (IsEmployee && (item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD")
+									@if (IsEmployee && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">

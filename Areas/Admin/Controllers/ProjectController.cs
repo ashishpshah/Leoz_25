@@ -517,6 +517,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					#region Validation
 
+					if (viewModel.ProjectId <= 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Project.";
+
+						return Json(CommonViewModel);
+					}
+
 					if (string.IsNullOrEmpty(viewModel.MaterialFor))
 					{
 						CommonViewModel.IsSuccess = false;
@@ -545,6 +554,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							if (IsCustomer) return Json(null);
 
+							if (!IsCustomer)
+							{
+								viewModel.CustomerId = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
+														join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
+														where z.IsActive == true && z.Id == viewModel.ProjectId && x.ProjectId == viewModel.ProjectId
+														select x.CustomerId).FirstOrDefault();
+
+							}
+
 							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
 							if (obj != null && obj.Status != "R")
@@ -559,6 +577,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
 								{ obj.Qty_Order = viewModel.Qty_Order; obj.Status = viewModel.Status; }
+								
+								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
+								{ obj.Qty_Receive = viewModel.Qty_Receive; obj.Status = "RC"; }
 
 								obj.UOM = viewModel.UOM;
 
