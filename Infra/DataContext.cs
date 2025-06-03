@@ -39,9 +39,16 @@ namespace Leoz_25.Infra
 		public virtual DbSet<LOV> LOVs { get; set; }
 
 
+		public virtual DbSet<AgencyMaster> AgencyMasters { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			//modelBuilder.HasDefaultSchema("padhyaso_Leoz");
+
+			modelBuilder.Entity<AgencyMaster>(entity =>
+			{
+				entity.ToTable("Agency_Master", "dbo");
+			});
 
 			modelBuilder.Entity<UnitsOfMeasurement>(entity =>
 			{

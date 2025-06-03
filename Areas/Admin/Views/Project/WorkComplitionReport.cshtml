@@ -1,0 +1,119 @@
+﻿@model ResponseModel<Project>
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+
+	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
+	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
+	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
+	long Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID);
+
+	string ProjectId = Model.SelectListItems.Where(x => x.Group == "P").Count() > 1 ? null : Model.SelectListItems.Where(x => x.Group == "P").Select(x => x.Value).FirstOrDefault();
+}
+
+@section Styles {
+	<style type="text/css">
+		.box {
+			cursor: pointer;
+			background-color: #f15a07;
+			color: white;
+			padding: 20px;
+			border-radius: 20px;
+			font-weight: bold;
+			min-height: 120px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+
+	</style>
+}
+
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<h4 class="page-title">Work Completion Report</h4>
+		</div>
+	</div>
+</div>
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header">
+				<div class="row no-gutters mb-1">
+					<div class="col-sm-4 @(IsVendor ? "":"d-none")">
+						<div class="form-group row d-flex align-items-center">
+							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
+							<div class="col-sm-9">
+								<select id="ddlCustomer" name="CustomerId" class="form-control form-control-sm select2"
+										data-selected="@Logged_In_CustomerId" onchange="fnChange_GetProjects(this)">
+									<option value="0">-- Select --</option>
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "C"))
+										{
+											if (Logged_In_CustomerId.ToString() == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+									}
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="form-group row d-flex align-items-center">
+							<label for="ddlProject" class="col-sm-1 col-form-label text-end"> Project </label>
+							<div class="col-sm-10">
+								<select id="ddlProject" name="ProjectId" class="form-control form-control-sm select2"
+										onchange="fnChange_GetProjectDetails(this)">
+									<option value="0">-- Select --</option>
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P"))
+										{
+											if (ProjectId == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+									}
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="row no-gutters">
+
+					<div class="clearfix"></div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+
+		$(document).ready(function () {
+
+		});
+
+	</script>
+}

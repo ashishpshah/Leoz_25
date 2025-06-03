@@ -1,0 +1,174 @@
+﻿@model ResponseModel<AgencyMaster>
+
+@{
+	Layout = null;
+
+	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
+	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
+	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
+}
+
+<div class="col-md-12">
+
+	@if (IsCustomer || (Model.Data5 != null && (string)Model.Data5 != "COORD"))
+	{
+		<form id="formSave" action="@Url.Action("Save_WCR","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+			<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+
+				<div class="row mb-1">
+					<label for="Name" class="col-2 col-form-label text-end">Agency Name</label>
+					<div class="col-6">
+						<input type="text" name="Name" class="form-control" value="@Model.Obj.Name" @(IsCustomer ? "readonly" : "")>
+					</div>
+				</div>
+				<div class="row mb-1">
+					<label for="WorkType" class="col-2 col-form-label text-end">Type of Work</label>
+					<div class="col-3">
+						@if (IsCustomer)
+						{
+							<input type="text" name="WorkType_Text" class="form-control" value="@Model.Obj.WorkType_Text" readonly>
+							<input type="text" name="WorkType" class="form-control d-none" value="@Model.Obj.WorkType">
+						}
+						else
+						{
+							<input type="text" name="WorkType_Text" class="form-control d-none" value="@Model.Obj.WorkType_Text">
+							<select name="WorkType" class="form-control form-control-sm select2">
+								<option value="">-- Select --</option>
+								@if (Model.SelectListItems != null)
+								{
+									@foreach (var item in Model.SelectListItems)
+									{
+										if (Model.Obj.WorkType == item.Value)
+										{
+											<option value="@item.Value" selected>@item.Text</option>
+										}
+										else
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									}
+								}
+							</select>
+						}
+					</div>
+				</div>
+
+				<div class="row mb-1">
+					<label for="Notes" class="col-2 col-form-label text-end">Notes</label>
+					<div class="col-10">
+						<input type="text" name="Notes" class="form-control" value="@Model.Obj.Notes">
+					</div>
+				</div>
+
+				@if (IsCustomer)
+				{
+					<div class="row mb-1">
+						<label class="col-2 col-form-label text-end">&nbsp;</label>
+						<div class="col-9">
+							<input type="text" name="Status" class="form-control d-none" value="A">
+							<button type="button" class="btn btn-success btnSubmit">Approve</button>
+							<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+						</div>
+					</div>
+				}
+				else if (IsEmployee && Model.Data5 != null && (string)Model.Data5 != "COORD")
+				{
+					<div class="row mb-1">
+						<label class="col-2 col-form-label text-end">&nbsp;</label>
+						<div class="col-9">
+							<input type="text" name="Status" class="form-control d-none" value="@Model.Obj.Status">
+							<button type="button" class="btn btn-success btnSubmit">Save</button>
+							<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+						</div>
+					</div>
+				}
+			</div>
+
+		</form>
+
+		@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+		{
+			<div class="d-flex align-items-start justify-content-between">
+				<div class="d-flex justify-content-end"> &nbsp; </div>
+				<div class="d-flex justify-content-end">
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteWCR(0)"> Add new record </button>
+				</div>
+			</div>
+		}
+	}
+
+	<div class="table-responsive-sm mt-3" id="divProjectSiteWCRList">
+		<table class="table table-bordered table-centered mb-0">
+			<thead>
+				<tr>
+					<th>Agency Name</th>
+					<th>Type of Work</th>
+					<th>Notes</th>
+					<th width="5%">Status</th>
+
+					@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+					{
+						<th class="text-center" width="10%">Action</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model.ObjList != null)
+				{
+					foreach (var item in Model.ObjList)
+					{
+						<tr>
+							<td>@item.Name</td>
+							<td>@item.WorkType_Text</td>
+							<td>@item.Notes</td>
+							<td>@item.Status_Text</td>
+
+							@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+							{
+								<td class="text-center">
+									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+									@if (IsEmployee && item.Status == "P")
+									{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+									@if (IsEmployee && item.Status == "P")
+									{
+										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WCR","Project", new {  area = "Admin" })?Id=@item.Id');">
+											<i class="ri-delete-bin-2-line"></i>
+										</button>
+									}
+
+									@if (IsCustomer && item.Status == "P")
+									{
+										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
+												onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
+											Approve
+										</button>
+									}
+								</td>
+							}
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+					$(document).ready(function () {
+
+		});
+	</script>
+}

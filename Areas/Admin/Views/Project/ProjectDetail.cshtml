@@ -189,7 +189,7 @@
 								}
 
 								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">WORK COMPLITION REPORT</div>
+									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>
 								</div>
 
 							</div>
@@ -249,13 +249,13 @@
 					else if (boxType == 'SITE') title = 'SITE UPDATES';
 					else if (boxType == 'WPEND') title = 'PENDING SELECTION & WORK';
 					else if (boxType == 'MPRO') title = 'MATERIAL PROCUREMENT';
-					else if (boxType == 'WCOMP') title = 'WORK COMPLITION REPORT';
+					else if (boxType == 'WCOMP') title = 'Work Completion Report';
 
 					var $url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
 
 					if (boxType == 'WPEND') $url = "@Url.Action("Partial_AddEditForm_WP", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
 					else if (boxType == 'MPRO') $url = "@Url.Action("Partial_AddEditForm_MP", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
-					else if (boxType == 'WCOMP') $url = "@Url.Action("Partial_AddEditForm_WC", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Type=" + boxType;
+					else if (boxType == 'WCOMP') $url = "@Url.Action("Partial_AddEditForm_WCR", "Project", new { area = "Admin" })?ProjectId=" + ProjectId + "&Type=" + boxType;
 
 					fnShow_Modal($url, title, false, 'html', false, false, false);
 
@@ -293,11 +293,9 @@
 						else if (boxType == 'WCOMP') boxType = "WC";
 						else boxType = "DOC";
 
-						var $url = "@Url.Action("Save_Doc_Status", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&Id=" + $id + "&Type=" + boxType + "&Status=" + $status;
+						var url = '@Url.Action("Save_Doc_Status", "Project", new { area = "Admin" })?CustomerId=' + CustomerId + "&ProjectId=" + ProjectId + "&Id=" + $id + "&Type=" + boxType + "&Status=" + $status;
 
-						ShowLoader(true);
-
-						ajaxPost($url, null);
+						ajaxPost(url, null);
 					}
 				}
 
@@ -323,13 +321,13 @@
 						}
 						else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
 
-						var $url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&ProjectSiteDocId=" + $id;
+						var url = "@Url.Action("Partial_AddEditForm_Doc", "Project", new { area = "Admin" })?CustomerId=" + CustomerId + "&ProjectId=" + ProjectId + "&ProjectSiteDocId=" + $id;
 
 						ShowLoader(true);
 
 						$.ajax({
 							type: 'GET',
-							url: $url,
+							url: url,
 							data: null,
 							cache: false,
 							contentType: false,
@@ -414,7 +412,6 @@
 										$('#formSave input[name="Qty"]').val(response['Qty']).trigger('change');
 										$('#formSave select[name="UOM"]').val(response['UOM']).trigger('change');
 
-										debugger;
 										try {
 											$('#formSave input[name="Qty_Receive"]').val(response['Qty_Receive']).trigger('change');
 											if (typeof response['Status'] != 'undefined' && response['Status'] != null && response['Status'] != ''
@@ -483,7 +480,7 @@
 							processData: false,
 							dataType: "json",
 							success: function (response) {
-								debugger;
+
 								try {
 									ShowLoader(false);
 									if (typeof response != 'undefined' && response != null && response != '') {
@@ -512,6 +509,65 @@
 						});
 					}
 				}
+
+				
+				function fnAddEdit_ProjectSiteWCR($id) {
+
+					$('#largeModal .modal-body form #divProjectSiteDoc input[type="text"]').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
+					$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
+					$('#largeModal .modal-body .btn-add').css('display', 'none');
+					
+					$('#largeModal .modal-body form #divProjectSiteDoc div.divQty_Receive').css('display', 'none');
+					
+					var ProjectId = $('#ddlProject option:selected').val();
+					if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
+					else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
+
+					$('#formSave input[name="ProjectId"]').val(ProjectId).trigger('change');
+
+					if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
+
+						var $url = "@Url.Action("Partial_AddEditForm_WCR", "Project", new { area = "Admin" })?ProjectId=" + ProjectId + "&AgencyMasterId=" + $id;
+
+						ShowLoader(true);
+
+						$.ajax({
+							type: 'GET',
+							url: $url,
+							data: null,
+							cache: false,
+							contentType: false,
+							processData: false,
+							dataType: "json",
+							success: function (response) {
+
+								try {
+									ShowLoader(false);
+									if (typeof response != 'undefined' && response != null && response != '') {
+
+										$('#formSave input[name="Id"]').val(response['Id']).trigger('change');
+										$('#formSave input[name="ProjectId"]').val(response['ProjectId']).trigger('change');
+
+										$('#formSave input[name="Name"]').val(response['Name']).trigger('change');
+										$('#formSave select[name="WorkType"]').val(response['WorkType']).trigger('change');
+										$('#formSave input[name="WorkType_Text"]').val(response['WorkType_Text']).trigger('change');
+										$('#formSave input[name="Notes"]').val(response['Notes']).trigger('change');
+										$('#formSave input[name="Status"]').val(response['Status']).trigger('change');
+
+									}
+									else {
+										ShowLoader(false); CommonAlert_Error(response.Message, null);
+									}
+								} catch { ShowLoader(false); window.location.reload(); }
+							},
+							failure: function (response) { ShowLoader(false); CommonAlert_Error(null) },
+							error: function (response) { ShowLoader(false); CommonAlert_Error(null) }
+						});
+					}
+				}
+
 
 				function fnClose_ProjectSiteDoc() {
 					debugger;

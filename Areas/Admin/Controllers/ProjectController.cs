@@ -577,7 +577,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
 								{ obj.Qty_Order = viewModel.Qty_Order; obj.Status = viewModel.Status; }
-								
+
 								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
 								{ obj.Qty_Receive = viewModel.Qty_Receive; obj.Status = "RC"; }
 
@@ -847,6 +847,203 @@ namespace Leoz_25.Areas.Admin.Controllers
 					CommonViewModel.Message = "Data deleted successfully ! ";
 
 					return Json(CommonViewModel);
+				}
+
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
+
+
+
+		public ActionResult Partial_AddEditForm_WCR(long ProjectId = 0, string Type = null, long AgencyMasterId = 0)
+		{
+			var list = _context.Using<LOV>().GetByCondition(x => x.LOV_Column.ToUpper() == "WORKTYPE").ToList();
+
+			var _CommonViewModel = new ResponseModel<AgencyMaster>() { Obj = new AgencyMaster() { ProjectId = ProjectId } };
+
+			var objProject = (from z in _context.Using<Project>().GetByCondition(x => x.Id == ProjectId && x.VendorId == Logged_In_VendorId).ToList()
+							  where z.IsActive == true
+							  select new Project
+							  {
+								  //VendorId = z.VendorId,
+								  Name = z.Name,
+								  Description = z.Description,
+								  StartDate = z.StartDate,
+								  HandoverDate = z.HandoverDate,
+								  Address = z.Address,
+								  CityId = z.CityId,
+								  StateId = z.StateId,
+								  CountryId = z.CountryId,
+								  LocationLink = z.LocationLink,
+								  CoordinatorId = z.CoordinatorId,
+								  CoordinatorName = z.CoordinatorName,
+								  SiteDetails = z.SiteDetails,
+								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
+								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  IsActive = z.IsActive
+							  }).FirstOrDefault();
+
+			if (objProject == null || (string.IsNullOrEmpty(Type) && AgencyMasterId == 0)) return Json(null);
+
+			if (AgencyMasterId > 0)
+			{
+				var obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == AgencyMasterId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
+
+				if (obj != null) obj.Status = obj.Status == "P" && IsCustomer ? "A" : obj.Status;
+
+				if (obj != null && !string.IsNullOrEmpty(obj.WorkType)) obj.WorkType_Text = list != null ? list.Where(x => x.LOV_Code == obj.WorkType).Select(x => x.LOV_Desc).FirstOrDefault() : "";
+
+				return Json(obj);
+			}
+			else
+			{
+				_CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+				if (list != null && list.Count() > 0) _CommonViewModel.SelectListItems.AddRange(list.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.LOV_Column, x.DisplayOrder)).ToList());
+
+				_CommonViewModel.ObjList = _context.Using<AgencyMaster>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true).Distinct().ToList();
+
+				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+					foreach (var item in _CommonViewModel.ObjList)
+					{
+						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "A" ? "Approve" : (item.Status == "R" ? "Rejected" : ""));
+						if (!string.IsNullOrEmpty(item.WorkType)) item.WorkType_Text = list != null ? list.Where(x => x.LOV_Code == item.WorkType).Select(x => x.LOV_Desc).FirstOrDefault() : "";
+					}
+
+				_CommonViewModel.Data5 = _context.Using<Employee>().GetByCondition(x => x.IsActive == true && x.Id == Logged_In_EmployeeId
+									&& x.VendorId == Logged_In_VendorId).Select(x => x.UserType).FirstOrDefault();
+
+				return PartialView("_Partial_AddEditForm_WCR", _CommonViewModel);
+			}
+		}
+
+		[HttpPost]
+		public ActionResult Save_WCR(AgencyMaster viewModel)
+		{
+			try
+			{
+				if (viewModel != null && !_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.VendorId == Logged_In_VendorId))
+				{
+					#region Validation
+
+					if (viewModel.ProjectId <= 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Project.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.Name))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Agency Name.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.WorkType))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Type of Work.";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							AgencyMaster obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null && obj.Status != "R"
+								&& (IsCustomer || _context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId)))
+							{
+								if (!IsCustomer)
+								{
+									obj.Name = viewModel.Name;
+									obj.WorkType = viewModel.WorkType;
+								}
+
+								obj.Notes = viewModel.Notes;
+
+								obj.Status = viewModel.Status;
+
+								_context.Using<AgencyMaster>().Update(obj);
+							}
+							else if (obj != null && obj.Status == "R")
+							{
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								CommonViewModel.Message = "Record was rejected. Can not allow to update. ";
+
+								return Json(CommonViewModel);
+							}
+							else
+							{
+								viewModel.Status = "P";
+
+								var _obj = _context.Using<AgencyMaster>().Add(viewModel);
+								viewModel.Id = _obj.Id;
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
+		[HttpPost]
+		public ActionResult DeleteConfirmed_WCR(long Id)
+		{
+			try
+			{
+				if (IsCustomer || _context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && (x.UserType == "MNGR") && x.IsActive == true && x.VendorId == Logged_In_VendorId))
+				{
+					var objProject = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+					if (objProject != null)
+					{
+						_context.Using<AgencyMaster>().Delete(objProject);
+
+						CommonViewModel.IsConfirm = true;
+						CommonViewModel.IsSuccess = true;
+						CommonViewModel.StatusCode = ResponseStatusCode.Success;
+						CommonViewModel.Message = "Data deleted successfully ! ";
+
+						return Json(CommonViewModel);
+					}
 				}
 
 			}

@@ -265,6 +265,10 @@
 
 
 	<ItemGroup>
+	  <Content Update="Areas\Admin\Views\Project\WorkComplitionReport.cshtml">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </Content>
 	  <Content Update="Areas\Admin\Views\Project\_Partial_AddEditForm_Doc.cshtml">
 	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
