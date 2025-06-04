@@ -265,7 +265,7 @@
 
 
 	<ItemGroup>
-	  <Content Update="Areas\Admin\Views\Project\WorkComplitionReport.cshtml">
+	  <Content Update="Areas\Admin\Views\Project\DailyUpdate.cshtml">
 	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 	  </Content>

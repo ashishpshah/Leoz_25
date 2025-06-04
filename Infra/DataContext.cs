@@ -39,11 +39,19 @@ namespace Leoz_25.Infra
 		public virtual DbSet<LOV> LOVs { get; set; }
 
 
+
+		public virtual DbSet<ProjectDailyUpdate> ProjectDailyUpdates { get; set; }
+
 		public virtual DbSet<AgencyMaster> AgencyMasters { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			//modelBuilder.HasDefaultSchema("padhyaso_Leoz");
+
+			modelBuilder.Entity<ProjectDailyUpdate>(entity =>
+			{
+				entity.ToTable("Project_Daily_Update", "dbo");
+			});
 
 			modelBuilder.Entity<AgencyMaster>(entity =>
 			{

@@ -3,8 +3,10 @@ using Leoz_25.Infra;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Leoz_25.Areas.Admin.Controllers
@@ -305,7 +307,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
-					
+
 					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
 					{
 						CommonViewModel.IsSuccess = false;
@@ -1169,7 +1171,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
 							   select new { Value = z.Id, Text = z.Name }).ToList();
@@ -1213,6 +1215,86 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(objProject);
 		}
 
+
+
+		public ActionResult DailyUpdate()
+		{
+			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
+
+			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
+				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
+
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
+							   join y in listCustomer on x.CustomerId equals y.Id
+							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
+							   where z.IsActive == true
+							   select new { ProjectId = z.Id, ProjectName = z.Name }).ToList();
+
+			if (listProject != null && listProject.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
+
+			return View(CommonViewModel);
+		}
+
+		public ActionResult GetData(JqueryDatatableParam param)
+		{
+			//string CustomerId = IsCustomer ? Logged_In_CustomerId.ToString() : HttpContext.Request.Query["CustomerId"];
+			string ProjectId = HttpContext.Request.Query["ProjectId"];
+
+			string Search_Term = HttpContext.Request.Query["sSearch"];
+			string SortCol = HttpContext.Request.Query["iSortCol_0"];
+			string SortDir = HttpContext.Request.Query["sSortDir_0"];
+			string DisplayStart = HttpContext.Request.Query["iDisplayStart"];
+			string DisplayLength = HttpContext.Request.Query["iDisplayLength"];
+
+			DataTable dt = new DataTable();
+
+			List<ProjectDailyUpdate> result = new List<ProjectDailyUpdate>();
+
+			//Id ProjectId   Project_Name CustomerId  Customer_Name Notes   FilePath Date    Date_Text
+
+			try
+			{
+				var parameters = new List<SqlParameter>();
+
+				//parameters.Add(new SqlParameter("CustomerId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(CustomerId) ? Convert.ToInt64(CustomerId) : 0, IsNullable = true });
+				parameters.Add(new SqlParameter("ProjectId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(ProjectId) ? Convert.ToInt64(ProjectId) : 0, IsNullable = true });
+				parameters.Add(new SqlParameter("Search_Term", SqlDbType.NVarChar) { Value = Search_Term, IsNullable = true });
+				parameters.Add(new SqlParameter("SortCol", SqlDbType.Int) { Value = !string.IsNullOrEmpty(SortCol) ? Convert.ToInt32(SortCol) : 0, IsNullable = true });
+				parameters.Add(new SqlParameter("SortDir", SqlDbType.NVarChar) { Value = SortDir, IsNullable = true });
+				parameters.Add(new SqlParameter("DisplayStart", SqlDbType.Int) { Value = !string.IsNullOrEmpty(DisplayStart) ? Convert.ToInt32(DisplayStart) : 0, IsNullable = true });
+				parameters.Add(new SqlParameter("DisplayLength", SqlDbType.Int) { Value = !string.IsNullOrEmpty(DisplayLength) ? Convert.ToInt32(DisplayLength) : 10, IsNullable = true });
+
+				dt = DataContext_Command.ExecuteStoredProcedure_DataTable("SP_Project_Daily_Update_GET", parameters.ToList());
+
+				if (dt != null && dt.Rows.Count > 0)
+					foreach (DataRow dr in dt.Rows)
+						result.Add(new ProjectDailyUpdate()
+						{
+							SrNo = dr["SrNo"] != DBNull.Value ? Convert.ToInt32(dr["SrNo"]) : 0,
+							Id = dr["Id"] != DBNull.Value ? Convert.ToInt64(dr["Id"]) : 0,
+							ProjectId = dr["ProjectId"] != DBNull.Value ? Convert.ToInt64(dr["ProjectId"]) : 0,
+							Project_Name = dr["Project_Name"] != DBNull.Value ? Convert.ToString(dr["Project_Name"]) : "",
+							//CustomerId = dr["CustomerId"] != DBNull.Value ? Convert.ToInt64(dr["CustomerId"]) : 0,
+							//Customer_Name = dr["Customer_Name"] != DBNull.Value ? Convert.ToString(dr["Customer_Name"]) : "",
+							Notes = dr["Notes"] != DBNull.Value ? Convert.ToString(dr["Notes"]) : "",
+							Date_Text = dr["Date_Text"] != DBNull.Value ? Convert.ToString(dr["Date_Text"]) : "",
+							FilePath = dr["FilePath"] != DBNull.Value ? Convert.ToString(dr["FilePath"]) : ""
+						});
+			}
+			catch { }
+
+			return Json(new
+			{
+				param.sEcho,
+				iTotalRecords = result.Count(),
+				iTotalDisplayRecords = dt != null && dt.Rows.Count > 0 ? Convert.ToInt64(dt.Rows[0]["Total_Records"]?.ToString()) : 0,
+				aaData = result
+			});
+
+		}
 	}
 
 }
