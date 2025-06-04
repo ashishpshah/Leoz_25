@@ -466,7 +466,7 @@ function fnShowHidePassword($selector = null) {
     if (typeof $selector != 'undefined' && $selector != null && $selector.length > 0) $selector = $selector + ' ';
     else $selector = '';
     $($selector + "[data-password]").on('click', function () {
-        debugger;
+        
         if ($(this).attr('data-password') == "false") {
             $(this).siblings("input").attr("type", "text");
             $(this).attr('data-password', 'true');

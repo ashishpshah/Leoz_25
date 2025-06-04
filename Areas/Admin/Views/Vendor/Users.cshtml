@@ -76,7 +76,7 @@
 		{
 			var VendorId = '@VendorId';
 			
-			debugger;
+			
 			if (typeof VendorId != 'undefined' && VendorId != null && !isNaN(parseInt(VendorId)) && parseInt(VendorId) > 0 ) {
 				
 				Swal.fire({
@@ -94,7 +94,7 @@
 						  $('#VendorId').val(VendorId).trigger('change');
 						const select = $('#ddlUsers');
 						select.empty(); 
-					debugger;
+					
 						data.forEach(user => { select.append(new Option(user.Text, user.Value)); });
 					  },
 					  error: function () {ShowLoader(false);  $('#ddlUsers').html('<option disabled>Error loading users</option>'); }
@@ -107,7 +107,7 @@
 					return selected;
 				  }
 				}).then((result) => {
-					debugger;
+					
 				  if (result.isConfirmed) {
 					  ShowLoader(false); 
 					console.log('Selected:', result.value);

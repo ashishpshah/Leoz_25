@@ -54,7 +54,7 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0)"> Add new record </button>
+				<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Obj != null ? Model.Obj.Type : "")')"> Add new record </button>
 			</div>
 		</div>
 	}
@@ -93,7 +93,7 @@
 										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
 										@{
 											<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
-													onclick="fnAddEdit_ProjectSiteDoc(@item.Id);">
+													onclick="fnAddEdit_ProjectSiteDoc(@item.Id, '@item.Type');">
 												<i class="ri-pencil-fill"></i>
 											</button>
 										}

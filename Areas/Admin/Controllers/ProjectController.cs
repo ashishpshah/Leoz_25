@@ -257,14 +257,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				//var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).FirstOrDefault();
 				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true && x.Type == Type).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true && x.Type == Type).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -288,6 +288,24 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					#region Validation
 
+					if (viewModel.ProjectId <= 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Project.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.Type))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select valid type.";
+
+						return Json(CommonViewModel);
+					}
+					
 					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
 					{
 						CommonViewModel.IsSuccess = false;
@@ -348,9 +366,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 							}
 							else
 							{
-								viewModel.Type = "";
 								viewModel.Status = "U";
 								viewModel.StatusDate = DateTime.Now;
+
+								viewModel.CustomerId = (IsCustomer ? Logged_In_CustomerId : viewModel.CustomerId);
 
 								var _obj = _context.Using<ProjectSiteDoc>().Add(viewModel);
 								viewModel.Id = _obj.Id;
