@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -221,8 +222,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			return View(CommonViewModel);
 		}
-
-
 
 		public ActionResult Partial_AddEditForm_Doc(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteDocId = 0)
 		{
@@ -465,7 +464,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-
 		public ActionResult Partial_AddEditForm_MP(long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
 		{
 			if (IsCustomer) return Json(null);
@@ -679,8 +677,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-
-
 		public ActionResult Partial_AddEditForm_WP(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSitePendingWorkId = 0)
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
@@ -880,8 +876,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-
-
 		public ActionResult Partial_AddEditForm_WCR(long ProjectId = 0, string Type = null, long AgencyMasterId = 0)
 		{
 			var list = _context.Using<LOV>().GetByCondition(x => x.LOV_Column.ToUpper() == "WORKTYPE").ToList();
@@ -1077,7 +1071,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-
 		[HttpPost]
 		public ActionResult Save_Doc_Status(long Id = 0, string Status = "", string Type = "")
 		{
@@ -1165,7 +1158,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-
 		[HttpPost]
 		public ActionResult GetProjectByCustomerId(long CustomerId = 0)
 		{
@@ -1215,15 +1207,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(objProject);
 		}
 
-
-
 		public ActionResult DailyUpdate()
 		{
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
 			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
-			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
+			if (listCustomer != null && listCustomer.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
 
 			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
@@ -1235,12 +1225,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 			if (listProject != null && listProject.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
 
+			CommonViewModel.Data5 = _context.Using<Employee>().GetByCondition(x => x.IsActive == true && x.Id == Logged_In_EmployeeId
+														&& x.VendorId == Logged_In_VendorId).Select(x => x.UserType).FirstOrDefault();
+
 			return View(CommonViewModel);
 		}
 
 		public ActionResult GetData(JqueryDatatableParam param)
 		{
-			//string CustomerId = IsCustomer ? Logged_In_CustomerId.ToString() : HttpContext.Request.Query["CustomerId"];
 			string ProjectId = HttpContext.Request.Query["ProjectId"];
 
 			string Search_Term = HttpContext.Request.Query["sSearch"];
@@ -1259,7 +1251,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var parameters = new List<SqlParameter>();
 
-				//parameters.Add(new SqlParameter("CustomerId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(CustomerId) ? Convert.ToInt64(CustomerId) : 0, IsNullable = true });
+				parameters.Add(new SqlParameter("Id", SqlDbType.BigInt) { Value = 0, IsNullable = true });
 				parameters.Add(new SqlParameter("ProjectId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(ProjectId) ? Convert.ToInt64(ProjectId) : 0, IsNullable = true });
 				parameters.Add(new SqlParameter("Search_Term", SqlDbType.NVarChar) { Value = Search_Term, IsNullable = true });
 				parameters.Add(new SqlParameter("SortCol", SqlDbType.Int) { Value = !string.IsNullOrEmpty(SortCol) ? Convert.ToInt32(SortCol) : 0, IsNullable = true });
@@ -1295,6 +1287,190 @@ namespace Leoz_25.Areas.Admin.Controllers
 			});
 
 		}
+
+
+		public ActionResult Partial_AddEditForm_DailyUpdate(long Id = 0, long ProjectId = 0)
+		{
+			var _CommonViewModel = new ResponseModel<ProjectDailyUpdate>() { Obj = new ProjectDailyUpdate() { ProjectId = ProjectId, Date = DateTime.Now.Date } };
+
+			if (Id > 0)
+			{
+				try
+				{
+					var parameters = new List<SqlParameter>();
+
+					parameters.Add(new SqlParameter("Id", SqlDbType.BigInt) { Value = Id, IsNullable = true });
+					parameters.Add(new SqlParameter("ProjectId", SqlDbType.BigInt) { Value = ProjectId, IsNullable = true });
+					parameters.Add(new SqlParameter("Search_Term", SqlDbType.NVarChar) { Value = "", IsNullable = true });
+					parameters.Add(new SqlParameter("SortCol", SqlDbType.Int) { Value = 1, IsNullable = true });
+					parameters.Add(new SqlParameter("SortDir", SqlDbType.NVarChar) { Value = "asc", IsNullable = true });
+					parameters.Add(new SqlParameter("DisplayStart", SqlDbType.Int) { Value = 0, IsNullable = true });
+					parameters.Add(new SqlParameter("DisplayLength", SqlDbType.Int) { Value = 10, IsNullable = true });
+
+					var dt = DataContext_Command.ExecuteStoredProcedure_DataTable("SP_Project_Daily_Update_GET", parameters.ToList());
+
+					if (dt != null && dt.Rows.Count > 0)
+						_CommonViewModel.Obj = new ProjectDailyUpdate()
+						{
+							Id = dt.Rows[0]["Id"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["Id"]) : 0,
+							ProjectId = dt.Rows[0]["ProjectId"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["ProjectId"]) : 0,
+							Project_Name = dt.Rows[0]["Project_Name"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Project_Name"]) : "",
+							//CustomerId = dt.Rows[0]["CustomerId"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["CustomerId"]) : 0,
+							//Customer_Name = dt.Rows[0]["Customer_Name"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Customer_Name"]) : "",
+							Notes = dt.Rows[0]["Notes"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Notes"]) : "",
+							Date = dt.Rows[0]["Date"] != DBNull.Value ? Convert.ToDateTime(dt.Rows[0]["Date_Text"]) : nullDateTime,
+							Date_Text = dt.Rows[0]["Date_Text"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Date_Text"]) : "",
+							FilePath = dt.Rows[0]["FilePath"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["FilePath"]) : ""
+						};
+				}
+				catch { }
+			}
+
+			return PartialView("Partial_AddEditForm_DailyUpdate", _CommonViewModel);
+		}
+
+
+		[HttpPost]
+		public ActionResult Save_DailyUpdate(ProjectDailyUpdate viewModel)
+		{
+			try
+			{
+				if (viewModel != null && IsEmployee && Logged_In_EmployeeId > 0
+					&& _context.Using<Employee>().Any(x => x.IsActive == true && x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.VendorId == Logged_In_VendorId))
+				{
+					#region Validation
+
+					if (viewModel.ProjectId <= 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Project.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (string.IsNullOrEmpty(viewModel.Date_Text))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Date.";
+
+						return Json(CommonViewModel);
+					}
+
+					if (!string.IsNullOrEmpty(viewModel.Date_Text)) { try { viewModel.Date = DateTime.ParseExact(viewModel.Date_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+
+					if (viewModel.Id == 0 && null != _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Date.HasValue && x.Date.Value.Date == viewModel.Date.Value.Date && x.ProjectId == viewModel.ProjectId).FirstOrDefault())
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Already Note(s) or Image(s) added on this selected date.";
+
+						return Json(CommonViewModel);
+					}
+
+					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
+
+					if (string.IsNullOrEmpty(viewModel.Notes) && (files == null || files.Count() <= 0))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Note(s) or Upload Image(s).";
+
+						return Json(CommonViewModel);
+					}
+
+					#endregion
+
+					#region Database-Transaction
+
+					using (var transaction = _context.BeginTransaction())
+					{
+						try
+						{
+							ProjectDailyUpdate obj = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+							if (obj != null)
+							{
+								obj.Notes = viewModel.Notes;
+
+								_context.Using<ProjectDailyUpdate>().Update(obj);
+							}
+							else
+							{
+								viewModel.CustomerId = 0;
+								var _obj = _context.Using<ProjectDailyUpdate>().Add(viewModel);
+								viewModel.Id = _obj.Id;
+							}
+
+							CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsSuccess = true;
+							CommonViewModel.StatusCode = ResponseStatusCode.Success;
+							CommonViewModel.Message = "Record saved successfully ! ";
+
+							CommonViewModel.RedirectURL = Url.Action("DailyUpdate", "Project", new { area = "Admin" });
+
+							try
+							{
+								if (files != null && files.Count() > 0)
+								{
+									List<string> filePaths = new List<string>();
+
+									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "Project_Daily_Update", $"{viewModel.ProjectId}");
+
+									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+									foreach (var file in files)
+									{
+										string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName);
+										string filePath = Path.Combine(folderPath, fileName);
+
+										using (var stream = new FileStream(filePath, FileMode.Create)) { file.CopyTo(stream); }
+
+										filePaths.Add(filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/"));
+									}
+
+									if (filePaths != null && filePaths.Count() > 0)
+									{
+										obj = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+										if (obj != null)
+										{
+											if (!string.IsNullOrEmpty(obj.FilePath)) filePaths.Insert(0, obj.FilePath);
+
+											obj.FilePath = string.Join(",", filePaths.ToArray());
+
+											_context.Using<ProjectDailyUpdate>().Update(obj);
+										}
+									}
+								}
+							}
+							catch (Exception)
+							{
+								CommonViewModel.Message = "Issue in Uploading Image/PDF.";
+								CommonViewModel.IsSuccess = false;
+								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+							}
+
+							transaction.Commit();
+
+							return Json(CommonViewModel);
+						}
+						catch (Exception ex) { transaction.Rollback(); }
+					}
+
+					#endregion
+				}
+			}
+			catch (Exception ex) { }
+
+			CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+
+			return Json(CommonViewModel);
+		}
+
 	}
 
 }

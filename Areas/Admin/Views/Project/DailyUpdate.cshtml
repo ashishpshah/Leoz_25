@@ -15,21 +15,21 @@
 }
 
 @section Styles {
-	<style type="text/css">
-		.box {
-			cursor: pointer;
-			background-color: #f15a07;
-			color: white;
-			padding: 20px;
-			border-radius: 20px;
-			font-weight: bold;
-			min-height: 120px;
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-		}
+					<style type="text/css">
+						.box {
+							cursor: pointer;
+							background-color: #f15a07;
+							color: white;
+							padding: 20px;
+							border-radius: 20px;
+							font-weight: bold;
+							min-height: 120px;
+							display: flex;
+							flex-direction: column;
+							justify-content: center;
+						}
 
-	</style>
+					</style>
 }
 
 <div class="row">
@@ -46,7 +46,7 @@
 		<div class="card">
 			<div class="card-header">
 				<div class="row no-gutters mb-1">
-					<div class="col-sm-4 @(IsVendor ? "":"d-none")">
+					<div class="col-sm-4 @(IsCustomer ? "d-none":"")">
 						<div class="form-group row d-flex align-items-center">
 							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
 							<div class="col-sm-9">
@@ -59,11 +59,11 @@
 										{
 											if (Logged_In_CustomerId.ToString() == item.Value)
 											{
-												<option value="@item.Value" selected>@item.Text</option>
+																								<option value="@item.Value" selected>@item.Text</option>
 											}
 											else
 											{
-												<option value="@item.Value">@item.Text</option>
+																								<option value="@item.Value">@item.Text</option>
 											}
 										}
 									}
@@ -84,11 +84,11 @@
 										{
 											if (ProjectId == item.Value)
 											{
-												<option value="@item.Value" selected>@item.Text</option>
+																								<option value="@item.Value" selected>@item.Text</option>
 											}
 											else
 											{
-												<option value="@item.Value">@item.Text</option>
+																								<option value="@item.Value">@item.Text</option>
 											}
 										}
 									}
@@ -100,12 +100,16 @@
 			</div>
 			<div class="card-body">
 
-				<div class="d-flex align-items-start justify-content-between">
-					<div class="d-flex justify-content-end"> &nbsp; </div>
-					<div class="d-flex justify-content-end">
-						<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_DailyUpdate()"> Add new record </button>
-					</div>
-				</div>
+				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+				{					
+						<div class="d-flex align-items-start justify-content-between">
+							<div class="d-flex justify-content-end"> &nbsp; </div>
+							<div class="d-flex justify-content-end">
+								<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_DailyUpdate()"> Add new record </button>
+							</div>
+						</div>
+				}
+
 				<div class="row no-gutters">
 					<div class="col-md-12 my-1">
 						<table class="table table-bordered table-striped table-hover w-100" id="dataTable_DailyUpdate"></table>
@@ -205,33 +209,34 @@
 				},
 				"initComplete": function (settings, json) { ShowLoader(false); },
 				"columns": [
-					{ "title": "No.", "data": "srNo", "autoWidth": false, "searchable": true, "width": "5%", "class": "text-center" },
-					{ "title": "Date", "data": "date_Text", "autoWidth": true, "searchable": true, "width": "10%", "class": "text-center" },
-					{ "title": "Project", "data": "project_Name", "autoWidth": true, "searchable": true, "width": "15%" },
-					{ "title": "Customer", "data": "customer_Name", "autoWidth": true, "searchable": true, "width": "15%" },
-					{ "title": "Notes", "data": "notes", "autoWidth": true, "searchable": true },
+					{ "title": "No.", "data": "SrNo", "autoWidth": false, "searchable": true, "width": "5%", "class": "text-center" },
+					{ "title": "Date", "data": "Date_Text", "autoWidth": true, "searchable": true, "width": "10%", "class": "text-center" },
+					{ "title": "Project", "data": "Project_Name", "autoWidth": true, "searchable": true, "width": "15%" },
+					//{ "title": "Customer", "data": "customer_Name", "autoWidth": true, "searchable": true, "width": "15%" },
+					{ "title": "Notes", "data": "Notes", "autoWidth": true, "searchable": true },
 					{
 						"title": "View", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center",
 						"render": function (data, type, row, meta) {
-							return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm", "QRCode", new { area = "Admin" })?Id=' + data.id + '\', \'View QR Code Requests\', false, \'html\', false)"><span><i class="far fa-edit"></i></span></a></div>';
+							debugger;
+								return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?Id='+data["Id"]+'&ProjectId='+data["ProjectId"]+'\', \'Update Daily Update\', false, \'html\', false);"><i class="ri-pencil-fill"></i></a></div>';
 						}
 					}
 				],
 			});
-
 		}
 
 		function fnAddEdit_DailyUpdate() {
-
+			ShowLoader(true);
 			//let CustomerId = $('#ddlCustomer option:selected').val();
 			let ProjectId = $('#ddlProject option:selected').val();
 
 			if (//typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0 &&
 				typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) {
 
-				fnShow_Modal('@Url.Action("Partial_AddEditForm", "QRCode", new { area = "Admin" })?ProjectId=' + ProjectId, 'Add Daily Update', false, 'html', false);
+				fnShow_Modal('@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?ProjectId=' + ProjectId, 'Add Daily Update', false, 'html', false);
 
 			}
+			else { ShowLoader(false); CommonAlert_Error("Please select Project", null); }
 		}
 	</script>
 }

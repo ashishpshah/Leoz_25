@@ -9,8 +9,9 @@ public partial class ProjectDailyUpdate : EntitiesBase
 	public long ProjectId { get; set; }
 
 	[NotMapped] public string Project_Name { get; set; }
-	//[NotMapped] public long CustomerId { get; set; }
-	//[NotMapped] public string Customer_Name { get; set; }
+
+	public long CustomerId { get; set; }
+	[NotMapped] public string Customer_Name { get; set; }
 
 	public string Notes { get; set; } = null!;
 	public virtual Nullable<System.DateTime> Date { get; set; }
