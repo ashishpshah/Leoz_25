@@ -1289,7 +1289,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 
-		public ActionResult Partial_AddEditForm_DailyUpdate(long Id = 0, long ProjectId = 0)
+		public ActionResult Partial_AddEditForm_DailyUpdate(long Id = 0, long ProjectId = 0, bool IsShowImages = false)
 		{
 			var _CommonViewModel = new ResponseModel<ProjectDailyUpdate>() { Obj = new ProjectDailyUpdate() { ProjectId = ProjectId, Date = DateTime.Now.Date } };
 
@@ -1326,6 +1326,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 				catch { }
 			}
 
+			_CommonViewModel.Data5 = IsShowImages;
+
 			return PartialView("Partial_AddEditForm_DailyUpdate", _CommonViewModel);
 		}
 
@@ -1358,6 +1360,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
+					if (string.IsNullOrEmpty(viewModel.Notes))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Note(s).";
+
+						return Json(CommonViewModel);
+					}
+
 					if (!string.IsNullOrEmpty(viewModel.Date_Text)) { try { viewModel.Date = DateTime.ParseExact(viewModel.Date_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
 
 					if (viewModel.Id == 0 && null != _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Date.HasValue && x.Date.Value.Date == viewModel.Date.Value.Date && x.ProjectId == viewModel.ProjectId).FirstOrDefault())
@@ -1371,14 +1382,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
 
-					if (string.IsNullOrEmpty(viewModel.Notes) && (files == null || files.Count() <= 0))
-					{
-						CommonViewModel.IsSuccess = false;
-						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Note(s) or Upload Image(s).";
+					//if (string.IsNullOrEmpty(viewModel.Notes) && (files == null || files.Count() <= 0))
+					//{
+					//	CommonViewModel.IsSuccess = false;
+					//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					//	CommonViewModel.Message = "Please enter Note(s) or Upload Image(s).";
 
-						return Json(CommonViewModel);
-					}
+					//	return Json(CommonViewModel);
+					//}
 
 					#endregion
 
@@ -1424,6 +1435,18 @@ namespace Leoz_25.Areas.Admin.Controllers
 									{
 										string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName);
 										string filePath = Path.Combine(folderPath, fileName);
+
+										int counter = 1;
+										while (System.IO.File.Exists(filePath))
+										{
+											// If the file exists, append a number to the file name
+											string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
+											string fileExtension = Path.GetExtension(file.FileName);
+											string newFileName = $"{fileNameWithoutExtension}_{counter}{fileExtension}";
+
+											filePath = Path.Combine(folderPath, newFileName);
+											counter++;
+										}
 
 										using (var stream = new FileStream(filePath, FileMode.Create)) { file.CopyTo(stream); }
 

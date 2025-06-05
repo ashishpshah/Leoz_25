@@ -15,21 +15,49 @@
 }
 
 @section Styles {
-					<style type="text/css">
-						.box {
-							cursor: pointer;
-							background-color: #f15a07;
-							color: white;
-							padding: 20px;
-							border-radius: 20px;
-							font-weight: bold;
-							min-height: 120px;
-							display: flex;
-							flex-direction: column;
-							justify-content: center;
-						}
+			<style type="text/css">
+				.box {
+					cursor: pointer;
+					background-color: #f15a07;
+					color: white;
+					padding: 20px;
+					border-radius: 20px;
+					font-weight: bold;
+					min-height: 120px;
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+				}
 
-					</style>
+				.upload_img {
+				  max-width: 120px;
+				  max-height: 120px;
+				  object-fit: cover;
+				  border: 1px solid #ccc;
+				  border-radius: 0.25rem;
+				  padding: 4px;
+				}
+				.upload_dropZone {
+				  border: 2px dashed #ccc;
+				  cursor: pointer;
+				  color: #0f3c4b;
+				  /* background-color: var(--colorPrimaryPale, #c8da00); */
+				  outline: 2px dashed var(--colorPrimaryHalf, #c1ddef);
+				  outline-offset: -12px;
+				  transition: outline-offset 0.2s ease-out, outline-color 0.3s ease-in-out,
+					background-color 0.2s ease-out;
+				}
+				.btn-upload {
+				  color: #fff;
+				  background-color: var(--colorPrimaryNormal);
+				}
+				.btn-upload:hover,
+				.btn-upload:focus {
+				  color: #fff;
+				  background-color: var(--colorPrimaryGlare);
+				}
+
+			</style>
 }
 
 <div class="row">
@@ -59,11 +87,11 @@
 										{
 											if (Logged_In_CustomerId.ToString() == item.Value)
 											{
-																								<option value="@item.Value" selected>@item.Text</option>
+																														<option value="@item.Value" selected>@item.Text</option>
 											}
 											else
 											{
-																								<option value="@item.Value">@item.Text</option>
+																														<option value="@item.Value">@item.Text</option>
 											}
 										}
 									}
@@ -84,11 +112,11 @@
 										{
 											if (ProjectId == item.Value)
 											{
-																								<option value="@item.Value" selected>@item.Text</option>
+																														<option value="@item.Value" selected>@item.Text</option>
 											}
 											else
 											{
-																								<option value="@item.Value">@item.Text</option>
+																														<option value="@item.Value">@item.Text</option>
 											}
 										}
 									}
@@ -102,12 +130,12 @@
 
 				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
 				{					
-						<div class="d-flex align-items-start justify-content-between">
-							<div class="d-flex justify-content-end"> &nbsp; </div>
-							<div class="d-flex justify-content-end">
-								<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_DailyUpdate()"> Add new record </button>
-							</div>
-						</div>
+								<div class="d-flex align-items-start justify-content-between">
+									<div class="d-flex justify-content-end"> &nbsp; </div>
+									<div class="d-flex justify-content-end">
+										<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_DailyUpdate()"> Add new record </button>
+									</div>
+								</div>
 				}
 
 				<div class="row no-gutters">
@@ -123,120 +151,192 @@
 </div>
 
 @section Scripts {
-	<script type="text/javascript">
+			<script type="text/javascript">
 
-		$(document).ready(function () {
-			fnLoadTableData();
-		});
-
-		function fnChange_GetProjects($this) {
-
-			var table = new DataTable('#dataTable_DailyUpdate');
-			table.rows().remove().draw();
-
-			var ddlProject = $("#ddlProject");
-			ddlProject.empty();
-			ddlProject.append('<option value="0">-- Select --</option>');
-
-			var CustomerId = $($this).find('option:selected').val();
-
-			if (typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0) {
-
-				ShowLoader(true);
-				$.ajax({
-					type: "POST",
-					url: "@Url.Action("GetProjectByCustomerId", "Project", new { area = "Admin" })?CustomerId=" + CustomerId,
-					data: {},
-					cache: false,
-					contentType: false,
-					processData: false,
-					dataType: "json",
-					success: function (response) {
-						ShowLoader(false);
-
-						if (response != null && response.length > 0) {
-							$.each(response, function () {
-								ddlProject.append($("<option></option>").val(this['Value']).html(this['Text']));
-							});
-						}
-
-						$("#ddlProject").attr('data-event', 'off');
-						$("#ddlProject").trigger('change');
-						$("#ddlProject").select2();
-						$("#ddlProject").attr('data-event', 'on');
-					},
-					failure: function (xhr) {
-						ShowLoader(false);
-						console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
-					},
-					error: function (xhr) {
-						ShowLoader(false);
-						console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
-					}
+				$(document).ready(function () {
+					fnLoadTableData();
 				});
-			}
-		}
 
+				function isImage(file) {
+				  return ['image/jpeg', 'image/png', 'image/svg+xml'].includes(file.type);
+				}
 
-		function fnChange_GetProjectDetails($this) {
+				function fnChange_GetProjects($this) {
 
-			if ($("#ddlProject").attr('data-event') == 'on') fnLoadTableData();
+					var table = new DataTable('#dataTable_DailyUpdate');
+					table.rows().remove().draw();
 
-		}
+					var ddlProject = $("#ddlProject");
+					ddlProject.empty();
+					ddlProject.append('<option value="0">-- Select --</option>');
 
-		function fnLoadTableData() {
+					var CustomerId = $($this).find('option:selected').val();
 
-			if ($.fn.DataTable.isDataTable('#dataTable_DailyUpdate')) {
-				$('#dataTable_DailyUpdate').DataTable().destroy();
-			}
+					if (typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0) {
 
-			ShowLoader(true);
+						ShowLoader(true);
+						$.ajax({
+							type: "POST",
+							url: "@Url.Action("GetProjectByCustomerId", "Project", new { area = "Admin" })?CustomerId=" + CustomerId,
+							data: {},
+							cache: false,
+							contentType: false,
+							processData: false,
+							dataType: "json",
+							success: function (response) {
+								ShowLoader(false);
 
-			$("#dataTable_DailyUpdate").DataTable({
-				"destroy": true,
-				"pageLength": 50,
-				"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-				"sAjaxSource": "@Url_RootToController/GetData",
-				"bServerSide": true,
-				"bProcessing": true,
-				"bSearchable": true,
-				"scrollX": true,
-				"order": [[0, 'asc']],
-				"language": { "emptyTable": "No record found.", "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color:#2a2b2b;"></i><span class="sr-only">Loading...</span> ' },
-				"fnServerParams": function (aoData) {
-					//aoData.push({ "name": "CustomerId", "value": "" + $('#ddlCustomer option:selected').val() });
-					aoData.push({ "name": "ProjectId", "value": "" + $('#ddlProject option:selected').val() });
-				},
-				"initComplete": function (settings, json) { ShowLoader(false); },
-				"columns": [
-					{ "title": "No.", "data": "SrNo", "autoWidth": false, "searchable": true, "width": "5%", "class": "text-center" },
-					{ "title": "Date", "data": "Date_Text", "autoWidth": true, "searchable": true, "width": "10%", "class": "text-center" },
-					{ "title": "Project", "data": "Project_Name", "autoWidth": true, "searchable": true, "width": "15%" },
-					//{ "title": "Customer", "data": "customer_Name", "autoWidth": true, "searchable": true, "width": "15%" },
-					{ "title": "Notes", "data": "Notes", "autoWidth": true, "searchable": true },
-					{
-						"title": "View", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center",
-						"render": function (data, type, row, meta) {
-							debugger;
-								return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?Id='+data["Id"]+'&ProjectId='+data["ProjectId"]+'\', \'Update Daily Update\', false, \'html\', false);"><i class="ri-pencil-fill"></i></a></div>';
-						}
+								if (response != null && response.length > 0) {
+									$.each(response, function () {
+										ddlProject.append($("<option></option>").val(this['Value']).html(this['Text']));
+									});
+								}
+
+								$("#ddlProject").attr('data-event', 'off');
+								$("#ddlProject").trigger('change');
+								$("#ddlProject").select2();
+								$("#ddlProject").attr('data-event', 'on');
+							},
+							failure: function (xhr) {
+								ShowLoader(false);
+								console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
+							},
+							error: function (xhr) {
+								ShowLoader(false);
+								console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
+							}
+						});
 					}
-				],
-			});
-		}
+				}
 
-		function fnAddEdit_DailyUpdate() {
-			ShowLoader(true);
-			//let CustomerId = $('#ddlCustomer option:selected').val();
-			let ProjectId = $('#ddlProject option:selected').val();
 
-			if (//typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0 &&
-				typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) {
+				function fnChange_GetProjectDetails($this) {
 
-				fnShow_Modal('@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?ProjectId=' + ProjectId, 'Add Daily Update', false, 'html', false);
+					if ($("#ddlProject").attr('data-event') == 'on') fnLoadTableData();
 
-			}
-			else { ShowLoader(false); CommonAlert_Error("Please select Project", null); }
-		}
-	</script>
+				}
+
+				function fnLoadTableData() {
+
+					if ($.fn.DataTable.isDataTable('#dataTable_DailyUpdate')) {
+						$('#dataTable_DailyUpdate').DataTable().destroy();
+					}
+
+					ShowLoader(true);
+
+					$("#dataTable_DailyUpdate").DataTable({
+						"destroy": true,
+						"pageLength": 50,
+						"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+						"sAjaxSource": "@Url_RootToController/GetData",
+						"bServerSide": true,
+						"bProcessing": true,
+						"bSearchable": true,
+						"scrollX": true,
+						"order": [[0, 'asc']],
+						"language": { "emptyTable": "No record found.", "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color:#2a2b2b;"></i><span class="sr-only">Loading...</span> ' },
+						"fnServerParams": function (aoData) {
+							//aoData.push({ "name": "CustomerId", "value": "" + $('#ddlCustomer option:selected').val() });
+							aoData.push({ "name": "ProjectId", "value": "" + $('#ddlProject option:selected').val() });
+						},
+						"initComplete": function (settings, json) { ShowLoader(false); },
+						"columns": [
+							{ "title": "No.", "data": "SrNo", "autoWidth": false, "searchable": true, "width": "5%", "class": "text-center" },
+							{ "title": "Date", "data": "Date_Text", "autoWidth": true, "searchable": true, "width": "10%", "class": "text-center" },
+							{ "title": "Project", "data": "Project_Name", "autoWidth": true, "searchable": true, "width": "15%" },
+							//{ "title": "Customer", "data": "customer_Name", "autoWidth": true, "searchable": true, "width": "15%" },
+							{ "title": "Notes", "data": "Notes", "autoWidth": true, "searchable": true },
+							{
+								"title": "View Image(s)", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center",
+								"render": function (data, type, row, meta) {
+									if (typeof data["FilePath"] != 'undefined' && data["FilePath"] != null && data["FilePath"] != '' && data["FilePath"].length > 0){
+											return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?Id='+data["Id"]+'&ProjectId='+data["ProjectId"]+'&IsShowImages=true\', \''+data["Project_Name"]+' - Uploaded Image(s)\', false, \'html\', false);"><i class="ri-eye-fill"></i></a></div>';
+									}
+									else return '';
+								}
+							},
+							{
+								"title": "Action", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center @(IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD" ? "" : "d-none")",
+								"render": function (data, type, row, meta) {
+									return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?Id='+data["Id"]+'&ProjectId='+data["ProjectId"]+'\', \''+data["Project_Name"]+' - Update Daily Update\', false, \'html\', false);"><i class="ri-pencil-fill"></i></a></div>';
+								}
+							}
+						],
+					});
+				}
+
+				function fnAddEdit_DailyUpdate() {
+					ShowLoader(true);
+					//let CustomerId = $('#ddlCustomer option:selected').val();
+					let ProjectId = $('#ddlProject option:selected').val();
+
+					if (//typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0 &&
+						typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) {
+
+					let Project_Name = $('#ddlProject option:selected').text();
+
+						fnShow_Modal('@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?ProjectId=' + ProjectId, Project_Name+ ' - Add Daily Update', false, 'html', false);
+
+					}
+					else { ShowLoader(false); CommonAlert_Error("Please select Project", null); }
+				}
+
+
+				function fnShow_Modal_Success($url, $title) {
+					$('#largeModal .modal-dialog').addClass('modal-fullscreen');
+					$('#largeModal').css('display', 'block');
+
+					debugger;
+				  const $dropZone = $('.upload_dropZone');
+					const $input = $('#upload_image_background');
+					const $gallery = $('.upload_gallery');
+
+					// Handle browse file
+					$input.on('change', function () {
+					  const files = this.files;
+					  previewImages(files, $gallery);
+					});
+
+					// Handle drag events
+					$dropZone.on('dragover dragenter', function (e) {
+					  e.preventDefault();
+					  e.stopPropagation();
+					  $(this).addClass('border-primary');
+					});
+
+					$dropZone.on('dragleave dragend drop', function (e) {
+					  e.preventDefault();
+					  e.stopPropagation();
+					  $(this).removeClass('border-primary');
+					});
+
+					// Handle drop files
+					$dropZone.on('drop', function (e) {
+					  const dt = e.originalEvent.dataTransfer;
+					  const files = dt.files;
+					  $input[0].files = files;
+					  previewImages(files, $gallery);
+					});
+
+				}
+
+				function previewImages(files, gallery) {
+				  gallery.empty(); // Clear previous
+				  $.each(files, function (i, file) {
+					if (!isImage(file)) return;
+
+					let reader = new FileReader();
+					reader.onload = function (e) {
+					  const img = $('<img>', {
+						src: e.target.result,
+						alt: file.name,
+						class: 'upload_img mt-2 mr-2'
+					  });
+					  gallery.append(img);
+					};
+					reader.readAsDataURL(file);
+				  });
+				}
+
+			</script>
 }
