@@ -718,7 +718,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -733,8 +733,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("A", "Admin"));
 				_CommonViewModel.SelectListItems.Add(new SelectListItem_Custom("C", "Customer"));
-
-				_CommonViewModel.Data5 = Logged_In_VendorId;
 
 				return PartialView("_Partial_AddEditForm_WP", _CommonViewModel);
 			}
