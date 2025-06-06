@@ -82,7 +82,11 @@
 							<td>
 								@if (index == 0)
 								{
-									<a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a>
+									//<a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a>
+									<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+											onclick="fnView_File('@(Url.Content("~" + item.FilePath))', 'View Document');">
+										<i class="ri-file-download-fill me-1"></i>
+									</button>
 								}
 							</td>
 

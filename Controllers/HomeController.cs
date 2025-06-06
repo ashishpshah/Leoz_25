@@ -21,8 +21,10 @@ namespace Leoz_25.Controllers
             var (IsSuccess, Message, Id) = (false, "", (long)0);
 
             if (list == null || list.Count == 0)
-            {
-                var user = new User() { UserName = "Adnin", Password = Common.Encrypt("admin"), CreatedBy = 1 };
+			{
+				Common.Set_Session_Int(SessionKey.KEY_USER_ID, 1);
+
+				var user = new User() { UserName = "Adnin", Password = Common.Encrypt("admin"), CreatedBy = 1 };
                 user = _context.Using<User>().Add(user);
                 //_context.SaveChanges();
                 //_context.Entry(user).Reload();

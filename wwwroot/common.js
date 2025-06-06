@@ -31,6 +31,11 @@ $(document).ready(function () {
         }
     }
 
+    // Event delegation for the dynamically added Back button
+    $(document).on('click', '#btnBackToBody', function () {
+        $('#largeModal .modal-body-embed').hide().html('');
+        $('#largeModal .modal-body').show();
+    });
 
     try { fnShowHidePassword(null); } catch { }
 
@@ -466,7 +471,7 @@ function fnShowHidePassword($selector = null) {
     if (typeof $selector != 'undefined' && $selector != null && $selector.length > 0) $selector = $selector + ' ';
     else $selector = '';
     $($selector + "[data-password]").on('click', function () {
-        
+
         if ($(this).attr('data-password') == "false") {
             $(this).siblings("input").attr("type", "text");
             $(this).attr('data-password', 'true');
@@ -1986,6 +1991,43 @@ function fnLoadCommonTable_Buttons($selector) {
     $($selector + " thead th.no_sorting").removeClass('sorting');
     $($selector + " thead th.no_sorting").removeClass('sorting_asc');
     $($selector + " thead th.no_sorting").removeClass('sorting_desc');
+}
+
+function fnView_File($filePath, $title) {
+    if (typeof $filePath != 'undefined' && $filePath != null && $filePath != '' && $filePath.trim().length > 0) {
+        ShowLoader(true);
+        debugger;
+        if ($('#largeModal').hasClass('show')) {
+            $('#largeModal .modal-body').hide();
+            $('#largeModal .modal-body-embed').show().html(`
+                <div class="text-center mb-2"> <button type="button" class="btn btn-outline-primary btn-sm" id="btnBackToBody">← Back</button> </div>
+                <embed src="${$filePath}" type="application/pdf" width="100%"  style="height:90vh;" />
+            `);
+            ShowLoader(false);
+        } else {
+
+            $('div.loader-overlay').remove();
+            $('body #div-modal-backdrop').remove();
+            $('#largeModal .modal-btn-save').css('display', 'block');
+            $('#largeModal .modal-btn-close').css('display', 'block');
+
+            if ($('#largeModal').hasClass('show')) $('#largeModal').hide(); //$('#largeModal').modal('hide');
+            setTimeout(function () {
+
+                $('#largeModal .modal-body').hide();
+                $('#largeModal .modal-body-embed').show().html(`
+                    <div class="text-center mb-2"> <button type="button" class="btn btn-danger btn-sm" id="btnBackToBody">← Back</button> </div>
+                <embed src="${$filePath}" type="application/pdf" width="100%"  style="height:90vh;" />
+                `);
+
+                $('#largeModal .modal-title').html($title);
+                $('#largeModal .modal-form').removeAttr('action');
+
+                $('#largeModal').modal('show');
+                ShowLoader(false);
+            }, 1000);
+        }
+    }
 }
 
 function fnShow_Modal($url, $title, $hasTable, $type, $IsSave = false, $IsClose = false, $noAlert = false) {

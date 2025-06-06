@@ -17,8 +17,8 @@
 	<style type="text/css">
 		.box {
 			cursor: pointer;
-			background-color: #f15a07;
-			color: white;
+			background-color: #011520;
+			color: #C5935B;
 			padding: 20px;
 			border-radius: 20px;
 			font-weight: bold;
@@ -307,7 +307,7 @@
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
 			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
-			
+
 			let change = '@(IsCustomer || IsEmployee ? "1" : "")'
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
@@ -491,7 +491,7 @@
 						try {
 							ShowLoader(false);
 							if (typeof response != 'undefined' && response != null && response != '') {
-								
+
 
 								$('#formSave input[name="Id"]').val(response['Id']).trigger('change');
 								$('#formSave input[name="ProjectId"]').val(response['ProjectId']).trigger('change');
@@ -577,7 +577,7 @@
 
 
 		function fnClose_ProjectSiteDoc() {
-			
+
 			$('#largeModal .modal-body form #divProjectSiteDoc input[type="text"]').val('').trigger('change');
 			$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 			$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
