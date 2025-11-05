@@ -20,6 +20,7 @@
 		public static string KEY_USER_MENUACCESS => "AuthenticatedUserMenuAccess";
 		public static string KEY_USER_LOGO => "AuthenticatedUserLogo";
 		public static string CURRENT_MENU_ID => "CurrentMenu";
+		public static string ProjectDetailTypeAccess => "ProjectDetailTypeAccess";
 	}
 
 	public static class ResponseStatusCode

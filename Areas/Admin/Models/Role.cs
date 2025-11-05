@@ -9,8 +9,9 @@ namespace Leoz_25
 		public string Name { get; set; }
 		public int? DisplayOrder { get; set; }
 		public bool IsAdmin { get; set; }
+        public string? ProjectDetailTypeAccess { get; set; }
 
-		[NotMapped] public long SelectedRoleId { get; set; } = 0;
+        [NotMapped] public long SelectedRoleId { get; set; } = 0;
 		[NotMapped] public List<SelectListItem> Menus { get; set; } = null;
 
 	}

@@ -9,6 +9,7 @@
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
 	long Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID);
+	List<string> ProjectDetailTypeAccess = Common.Get_Session(SessionKey.ProjectDetailTypeAccess).Split(',').ToList();
 
 	string ProjectId = Model.SelectListItems.Where(x => x.Group == "P").Count() > 1 ? null : Model.SelectListItems.Where(x => x.Group == "P").Select(x => x.Value).FirstOrDefault();
 }
@@ -47,7 +48,7 @@
 		<div class="card">
 			<div class="card-header">
 				<div class="row no-gutters mb-1">
-					<div class="col-sm-4 @(IsVendor ? "":"d-none")">
+					<div class="col-sm-4 @(IsVendor ? "" : "d-none")">
 						<div class="form-group row d-flex align-items-center">
 							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
 							<div class="col-sm-9">
@@ -149,49 +150,70 @@
 					<div class="col-10">
 						<div class="container py-5">
 							<div class="row g-4">
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
-										<p class="mb-1">Estimate</p>
-										<p class="mb-1">Payment Terms</p>
-										<p class="mb-0">Material Specifications</p>
-									</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">FINAL 3D</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">DRAWINGS</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">CLIENT SCOPE OF WORK</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">MOOD BOARD</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">SITE UPDATES</div>
-								</div>
-
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">PENDING SELECTION & WORK</div>
-								</div>
-
-								@if (IsVendor || IsEmployee)
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "EPM"))
 								{
 									<div class="col-md-4">
-										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">MATERIAL PROCUREMENT</div>
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
+											<p class="mb-1">Estimate</p>
+											<p class="mb-0">Payment Terms</p>
+										</div>
 									</div>
 								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "F3D"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">Final 3D</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "DRW"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">Drawings</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WCLTSC"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">
+											<p class="mb-1">Client Scope of Work</p>
+											<p class="mb-0">Material Specifications</p>
+										</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "MB"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">Mood Board</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "SITE"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">Site Updates</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WPEND"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">Pending Selection & Work</div>
+									</div>
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "MPRO"))
+								{
+									@if (true@* IsVendor || IsEmployee *@)
+									{
+										<div class="col-md-4">
+											<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">Material Procurement</div>
+										</div>
+									}
 
-								<div class="col-md-4">
-									<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>
-								</div>
-
+								}
+								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WCOMP"))
+								{
+									<div class="col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>
+									</div>
+								}
 							</div>
 						</div>
 					</div>
