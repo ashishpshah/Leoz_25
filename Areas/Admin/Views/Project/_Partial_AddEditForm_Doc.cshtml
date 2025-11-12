@@ -7,11 +7,12 @@
 	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
+	string UserType = Common.Get_Session("Employee_UserType");
 }
 
 <div class="col-md-12">
 
-	@if (IsCustomer)
+	@if (IsCustomer || IsVendor || UserType == "MNGR" || UserType == "COORD")
 	{
 		<form id="formSave" action="@Url.Action("Save_Doc","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -90,7 +91,7 @@
 								}
 							</td>
 
-							@if (IsCustomer)
+							@if (IsCustomer || IsVendor || UserType == "MNGR")
 							{
 								<td>
 									<div class="btn-group">
@@ -111,7 +112,7 @@
 									</div>
 								</td>
 							}
-							else
+							else if (IsCustomer || IsVendor || UserType == "MNGR" || UserType == "COORD")
 							{
 								<td>
 									<div class="btn-group">

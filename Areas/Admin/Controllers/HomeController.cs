@@ -137,6 +137,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 									.Select(x => x.ProjectDetailTypeAccess).FirstOrDefault();
 
 								Common.Set_Session(SessionKey.ProjectDetailTypeAccess, ProjectDetailTypeAccess ?? "");
+								Common.Set_Session("Employee_UserType", employee.UserType);
 							}
 						}
 
