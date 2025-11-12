@@ -9,7 +9,9 @@
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
 	long Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID);
-	List<string> ProjectDetailTypeAccess = Common.Get_Session(SessionKey.ProjectDetailTypeAccess).Split(',').ToList();
+	var projectDetailTypeAccess = Common.Get_Session(SessionKey.ProjectDetailTypeAccess) ?? "";
+
+	List<string> ProjectDetailTypeAccess = !string.IsNullOrEmpty(projectDetailTypeAccess) ? projectDetailTypeAccess.Split(',').ToList() : null;
 
 	string ProjectId = Model.SelectListItems.Where(x => x.Group == "P").Count() > 1 ? null : Model.SelectListItems.Where(x => x.Group == "P").Select(x => x.Value).FirstOrDefault();
 }
@@ -150,7 +152,7 @@
 					<div class="col-10">
 						<div class="container py-5">
 							<div class="row g-4">
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "EPM"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "EPM")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
@@ -159,19 +161,19 @@
 										</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "F3D"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "F3D")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">Final 3D</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "DRW"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "DRW")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">Drawings</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WCLTSC"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WCLTSC")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">
@@ -180,25 +182,25 @@
 										</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "MB"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "MB")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">Mood Board</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "SITE"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "SITE")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">Site Updates</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WPEND"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WPEND")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">Pending Selection & Work</div>
 									</div>
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "MPRO"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "MPRO")))
 								{
 									@if (true@* IsVendor || IsEmployee *@)
 									{
@@ -208,7 +210,7 @@
 									}
 
 								}
-								@if (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "WCOMP"))
+								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WCOMP")))
 								{
 									<div class="col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>

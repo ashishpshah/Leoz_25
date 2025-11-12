@@ -27,6 +27,7 @@ namespace Leoz_25.Controllers
 		public bool IsCustomer { get; set; }
 		public bool IsEmployee { get; set; }
 
+		public long Logged_In_UserId { get; set; }
 		public long Logged_In_VendorId { get; set; }
 		public long Logged_In_CustomerId { get; set; }
 		public long Logged_In_EmployeeId { get; set; }
@@ -39,6 +40,7 @@ namespace Leoz_25.Controllers
 			try { IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1; } catch { }
 			try { IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1; } catch { }
 
+			try { Logged_In_UserId = Common.Get_Session_Int(SessionKey.KEY_USER_ID); } catch { }
 			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_VENDOR_ID); } catch { }
 			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID); } catch { }
 			try { Logged_In_EmployeeId = Common.Get_Session_Int(SessionKey.KEY_EMPLOYEE_ID); } catch { }
@@ -51,6 +53,7 @@ namespace Leoz_25.Controllers
 			try { IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1; } catch { }
 			try { IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1; } catch { }
 
+			try { Logged_In_UserId = Common.Get_Session_Int(SessionKey.KEY_USER_ID); } catch { }
 			try { Logged_In_VendorId = Common.Get_Session_Int(SessionKey.KEY_VENDOR_ID); } catch { }
 			try { Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID); } catch { }
 			try { Logged_In_EmployeeId = Common.Get_Session_Int(SessionKey.KEY_EMPLOYEE_ID); } catch { }

@@ -19,5 +19,6 @@ public partial class LOV
 	public string LOV_Code { get; set; } = null!;
 
 	public string LOV_Desc { get; set; } = null!;
+	public string? ProjectDetailTypeAccess { get; set; } = null!;
 	public int DisplayOrder { get; set; }
 }

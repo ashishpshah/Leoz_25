@@ -138,7 +138,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				//}
 
 
-				if (viewModel != null && viewModel != null)
+				if (viewModel != null && viewModel != null && IsVendor)
 				{
 					if (!Request.Form.ContainsKey("ProjectMap"))
 					{

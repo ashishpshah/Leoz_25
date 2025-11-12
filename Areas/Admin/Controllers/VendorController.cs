@@ -14,7 +14,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/Vendor
 		public ActionResult Index()
 		{
-			CommonViewModel.ObjList = DataContext_Command.Vendor_Get(0).Where(x => Logged_In_VendorId > 0 ? x.CreatedBy == Logged_In_VendorId : Common.IsAdmin()).ToList();
+			var list = DataContext_Command.Vendor_Get(0).ToList();
+
+			CommonViewModel.ObjList = DataContext_Command.Vendor_Get(0).Where(x => IsVendor && x.CreatedBy == Logged_In_UserId).ToList();
 
 			return View(CommonViewModel);
 		}
@@ -31,7 +33,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.Obj = new Vendor() { };
 
-			if (Id > 0) CommonViewModel.Obj = DataContext_Command.Vendor_Get(Id).Where(x => Logged_In_VendorId > 0 ? x.CreatedBy == Logged_In_VendorId : Common.IsAdmin()).FirstOrDefault();
+			var list = DataContext_Command.Vendor_Get(Id).ToList();
+
+			if (Id > 0) CommonViewModel.Obj = list.Where(x => IsVendor && x.CreatedBy == Logged_In_UserId).FirstOrDefault();
 
 			if (CommonViewModel.Obj != null && CommonViewModel.Obj.UserId > 0)
 			{
@@ -65,7 +69,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && viewModel != null)
+				if (viewModel != null && viewModel != null && (Common.IsAdmin() || IsVendor))
 				{
 					#region Validation
 

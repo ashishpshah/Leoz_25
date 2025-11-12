@@ -22,12 +22,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 			CommonViewModel.ObjList = (from x in _context.Using<User>().GetAll().ToList()
 									   join y in _context.Using<UserRoleMapping>().GetAll().ToList() on x.Id equals y.UserId
 									   join z in _context.Using<Role>().GetAll().ToList() on y.RoleId equals z.Id
-									   where y.RoleId > 1 && y.UserId != Common.LoggedUser_Id()
-									   select new User() { Id = x.Id, UserName = x.UserName, /*EmailId = x.EmailId, MobileNo = x.MobileNo,*/ User_Role_Id = z.Id, User_Role = z.Name }).ToList();
+									   where y.RoleId > 1 && y.UserId != Common.LoggedUser_Id() && (IsVendor ? z.Name.ToUpper() == "EMPLOYEE" : true)
+									   select new User() { Id = x.Id, UserName = x.UserName, /*EmailId = x.EmailId, MobileNo = x.MobileNo,*/ User_Role_Id = z.Id, User_Role = z.Name, CreatedBy = x.CreatedBy }).ToList();
 
-			if (Logged_In_VendorId > 0)
+			if (IsVendor && Logged_In_VendorId > 0)
 				CommonViewModel.ObjList = (from x in CommonViewModel.ObjList.ToList()
-										   join x_ in _context.Using<UserVendorMapping>().GetAll().ToList() on x.Id equals x_.UserId
+										   join x_ in _context.Using<UserVendorMapping>().GetAll().ToList() on x.CreatedBy equals x_.UserId
 										   where x_.VendorId == Convert.ToInt64(Logged_In_VendorId)
 										   select x).ToList();
 
@@ -53,7 +53,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			var listRole = _context.Using<Role>().GetByCondition(x => x.Id > 1 && (Logged_In_VendorId > 0 ? x.IsAdmin == false : true)).Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).Distinct().ToList();
+			var listRole = _context.Using<Role>().GetByCondition(x => x.Id > 1 && (Logged_In_VendorId > 0 ? x.IsAdmin == false && x.Name.ToUpper() != "VENDOR" && x.Name.ToUpper() != "EMPLOYEE" : x.Name.ToUpper() == "VENDOR")).Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).Distinct().ToList();
 
 			if (listRole != null && listRole.Count() > 0) CommonViewModel.SelectListItems.AddRange(listRole);
 
@@ -178,7 +178,33 @@ namespace Leoz_25.Areas.Admin.Controllers
 							}
 
 
+
 							var role = _context.Using<Role>().GetByCondition(x => x.Id == viewModel.Obj.User_Role_Id).FirstOrDefault();
+
+							if (viewModel.Obj.Id > 0 && role != null)
+							{
+								if (role.Name.ToUpper() == "VENDOR")
+								{
+									var vendor = _context.Using<Vendor>().GetByCondition(x => x.UserId == viewModel.Obj.Id).FirstOrDefault();
+
+									if (vendor == null)
+										_context.Using<Vendor>().Add(new Vendor()
+										{
+											FirstName = viewModel.Obj.UserName,
+											LastName = "",
+											UserId = viewModel.Obj.Id,
+											RoleId = role.Id,
+											UserName = viewModel.Obj.UserName
+										});
+
+									if (vendor == null) vendor = _context.Using<Vendor>().GetByCondition(x => x.UserId == viewModel.Obj.Id).FirstOrDefault();
+
+									if (viewModel.Obj.Id > 0 && vendor != null
+										&& !_context.Using<UserVendorMapping>().GetByCondition(x => x.UserId == viewModel.Obj.Id && x.VendorId == vendor.Id).Any())
+										_context.Using<UserVendorMapping>().Add(new UserVendorMapping() { UserId = viewModel.Obj.Id, VendorId = vendor.Id });
+
+								}
+							}
 
 							if (viewModel.Obj.Id > 0 && role != null && (Decrypt_RoleId != viewModel.Obj.User_Role_Id))
 							{
@@ -235,9 +261,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 								}
 								catch (Exception ex) { }
 							}
-
-							if (viewModel.Obj.Id > 0 && Logged_In_VendorId > 0)
-								_context.Using<UserVendorMapping>().Add(new UserVendorMapping() { UserId = viewModel.Obj.Id, VendorId = Logged_In_VendorId });
 
 
 							CommonViewModel.IsConfirm = true;
