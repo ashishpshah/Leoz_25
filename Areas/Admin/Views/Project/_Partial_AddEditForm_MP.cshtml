@@ -10,7 +10,7 @@
 
 <div class="col-md-12">
 
-	@if (IsEmployee)
+	@if (IsEmployee || IsVendor)
 	{
 		<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -42,7 +42,7 @@
 					</div>
 				</div>
 
-				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
 						<label class="col-2 col-form-label text-end">Required Quantity</label>
@@ -107,7 +107,7 @@
 					</div>
 				</div>
 
-				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
 						<label class="col-2 col-form-label text-end">Status</label>
@@ -139,13 +139,15 @@
 			</div>
 
 		</form>
-
-		<div class="d-flex align-items-start justify-content-between">
-			<div class="d-flex justify-content-end"> &nbsp; </div>
-			<div class="d-flex justify-content-end">
-				<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteMP(0)"> Add new record </button>
+		@if ((IsEmployee || IsVendor) && Model.Data5 != null && ((string)Model.Data5 == "COORD" || (string)Model.Data5 == "MNGR"))
+		{
+			<div class="d-flex align-items-start justify-content-between">
+				<div class="d-flex justify-content-end"> &nbsp; </div>
+				<div class="d-flex justify-content-end">
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteMP(0)"> Add new record </button>
+				</div>
 			</div>
-		</div>
+		}
 	}
 
 	<div class="table-responsive-sm mt-3" id="divProjectSiteMPList">
@@ -156,7 +158,7 @@
 					<th>Material Code</th>
 					<th>Material Name</th>
 					<th>Material Brand</th>
-					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD")
 					{
 						<th width="10%">Qty / Received</th>
 					}
@@ -164,14 +166,14 @@
 					{
 						<th width="10%">Qty</th>
 					}
-					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 					{
 						<th width="20%">Actual Order Qty </th>
 					}
 					<th width="5%">Status</th>
 					<th width="10%">Status Date</th>
 
-					@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+					@if (IsEmployee || IsVendor)
 					{
 						<th class="text-center" width="10%">Action</th>
 					}
@@ -187,11 +189,11 @@
 							<td>@item.MaterialCode</td>
 							<td>@item.MaterialName</td>
 							<td>@item.MaterialBrand</td>
-							@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD" && (item.Qty_Receive ?? -1) > -1)
+							@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD" && (item.Qty_Receive ?? -1) > -1)
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp; / &nbsp; @item.Qty_Receive.ToString() &nbsp; @item.UOM_Text</td>
 							}
-							else if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+							else if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD")
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp;</td>
 							}
@@ -199,7 +201,7 @@
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
 							}
-							@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+							@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 							{
 								<td>
 									@if (item.Status == "O")
@@ -211,11 +213,11 @@
 							<td>@item.Status_Text</td>
 							<td>@item.StatusDate_Text</td>
 
-							@if (IsEmployee)
+							@if ((IsEmployee || IsVendor))
 							{
 								<td class="text-center">
 									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-									@if (item.Status == "S")
+									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
@@ -223,7 +225,7 @@
 										</button>
 									}
 									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-									@if (item.Status == "S")
+									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
@@ -231,14 +233,14 @@
 										</button>
 									}
 
-									@if (IsEmployee && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+									@if ((IsEmployee || IsVendor) && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
 											Order
 										</button>
 									}
-									@if (IsEmployee && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD")
+									@if ((IsEmployee || IsVendor) && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
