@@ -275,8 +275,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                             //_context.SaveChanges();
                             //}
                         }
-                        catch (Exception ex)
-                        { continue; }
+                        catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); continue; }
                     }
 
 
@@ -320,8 +319,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                     return Json(CommonViewModel);
                 }
             }
-            catch (Exception ex)
-            { }
+            catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
             CommonViewModel.IsSuccess = false;
             CommonViewModel.StatusCode = ResponseStatusCode.Error;

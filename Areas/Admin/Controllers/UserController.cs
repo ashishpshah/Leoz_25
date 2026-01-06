@@ -208,8 +208,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							if (viewModel.Obj.Id > 0 && role != null && (Decrypt_RoleId != viewModel.Obj.User_Role_Id))
 							{
-								try
-								{
 									UserRoleMapping UserRole = _context.Using<UserRoleMapping>().GetByCondition(x => x.UserId == Decrypt_Id && x.RoleId == Decrypt_RoleId).FirstOrDefault();
 
 									if (UserRole != null)
@@ -258,8 +256,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 										//_context.SaveChanges();
 									}
 
-								}
-								catch (Exception ex) { }
 							}
 
 
@@ -274,13 +270,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 							return Json(CommonViewModel);
 						}
 						catch (Exception ex)
-						{ transaction.Rollback(); }
+						{ transaction.Rollback(); LogService.LogInsert(GetCurrentAction(), "", ex); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
@@ -395,8 +391,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex)
-			{ }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 
 			CommonViewModel.Message = "Unable to delete User.";

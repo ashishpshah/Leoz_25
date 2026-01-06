@@ -230,15 +230,15 @@ namespace Leoz_25.Areas.Admin.Controllers
                                             foreach (var item_ in listRoleUserAccess) _context.Using<UserMenuAccess>().Add(item_);
                                             //_context.SaveChanges();
                                         }
-                                    }
-                                    catch (Exception ex) { }
+									}
+									catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
-                                }
+								}
 
-                            }
-                            catch (Exception ex) { }
+							}
+							catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
-                            CommonViewModel.IsConfirm = true;
+							CommonViewModel.IsConfirm = true;
                             CommonViewModel.IsSuccess = true;
                             CommonViewModel.StatusCode = ResponseStatusCode.Success;
                             CommonViewModel.Message = ResponseStatusMessage.Success;
@@ -247,16 +247,16 @@ namespace Leoz_25.Areas.Admin.Controllers
                             transaction.Commit();
 
                             return Json(CommonViewModel);
-                        }
-                        catch (Exception ex) { transaction.Rollback(); }
+						}
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
                     }
 
                     #endregion
                 }
-            }
-            catch (Exception ex) { }
+			}
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
-            CommonViewModel.Message = ResponseStatusMessage.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Error;
             CommonViewModel.IsSuccess = false;
             CommonViewModel.StatusCode = ResponseStatusCode.Error;
 
@@ -296,11 +296,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
                     return Json(CommonViewModel);
                 }
-            }
-            catch (Exception ex)
-            { }
+			}
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
-            CommonViewModel.IsSuccess = false;
+			CommonViewModel.IsSuccess = false;
             CommonViewModel.StatusCode = ResponseStatusCode.Error;
             CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
 

@@ -120,7 +120,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;

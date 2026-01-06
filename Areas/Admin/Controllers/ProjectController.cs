@@ -152,16 +152,16 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								return Json(CommonViewModel);
 							}
-							catch (Exception ex) { transaction.Rollback(); }
+							catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 						}
 
 					}
-					catch (Exception ex) { }
+					catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -193,7 +193,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -420,13 +420,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -455,7 +455,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -630,13 +630,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -668,7 +668,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -830,13 +830,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -865,7 +865,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -1022,13 +1022,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -1060,7 +1060,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				}
 
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.IsSuccess = false;
 			CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -1141,13 +1141,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;
@@ -1477,13 +1477,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						catch (Exception ex) { transaction.Rollback(); }
+						catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); transaction.Rollback(); }
 					}
 
 					#endregion
 				}
 			}
-			catch (Exception ex) { }
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 
 			CommonViewModel.Message = ResponseStatusMessage.Error;
 			CommonViewModel.IsSuccess = false;

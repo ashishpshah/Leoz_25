@@ -12,6 +12,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Index()
 		{
+			LogService.LogInsert(GetCurrentAction(), "Test", null);
+
 			if (Common.LoggedUser_Id() <= 0)
 				return RedirectToAction("Account", "Home", new { Area = "Admin" });
 
@@ -161,6 +163,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 			catch (Exception ex)
 			{
+				LogService.LogInsert(GetCurrentAction(), "", ex);
 				CommonViewModel.IsSuccess = false;
 				CommonViewModel.StatusCode = ResponseStatusCode.Error;
 				CommonViewModel.Message = ResponseStatusMessage.Error + " | " + ex.Message;
