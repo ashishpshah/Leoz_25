@@ -16,7 +16,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			var list = DataContext_Command.Vendor_Get(0).ToList();
 
-			CommonViewModel.ObjList = DataContext_Command.Vendor_Get(0).Where(x => IsVendor && x.CreatedBy == Logged_In_UserId).ToList();
+			CommonViewModel.ObjList = DataContext_Command.Vendor_Get(0).Where(x => Common.IsAdmin() && x.CreatedBy == Logged_In_UserId).ToList();
 
 			return View(CommonViewModel);
 		}
@@ -35,7 +35,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var list = DataContext_Command.Vendor_Get(Id).ToList();
 
-			if (Id > 0) CommonViewModel.Obj = list.Where(x => IsVendor && x.CreatedBy == Logged_In_UserId).FirstOrDefault();
+			if (Id > 0) CommonViewModel.Obj = list.Where(x => Common.IsAdmin() && x.CreatedBy == Logged_In_UserId).FirstOrDefault();
 
 			if (CommonViewModel.Obj != null && CommonViewModel.Obj.UserId > 0)
 			{
