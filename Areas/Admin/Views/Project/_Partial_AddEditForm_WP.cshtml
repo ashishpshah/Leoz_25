@@ -73,7 +73,7 @@
 	}
 
 	@{
-		var grouped = Model.ObjList.GroupBy(i => i.PendingFrom).Select(g => g.Key);
+		var grouped = Model.ObjList.OrderByDescending(x => x.LastModifiedDate?.Ticks).GroupBy(i => i.PendingFrom).Select(g => g.Key);
 
 		<div class="row mb-1">
 			@foreach (string group in grouped.Where(x => IsCustomer ? x == "C" : true))
@@ -99,7 +99,7 @@
 									<tbody>
 										@if (Model.ObjList != null)
 										{
-											foreach (var item in Model.ObjList.Where(x => x.PendingFrom == group).OrderByDescending(x => x.UploadDate.Ticks))
+											foreach (var item in Model.ObjList.Where(x => x.PendingFrom == group).OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks))
 											{
 												<tr>
 													<td>@item.PendingPoint</td>

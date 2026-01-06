@@ -119,7 +119,7 @@
 			<tbody>
 				@if (Model.ObjList != null)
 				{
-					foreach (var item in Model.ObjList)
+					foreach (var item in Model.ObjList.OrderByDescending(x => x.LastModifiedDate?.Ticks))
 					{
 						<tr>
 							<td>@item.Name</td>

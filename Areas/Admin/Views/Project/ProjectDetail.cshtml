@@ -493,7 +493,7 @@
 			}
 			else { ShowLoader(false); CommonAlert_Error('Please select Customer', null); return false; }
 
-			//$('#formSave input[name="ProjectId"]').val(ProjectId).trigger('change');
+			$('#formSave input[name="ProjectId"]').val(ProjectId).trigger('change');
 			//$('#formSave input[name="CustomerId"]').val(CustomerId).trigger('change');
 
 			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
@@ -556,7 +556,7 @@
 			if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) { }
 			else { ShowLoader(false); CommonAlert_Error('Please select Project', null); return false; }
 
-			//$('#formSave input[name="ProjectId"]').val(ProjectId).trigger('change');
+			$('#formSave input[name="ProjectId"]').val(ProjectId).trigger('change');
 
 			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 

@@ -74,7 +74,7 @@
 			<tbody>
 				@if (Model.ObjList != null)
 				{
-					foreach (var (item, index) in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks).Select((item, index) => (item, index)))
+					foreach (var (item, index) in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks).Select((item, index) => (item, index)))
 					{
 						<tr>
 							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy)</td>
