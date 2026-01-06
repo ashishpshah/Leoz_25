@@ -428,8 +428,9 @@ $(document).ready(function () {
     });
 
     $(document).on("keyup", "form", function (event) {
+        event.preventDefault();
         if (event.keyCode === 13 && $('#btnSubmit').length > 0) {
-            event.preventDefault();
+            debugger;
             $('#btnSubmit').trigger('click');
         }
     });
