@@ -1209,7 +1209,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) 
+			&& x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
 			if (listCustomer != null && listCustomer.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
@@ -1247,9 +1248,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			try
 			{
+				var CustomerId = (IsCustomer ? Logged_In_CustomerId : 0);
+				var VendorId = (IsVendor ? Logged_In_VendorId : 0);
+
 				var parameters = new List<SqlParameter>();
 
 				parameters.Add(new SqlParameter("Id", SqlDbType.BigInt) { Value = 0, IsNullable = true });
+				parameters.Add(new SqlParameter("VendorId", SqlDbType.BigInt) { Value = VendorId, IsNullable = true });
+				parameters.Add(new SqlParameter("CustomerId", SqlDbType.BigInt) { Value = CustomerId, IsNullable = true });
 				parameters.Add(new SqlParameter("ProjectId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(ProjectId) ? Convert.ToInt64(ProjectId) : 0, IsNullable = true });
 				parameters.Add(new SqlParameter("Search_Term", SqlDbType.NVarChar) { Value = Search_Term, IsNullable = true });
 				parameters.Add(new SqlParameter("SortCol", SqlDbType.Int) { Value = !string.IsNullOrEmpty(SortCol) ? Convert.ToInt32(SortCol) : 0, IsNullable = true });
