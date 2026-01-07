@@ -1147,6 +1147,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 							   where x.IsActive == true && (CustomerId > 0 ? (cpm == null ? 0 : cpm.CustomerId) == CustomerId : true)
 							   select new { Value = x.Id, Text = x.Name }).ToList();
 
+			if (IsEmployee)
+			{
+				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.Value)).ToList();
+			}
+
 			return Json(listProject);
 		}
 
@@ -1162,7 +1169,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var listProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
 							   join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
-							   into cpmGroup from cpm in cpmGroup.DefaultIfEmpty()
+							   into cpmGroup
+							   from cpm in cpmGroup.DefaultIfEmpty()
 							   where x.IsActive == true
 							   select new { ProjectId = x.Id, ProjectName = x.Name, CustomerId = (cpm == null ? (long?)null : cpm.CustomerId) }).ToList();
 
@@ -1193,13 +1201,16 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
+			var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
+
 			var objProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
 							  join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
-							  into cpmGroup from cpm in cpmGroup.DefaultIfEmpty()
+							  into cpmGroup
+							  from cpm in cpmGroup.DefaultIfEmpty()
 								  //from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (CustomerId > 0 ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 								  //join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							  where x.IsActive == true && (CustomerId > 0 ? (cpm == null ? 0 : cpm.CustomerId) == CustomerId : true) 
-							  && x.Id == ProjectId
+							  where x.IsActive == true && (CustomerId > 0 ? (cpm == null ? 0 : cpm.CustomerId) == CustomerId : true)
+							  && x.Id == ProjectId && (IsEmployee ? listProjectId.Contains(x.Id) : true)
 							  select new Project
 							  {
 								  //VendorId = x.VendorId,
@@ -1261,7 +1272,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (IsEmployee)
 			{
-				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_UserId).Select(x => x.ProjectId).Distinct().ToList();
+				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
 
 				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
 			}
