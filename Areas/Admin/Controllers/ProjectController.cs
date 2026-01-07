@@ -202,34 +202,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-		public ActionResult ProjectDetail()
-		{
-			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
-
-			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
-
-			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
-				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
-
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
-							   join y in listCustomer on x.CustomerId equals y.Id
-							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							   where z.IsActive == true
-							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
-
-			if (IsEmployee)
-			{
-				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
-
-				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
-			}
-
-			if (listProject != null && listProject.Count > 0)
-				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, x.CustomerId.ToString(), "P")).ToList());
-
-			return View(CommonViewModel);
-		}
-
 		public ActionResult Partial_AddEditForm_Doc(long CustomerId = 0, long ProjectId = 0, string Type = null, long ProjectSiteDocId = 0)
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
@@ -1176,6 +1148,43 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(listProject);
 		}
 
+		public ActionResult ProjectDetail()
+		{
+			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
+
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
+
+			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
+				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
+
+			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
+							   join y in listCustomer on x.CustomerId equals y.Id
+							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
+							   where z.IsActive == true
+							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+
+			if (IsCustomer)
+			{
+				var listProjectId = _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == Logged_In_CustomerId && x.VendorId == Logged_In_VendorId)
+					.Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+			}
+
+			if (IsEmployee)
+			{
+				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId && x.VendorId == Logged_In_VendorId)
+					.Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+			}
+
+			if (listProject != null && listProject.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, x.CustomerId.ToString(), "P")).ToList());
+
+			return View(CommonViewModel);
+		}
+
 		[HttpPost]
 		public ActionResult GetProjectDetail(long CustomerId = 0, long ProjectId = 0)
 		{
@@ -1227,6 +1236,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
 							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+
+			if (IsCustomer)
+			{
+				var listProjectId = _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == Logged_In_CustomerId && x.VendorId == Logged_In_VendorId)
+					.Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+			}
 
 			if (IsEmployee)
 			{
