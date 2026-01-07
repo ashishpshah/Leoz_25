@@ -37,8 +37,8 @@
 
 	<style type="text/css">
 		/* .table > :not(caption) > * > * {
-																	padding: .35rem 0.95rem !important;
-																} */
+																			padding: .35rem 0.95rem !important;
+																		} */
 
 		.input-group-text-sm {
 			min-height: calc(1.5em + .56rem + calc(var(--tz-border-width) * 2));
@@ -104,11 +104,15 @@
 				line-height: normal !important;
 			}
 
+		.select2-selection__rendered, .select2-selection__rendered > button, input, optgroup, select, textarea {
+			line-height: var(--tz-body-line-height);
+		}
+
 		/* @@media (min-width: 576px) {
-																																	.form-group.row > .text-right {
-																																		text-align: left !important;
-																																	}
-																																} */
+																																			.form-group.row > .text-right {
+																																				text-align: left !important;
+																																			}
+																																		} */
 	</style>
 
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -130,7 +134,7 @@
 					<!-- Topbar Brand Logo -->
 					<div class="logo-topbar">
 						<!-- Logo light -->
-						<a href="@Url.Action("Index", "Home", new {  area="Admin"})" class="logo-light">
+						<a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="logo-light">
 							<span class="logo-lg">
 								<img src="~/assets/images/logo.png" alt="logo">
 							</span>
@@ -140,7 +144,7 @@
 						</a>
 
 						<!-- Logo Dark -->
-						<a href="@Url.Action("Index", "Home", new {  area="Admin"})" class="logo-dark">
+						<a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="logo-dark">
 							<span class="logo-lg">
 								<img src="~/assets/images/logo-dark.png" alt="dark logo">
 							</span>
@@ -207,7 +211,7 @@
 							</a>
 							*@
 							<!-- item-->
-							<a href="@Url.Action("Logout","Home", new { area = "Admin"})" class="dropdown-item">
+							<a href="@Url.Action("Logout", "Home", new { area = "Admin" })" class="dropdown-item">
 								<i class="ri-logout-box-line fs-18 align-middle me-1"></i>
 								<span>Logout</span>
 							</a>
@@ -221,7 +225,7 @@
 		<div class="leftside-menu">
 
 			<!-- Brand Logo Light -->
-			<a href="@Url.Action("Index", "Home", new {  area="Admin"})" class="logo logo-light">
+			<a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="logo logo-light">
 				<span class="logo-lg">
 					@* <img src="~/assets/images/logo.png" alt="logo"> *@
 					<img src="~/assets/images/leozlogo.jpeg" alt="logo" style="height: 100px !important;">
@@ -233,7 +237,7 @@
 			</a>
 
 			<!-- Brand Logo Dark -->
-			<a href="@Url.Action("Index", "Home", new {  area="Admin"})" class="logo logo-dark">
+			<a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="logo logo-dark">
 				<span class="logo-lg">
 					<img src="~/assets/images/logo-dark.png" alt="dark logo">
 				</span>
@@ -248,7 +252,7 @@
 				<ul class="side-nav">
 
 					<li class="side-nav-item">
-						<a href="@Url.Action("Index", "Home", new {  area="Admin"})" class="side-nav-link">
+						<a href="@Url.Action("Index", "Home", new { area = "Admin" })" class="side-nav-link">
 							<i class="ri-dashboard-3-line"></i>
 							<span> Dashboard </span>
 						</a>
@@ -280,7 +284,7 @@
 									}
 									else
 									{
-										<a href="@(Url.Content("~/")+menu.Url)" class="side-nav-link">
+										<a href="@(Url.Content("~/") + menu.Url)" class="side-nav-link">
 											<i class="ri-dashboard-3-line"></i>
 											<span> @menu.MenuName </span>
 										</a>
@@ -300,7 +304,7 @@
 											@foreach (var item in childMenus.Where(x => x.ParentMenuId == menu.Id).ToList())
 											{
 												<li>
-													<a href="@(string.IsNullOrEmpty(item.Url) ? string.IsNullOrEmpty(item.Area) ? "" : "/" + item.Area +"/"+ item.Controller + "/Index" : Url.Content("~/")+item.Url)"> @item.MenuName </a>
+													<a href="@(string.IsNullOrEmpty(item.Url) ? string.IsNullOrEmpty(item.Area) ? "" : "/" + item.Area + "/" + item.Controller + "/Index" : Url.Content("~/") + item.Url)"> @item.MenuName </a>
 												</li>
 											}
 										</ul>
@@ -349,7 +353,7 @@
 									<button type="button" class="btn btn-secondary modal-btn-close" data-bs-dismiss="modal">Close</button>
 									<button type="button" class="btn btn-success modal-btn-save btnSubmit">Save</button>
 								</div>
-							</div> 
+							</div>
 						</div>
 					</div>
 				</div> <!-- container -->

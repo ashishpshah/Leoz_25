@@ -49,7 +49,7 @@
 												<th>#</th>
 												<th>Employee Name</th>
 												<th>Role</th>
-												<th>Birth Date</th>
+												<th>Project(s)</th>
 												<th width="5%">Status</th>
 												<th>Action</th>
 											</tr>
@@ -65,7 +65,7 @@
 														<td></td>
 														<td>@item.Fullname</td>
 														<td>@item.UserType</td>
-														<td>@item.BirthDate_Text</td>
+														<td>@item.ProjectNames</td>
 														<td class="text-center"><span class="badge bg-@(item.IsActive == true ? "success" : "danger")">@(item.IsActive == true ? "Active" : "Inactive")</span></td>
 														<td>
 															<div class="btn-group">

@@ -49,8 +49,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 			var listUOM = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE").ToList();
 
 			if (listUOM != null && listUOM.Count() > 0)
-				CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.DisplayOrder, x.ProjectDetailTypeAccess, x.LOV_Column)).ToList());
+				CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.DisplayOrder, x.ProjectDetailTypeAccess, "UT")).ToList());
 
+			var listProject = _context.Using<Project>().GetByCondition(x => x.IsActive == true && x.VendorId == Logged_In_VendorId).Distinct().ToList();
+
+			if (listProject != null && listProject.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listProject.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "P")).ToList());
 			return PartialView("_Partial_AddEditForm", CommonViewModel);
 		}
 

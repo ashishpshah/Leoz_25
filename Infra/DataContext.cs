@@ -629,7 +629,9 @@ namespace Leoz_25.Infra
 							BirthDate_Text = dr["BirthDate_Text"] != DBNull.Value ? Convert.ToString(dr["BirthDate_Text"]) : "",
 							IsActive = dr["IsActive"] != DBNull.Value ? Convert.ToBoolean(dr["IsActive"]) : false,
 							IsDeleted = dr["IsDeleted"] != DBNull.Value ? Convert.ToBoolean(dr["IsDeleted"]) : false,
-							CreatedBy = dr["CreatedBy"] != DBNull.Value ? Convert.ToInt64(dr["CreatedBy"]) : 0
+							CreatedBy = dr["CreatedBy"] != DBNull.Value ? Convert.ToInt64(dr["CreatedBy"]) : 0,
+							ProjectIds = dr["ProjectIds"] != DBNull.Value ? Convert.ToString(dr["ProjectIds"]) : "",
+							ProjectNames = dr["ProjectNames"] != DBNull.Value ? Convert.ToString(dr["ProjectNames"]) : ""
 						});
 			}
 			catch (Exception ex) { /*LogService.LogInsert(GetCurrentAction(), "", ex);*/ }
@@ -654,6 +656,7 @@ namespace Leoz_25.Infra
 					parameters.Add(new SqlParameter("MiddleName", SqlDbType.NVarChar) { Value = obj.MiddleName, Direction = ParameterDirection.Input, IsNullable = true });
 					parameters.Add(new SqlParameter("LastName", SqlDbType.NVarChar) { Value = obj.LastName, Direction = ParameterDirection.Input, IsNullable = true });
 					parameters.Add(new SqlParameter("UserType", SqlDbType.NVarChar) { Value = obj.UserType, Direction = ParameterDirection.Input, IsNullable = true });
+					parameters.Add(new SqlParameter("ProjectIds", SqlDbType.NVarChar) { Value = obj.ProjectIds, Direction = ParameterDirection.Input, IsNullable = true });
 					parameters.Add(new SqlParameter("BirthDate", SqlDbType.NVarChar) { Value = obj.BirthDate?.ToString("dd/MM/yyyy"), Direction = ParameterDirection.Input, IsNullable = true });
 					parameters.Add(new SqlParameter("IsActive", SqlDbType.NVarChar) { Value = obj.IsActive, Direction = ParameterDirection.Input, IsNullable = true });
 					parameters.Add(new SqlParameter("Operated_By", SqlDbType.BigInt) { Value = Common.Get_Session_Int(SessionKey.KEY_USER_ID), Direction = ParameterDirection.Input, IsNullable = true });

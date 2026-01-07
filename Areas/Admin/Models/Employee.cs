@@ -44,6 +44,8 @@ namespace Leoz_25
 		[NotMapped] public string BirthDate_Text { get; set; }
 		[NotMapped] public string HireDate_Text { get; set; }
 
+		[NotMapped] public string ProjectIds { get; set; }
+		[NotMapped] public string ProjectNames { get; set; }
 		[NotMapped] public string UserName { get; set; }
 		[NotMapped] public string Password { get; set; }
 		[NotMapped] public bool IsPassword_Reset { get; set; }

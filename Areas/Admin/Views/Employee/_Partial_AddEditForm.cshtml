@@ -139,7 +139,7 @@
 								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
 									@if (Model.SelectListItems != null)
 									{
-										foreach (var item in Model.SelectListItems)
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "UT"))
 										{
 											if (Convert.ToString(Model.Obj.UserType) == item.Value)
 											{
@@ -155,11 +155,28 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-sm-4" style="margin: 0rem !important;">
+					@* <div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row">
 							<label class="col-sm-3 col-form-label text-end">Birth Date</label>
 							<div class="col-sm-9">
 								<input type="date" name="BirthDate_Text" class="form-control form-control-sm" value="@(Model.Obj.BirthDate?.ToString("yyyy-MM-dd"))">
+							</div>
+						</div>
+					</div> *@
+					<div class="col-sm-8" style="margin: 0rem !important;">
+						<div class="form-group row d-flex align-items-center">
+							<label for="ddlProjectIds" class="col-sm-3 col-form-label text-end">Project(s)</label>
+							<div class="col-sm-9">
+								<select id="ddlProjectIds" name="ProjectIds" class="form-control form-control-sm select2_multiple" data-selected="@Model.Obj.ProjectIds">
+									<option value="0">-- Select --</option>
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P"))
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									}
+								</select>
 							</div>
 						</div>
 					</div>
