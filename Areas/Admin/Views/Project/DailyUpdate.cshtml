@@ -161,7 +161,12 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
-			fnLoadTableData();
+
+			$("#ddlProject").attr('data-event', 'off');
+
+			//fnLoadTableData();
+
+			$('#ddlCustomer').trigger('change');
 		});
 
 		function isImage(file) {
@@ -170,8 +175,14 @@
 
 		function fnChange_GetProjects($this) {
 
-			var table = new DataTable('#dataTable_DailyUpdate');
-			table.rows().remove().draw();
+			// var table = new DataTable('#dataTable_DailyUpdate');
+			// table.rows().remove().draw();
+
+			if ($.fn.DataTable.isDataTable('#dataTable_DailyUpdate')) {
+				$('#dataTable_DailyUpdate').DataTable().destroy();
+			}
+
+			$('#dataTable_DailyUpdate').text('');
 
 			var ddlProject = $("#ddlProject");
 			ddlProject.empty();
@@ -179,7 +190,7 @@
 
 			var CustomerId = $($this).find('option:selected').val();
 
-			if (typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0) {
+			if (true/* typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0 */) {
 
 				ShowLoader(true);
 				$.ajax({
@@ -193,16 +204,19 @@
 					success: function (response) {
 						ShowLoader(false);
 
+						$("#ddlProject").attr('data-event', 'off');
+
 						if (response != null && response.length > 0) {
 							$.each(response, function () {
 								ddlProject.append($("<option></option>").val(this['Value']).html(this['Text']));
 							});
+
+							$("#ddlProject").val(response[0]['Value']);
 						}
 
-						$("#ddlProject").attr('data-event', 'off');
-						$("#ddlProject").trigger('change');
-						$("#ddlProject").select2();
 						$("#ddlProject").attr('data-event', 'on');
+
+						$("#ddlProject").trigger('change');
 					},
 					failure: function (xhr) {
 						ShowLoader(false);

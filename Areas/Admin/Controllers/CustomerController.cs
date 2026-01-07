@@ -78,7 +78,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate.Ticks).FirstOrDefault();
+				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
 
 				if (subscription == null)
 				{

@@ -56,7 +56,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate.Ticks).FirstOrDefault();
+				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
 
 				if (subscription == null)
 				{
@@ -1140,10 +1140,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == CustomerId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
-							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							   where z.IsActive == true
-							   select new { Value = z.Id, Text = z.Name }).ToList();
+			var listProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
+							   join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
+							   into cpmGroup
+							   from cpm in cpmGroup.DefaultIfEmpty()
+							   where x.IsActive == true && (CustomerId > 0 ? (cpm == null ? 0 : cpm.CustomerId) == CustomerId : true)
+							   select new { Value = x.Id, Text = x.Name }).ToList();
 
 			return Json(listProject);
 		}
@@ -1152,16 +1154,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) && x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true)
+			&& x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
-			if (listCustomer != null && listCustomer.Count > 0 && IsVendor)
+			if (listCustomer != null && listCustomer.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
-							   join y in listCustomer on x.CustomerId equals y.Id
-							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							   where z.IsActive == true
-							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+			var listProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
+							   join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
+							   into cpmGroup from cpm in cpmGroup.DefaultIfEmpty()
+							   where x.IsActive == true
+							   select new { ProjectId = x.Id, ProjectName = x.Name, CustomerId = (cpm == null ? (long?)null : cpm.CustomerId) }).ToList();
 
 			if (IsCustomer)
 			{
@@ -1190,27 +1193,31 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (CustomerId > 0 ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
-							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							  where z.IsActive == true
+			var objProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
+							  join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
+							  into cpmGroup from cpm in cpmGroup.DefaultIfEmpty()
+								  //from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (CustomerId > 0 ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
+								  //join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
+							  where x.IsActive == true && (CustomerId > 0 ? (cpm == null ? 0 : cpm.CustomerId) == CustomerId : true) 
+							  && x.Id == ProjectId
 							  select new Project
 							  {
-								  //VendorId = z.VendorId,
-								  Name = z.Name,
-								  Description = z.Description,
-								  StartDate = z.StartDate,
-								  HandoverDate = z.HandoverDate,
-								  Address = z.Address,
-								  CityId = z.CityId,
-								  StateId = z.StateId,
-								  CountryId = z.CountryId,
-								  LocationLink = z.LocationLink,
-								  CoordinatorId = z.CoordinatorId,
-								  CoordinatorName = z.CoordinatorName,
-								  SiteDetails = z.SiteDetails,
-								  StartDate_Text = z.StartDate != DateTime.MinValue ? z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "",
-								  HandoverDate_Text = z.HandoverDate != DateTime.MinValue && z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : "",
-								  IsActive = z.IsActive
+								  //VendorId = x.VendorId,
+								  Name = x.Name,
+								  Description = x.Description,
+								  StartDate = x.StartDate,
+								  HandoverDate = x.HandoverDate,
+								  Address = x.Address,
+								  CityId = x.CityId,
+								  StateId = x.StateId,
+								  CountryId = x.CountryId,
+								  LocationLink = x.LocationLink,
+								  CoordinatorId = x.CoordinatorId,
+								  CoordinatorName = x.CoordinatorName,
+								  SiteDetails = x.SiteDetails,
+								  StartDate_Text = x.StartDate != DateTime.MinValue ? x.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "",
+								  HandoverDate_Text = x.HandoverDate != DateTime.MinValue && x.HandoverDate.HasValue ? x.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : "",
+								  IsActive = x.IsActive
 							  }).FirstOrDefault();
 
 			var listEmployee = _context.Using<Employee>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList();
@@ -1231,11 +1238,18 @@ namespace Leoz_25.Areas.Admin.Controllers
 			if (listCustomer != null && listCustomer.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
 
-			var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
-							   join y in listCustomer on x.CustomerId equals y.Id
-							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
-							   where z.IsActive == true
-							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+			var listProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
+							   join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
+							   into cpmGroup
+							   from cpm in cpmGroup.DefaultIfEmpty()
+							   where x.IsActive == true
+							   select new { ProjectId = x.Id, ProjectName = x.Name, CustomerId = (cpm == null ? (long?)null : cpm.CustomerId) }).ToList();
+
+			//var listProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
+			//				   join y in listCustomer on x.CustomerId equals y.Id
+			//				   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
+			//				   where z.IsActive == true
+			//				   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
 
 			if (IsCustomer)
 			{

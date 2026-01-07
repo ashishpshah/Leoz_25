@@ -15,7 +15,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/VendorSubscription
 		public ActionResult Index()
 		{
-			CommonViewModel.Obj = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate.Ticks).FirstOrDefault();
+			CommonViewModel.Obj = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
 
 			var list = _context.Using<Package>().GetByCondition(x => x.IsActive == true || x.Id == (CommonViewModel.Obj != null ? CommonViewModel.Obj.PackageId : -1)).ToList();
 
@@ -24,7 +24,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			if (CommonViewModel.Obj != null != null)
 			{
 				CommonViewModel.Obj.StartDate_Text = CommonViewModel.Obj.StartDate != DateTime.MinValue ? CommonViewModel.Obj.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "";
-				CommonViewModel.Obj.EndDate_Text = CommonViewModel.Obj.EndDate != DateTime.MinValue ? CommonViewModel.Obj.EndDate.ToString("dd/MM/yyyy").Replace("-", "/") : "";
+				CommonViewModel.Obj.EndDate_Text = CommonViewModel.Obj.EndDate != DateTime.MinValue ? CommonViewModel.Obj.EndDate?.ToString("dd/MM/yyyy").Replace("-", "/") : "";
 			}
 
 			CommonViewModel.Data1 = list;
@@ -51,12 +51,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate.Ticks).FirstOrDefault();
+					var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
 
 					var selected_Package = _context.Using<Package>().GetByCondition(x => x.Id == (subscription != null ? subscription.PackageId : -1)).FirstOrDefault();
 
 
-					if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate.Date.Ticks >= DateTime.Now.Date.Ticks && (subscription.IsActive == false || subscription.IsCancelled == true))
+					if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks && (subscription.IsActive == false || subscription.IsCancelled == true))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -64,7 +64,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
-					else if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate.Date.Ticks >= DateTime.Now.Date.Ticks)
+					else if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks)
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;

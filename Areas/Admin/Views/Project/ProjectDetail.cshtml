@@ -54,7 +54,7 @@
 		<div class="card">
 			<div class="card-header">
 				<div class="row no-gutters mb-1">
-					<div class="col-sm-4 @(IsVendor ? "" : "d-none")">
+					<div class="col-sm-4 @(IsCustomer ? "d-none" : "")">
 						<div class="form-group row d-flex align-items-center">
 							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
 							<div class="col-sm-9">
@@ -234,7 +234,7 @@
 	<script type="text/javascript">
 		$(document).ready(function () {
 
-			let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+			let change = '@(IsCustomer ? "1" : "")'
 
 			if (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)
 				$("#ddlProject").trigger('change');
@@ -252,13 +252,14 @@
 				fnOpenModal(boxType);
 			});
 
-			fnChange_GetProjectDetails(null);
+			//fnChange_GetProjectDetails(null);
+			$('#ddlCustomer').trigger('change');
 		});
 
 		function fnOpenModal(boxType) {
 			ShowLoader(true);
 
-			let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+			let change = '@(IsCustomer ? "1" : "")'
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $('#ddlProject option:selected').val();
@@ -304,7 +305,7 @@
 
 			if (typeof $id != 'undefined' && $id != null && parseInt($id) > 0) {
 
-				let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+				let change = '@(IsCustomer ? "1" : "")'
 
 				var CustomerId = $('#ddlCustomer option:selected').val();
 				var ProjectId = $('#ddlProject option:selected').val();
@@ -330,7 +331,7 @@
 
 
 		function fnAddEdit_ProjectSiteDoc($id, $type) {
-			debugger;
+			
 			$('#largeModal .modal-body form #divProjectSiteDoc input[type="text"]').val('').trigger('change');
 			$('#largeModal .modal-body form #divProjectSiteDoc select').val('').trigger('change');
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
@@ -338,7 +339,7 @@
 
 			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
-			let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+			let change = '@(IsCustomer ? "1" : "")'
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $('#ddlProject option:selected').val();
@@ -368,7 +369,7 @@
 					processData: false,
 					dataType: "json",
 					success: function (response) {
-						debugger;
+						
 						try {
 							ShowLoader(false);
 							if (typeof response != 'undefined' && response != null && response != '') {
@@ -489,7 +490,7 @@
 
 			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
-			let change = '@(IsCustomer || IsEmployee ? "1" : "")'
+			let change = '@(IsCustomer ? "1" : "")'
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $('#ddlProject option:selected').val();
@@ -618,7 +619,7 @@
 		}
 
 		function fnSubmitForm_Success(response, $id) {
-			debugger;
+			
 			try {
 				if (response.StatusCode === 1) {
 					const boxType = $($('.box[data-active="true"]')).attr('data-type').trim();
@@ -646,9 +647,9 @@
 			$('#divProjectDetail').addClass('d-none');
 			$('#divProjectDetailOption').addClass('d-none');
 
-			var CustomerId = $($this).find('option:selected').val();
+			var CustomerId = $('#ddlCustomer option:selected').val();
 
-			if (typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > 0) {
+			if (true/* typeof CustomerId != 'undefined' && CustomerId != null && CustomerId != '' && !isNaN(parseInt(CustomerId)) && parseInt(CustomerId) > -1 */) {
 
 				var ddlProject = $("#ddlProject");
 				ddlProject.empty();
@@ -666,16 +667,19 @@
 					success: function (response) {
 						ShowLoader(false);
 
+						$("#ddlProject").attr('data-event', 'off');
+
 						if (response != null && response.length > 0) {
 							$.each(response, function () {
 								ddlProject.append($("<option></option>").val(this['Value']).html(this['Text']));
 							});
+
+							$("#ddlProject").val(response[0]['Value']);
 						}
 
-						$("#ddlProject").attr('data-event', 'off');
-						$("#ddlProject").trigger('change');
-						$("#ddlProject").select2();
 						$("#ddlProject").attr('data-event', 'on');
+
+						$("#ddlProject").trigger('change');
 					},
 					failure: function (xhr) {
 						ShowLoader(false);

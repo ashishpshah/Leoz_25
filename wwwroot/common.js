@@ -430,7 +430,7 @@ $(document).ready(function () {
     $(document).on("keyup", "form", function (event) {
         event.preventDefault();
         if (event.keyCode === 13 && $('#btnSubmit').length > 0) {
-            debugger;
+            
             $('#btnSubmit').trigger('click');
         }
     });
@@ -1997,7 +1997,7 @@ function fnLoadCommonTable_Buttons($selector) {
 function fnView_File($filePath, $title) {
     if (typeof $filePath != 'undefined' && $filePath != null && $filePath != '' && $filePath.trim().length > 0) {
         ShowLoader(true);
-        debugger;
+        
         if ($('#largeModal').hasClass('show')) {
             $('#largeModal .modal-body').hide();
             $('#largeModal .modal-body-embed').show().html(`
