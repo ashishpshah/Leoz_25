@@ -215,10 +215,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 							   join y in listCustomer on x.CustomerId equals y.Id
 							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
-							   select new { ProjectId = z.Id, ProjectName = z.Name }).ToList();
+							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+
+			if (IsEmployee)
+			{
+				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+			}
 
 			if (listProject != null && listProject.Count > 0)
-				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
+				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, x.CustomerId.ToString(), "P")).ToList());
 
 			return View(CommonViewModel);
 		}
@@ -1192,8 +1199,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 								  CoordinatorId = z.CoordinatorId,
 								  CoordinatorName = z.CoordinatorName,
 								  SiteDetails = z.SiteDetails,
-								  StartDate_Text = z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/"),
-								  HandoverDate_Text = z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : string.Empty,
+								  StartDate_Text = z.StartDate != DateTime.MinValue ? z.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "",
+								  HandoverDate_Text = z.HandoverDate != DateTime.MinValue && z.HandoverDate.HasValue ? z.HandoverDate.Value.ToString("dd/MM/yyyy").Replace("-", "/") : "",
 								  IsActive = z.IsActive
 							  }).FirstOrDefault();
 
@@ -1209,7 +1216,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true) 
+			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true)
 			&& x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
 			if (listCustomer != null && listCustomer.Count > 0)
@@ -1219,10 +1226,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 							   join y in listCustomer on x.CustomerId equals y.Id
 							   join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							   where z.IsActive == true
-							   select new { ProjectId = z.Id, ProjectName = z.Name }).ToList();
+							   select new { ProjectId = z.Id, ProjectName = z.Name, CustomerId = x.CustomerId }).ToList();
+
+			if (IsEmployee)
+			{
+				var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_UserId).Select(x => x.ProjectId).Distinct().ToList();
+
+				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+			}
 
 			if (listProject != null && listProject.Count > 0)
-				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, "P")).ToList());
+				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, x.CustomerId.ToString(), "P")).ToList());
 
 			CommonViewModel.Data5 = _context.Using<Employee>().GetByCondition(x => x.IsActive == true && x.Id == Logged_In_EmployeeId
 														&& x.VendorId == Logged_In_VendorId).Select(x => x.UserType).FirstOrDefault();
@@ -1233,6 +1247,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		public ActionResult GetData(JqueryDatatableParam param)
 		{
 			string ProjectId = HttpContext.Request.Query["ProjectId"];
+			string CustomerId = HttpContext.Request.Query["CustomerId"];
 
 			string Search_Term = HttpContext.Request.Query["sSearch"];
 			string SortCol = HttpContext.Request.Query["iSortCol_0"];
@@ -1244,18 +1259,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			List<ProjectDailyUpdate> result = new List<ProjectDailyUpdate>();
 
-			//Id ProjectId   Project_Name CustomerId  Customer_Name Notes   FilePath Date    Date_Text
-
 			try
 			{
-				var CustomerId = (IsCustomer ? Logged_In_CustomerId : 0);
+				if (IsCustomer) CustomerId = Logged_In_CustomerId.ToString();
+
 				var VendorId = (IsVendor ? Logged_In_VendorId : 0);
 
 				var parameters = new List<SqlParameter>();
 
 				parameters.Add(new SqlParameter("Id", SqlDbType.BigInt) { Value = 0, IsNullable = true });
 				parameters.Add(new SqlParameter("VendorId", SqlDbType.BigInt) { Value = VendorId, IsNullable = true });
-				parameters.Add(new SqlParameter("CustomerId", SqlDbType.BigInt) { Value = CustomerId, IsNullable = true });
+				parameters.Add(new SqlParameter("CustomerId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(CustomerId) ? Convert.ToInt64(CustomerId) : 0, IsNullable = true });
 				parameters.Add(new SqlParameter("ProjectId", SqlDbType.BigInt) { Value = !string.IsNullOrEmpty(ProjectId) ? Convert.ToInt64(ProjectId) : 0, IsNullable = true });
 				parameters.Add(new SqlParameter("Search_Term", SqlDbType.NVarChar) { Value = Search_Term, IsNullable = true });
 				parameters.Add(new SqlParameter("SortCol", SqlDbType.Int) { Value = !string.IsNullOrEmpty(SortCol) ? Convert.ToInt32(SortCol) : 0, IsNullable = true });
@@ -1279,6 +1293,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 							Date_Text = dr["Date_Text"] != DBNull.Value ? Convert.ToString(dr["Date_Text"]) : "",
 							FilePath = dr["FilePath"] != DBNull.Value ? Convert.ToString(dr["FilePath"]) : ""
 						});
+
+
+				if (IsEmployee)
+				{
+					var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
+
+					result = result.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+				}
+
 			}
 			catch { }
 

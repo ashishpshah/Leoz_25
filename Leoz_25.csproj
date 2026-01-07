@@ -85,6 +85,7 @@
 	  <Folder Include="wwwroot\assets\vendor\jquery-sparkline\src\" />
 	  <Folder Include="wwwroot\assets\vendor\moment\src\" />
 	  <Folder Include="wwwroot\assets\vendor\twitter-bootstrap-wizard\examples\" />
+	  <Folder Include="wwwroot\Uploads\Project_Daily_Update\" />
 	</ItemGroup>
 
 

@@ -34,6 +34,7 @@ namespace Leoz_25.Infra
 		public virtual DbSet<ProjectSitePendingWork> ProjectSitePendingWorks { get; set; }
 
 		public virtual DbSet<CustomerProjectMapping> CustomerProjectMappings { get; set; }
+		public virtual DbSet<EmployeeProjectMapping> EmployeeProjectMappings { get; set; }
 
 		public virtual DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
 		public virtual DbSet<LOV> LOVs { get; set; }
@@ -71,6 +72,11 @@ namespace Leoz_25.Infra
 			modelBuilder.Entity<CustomerProjectMapping>(entity =>
 			{
 				entity.ToTable("CustomerProjectMapping", "dbo");
+			});
+
+			modelBuilder.Entity<EmployeeProjectMapping>(entity =>
+			{
+				entity.ToTable("EmployeeProjectMapping", "dbo");
 			});
 
 			modelBuilder.Entity<Package>(entity =>

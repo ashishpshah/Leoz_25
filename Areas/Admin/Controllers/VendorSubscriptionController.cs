@@ -21,6 +21,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (CommonViewModel.Obj != null) CommonViewModel.Obj.Selected_Package = list.Where(x => x.Id == CommonViewModel.Obj.PackageId).FirstOrDefault();
 
+			if (CommonViewModel.Obj != null != null)
+			{
+				CommonViewModel.Obj.StartDate_Text = CommonViewModel.Obj.StartDate != DateTime.MinValue ? CommonViewModel.Obj.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "";
+				CommonViewModel.Obj.EndDate_Text = CommonViewModel.Obj.EndDate != DateTime.MinValue ? CommonViewModel.Obj.EndDate.ToString("dd/MM/yyyy").Replace("-", "/") : "";
+			}
+
 			CommonViewModel.Data1 = list;
 
 			return View(CommonViewModel);
@@ -83,6 +89,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
 						CommonViewModel.Message = $"You are already used plan Project Limit.";
+
+						return Json(CommonViewModel);
+					}
+
+					var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
+
+					if (listEmployee == null || listEmployee.Count() == 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = $"There are no employees associated with this vendor. Please First Add Employee of your company";
 
 						return Json(CommonViewModel);
 					}

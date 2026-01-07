@@ -8,7 +8,11 @@
 	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
-	long Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID);
+	string Logged_In_CustomerId = Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID).ToString();
+
+	if (IsCustomer || Common.Get_Session_Int(SessionKey.KEY_CUSTOMER_ID) <= 0)
+		Logged_In_CustomerId = Model.SelectListItems.Where(x => x.Group == "C").Count() > 0 ? Model.SelectListItems.Where(x => x.Group == "C").Select(x => x.Value).FirstOrDefault() : Logged_In_CustomerId;
+
 	var projectDetailTypeAccess = Common.Get_Session(SessionKey.ProjectDetailTypeAccess) ?? "";
 
 	List<string> ProjectDetailTypeAccess = !string.IsNullOrEmpty(projectDetailTypeAccess) ? projectDetailTypeAccess.Split(',').ToList() : null;
@@ -61,7 +65,7 @@
 									{
 										foreach (var item in Model.SelectListItems.Where(x => x.Group == "C"))
 										{
-											if (Logged_In_CustomerId.ToString() == item.Value)
+											if (Logged_In_CustomerId == item.Value)
 											{
 												<option value="@item.Value" selected>@item.Text</option>
 											}
@@ -80,11 +84,13 @@
 							<label for="ddlProject" class="col-sm-1 col-form-label text-end"> Project </label>
 							<div class="col-sm-10">
 								<select id="ddlProject" class="form-control form-control-sm select2"
-										onchange="fnChange_GetProjectDetails(this)">
+										onchange="fnChange_GetProjectDetails(this)" data-event="on">
 									<option value="0">-- Select --</option>
 									@if (Model.SelectListItems != null)
 									{
-										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P"))
+										if (int.TryParse(Logged_In_CustomerId, out int CustomerId)) { }
+
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P" && (CustomerId > 0 ? x.Value2 == CustomerId.ToString() : true)))
 										{
 											if (ProjectId == item.Value)
 											{
@@ -246,6 +252,7 @@
 				fnOpenModal(boxType);
 			});
 
+			fnChange_GetProjectDetails(null);
 		});
 
 		function fnOpenModal(boxType) {
@@ -665,8 +672,10 @@
 							});
 						}
 
+						$("#ddlProject").attr('data-event', 'off');
 						$("#ddlProject").trigger('change');
 						$("#ddlProject").select2();
+						$("#ddlProject").attr('data-event', 'on');
 					},
 					failure: function (xhr) {
 						ShowLoader(false);
@@ -682,12 +691,14 @@
 
 		function fnChange_GetProjectDetails($this) {
 
+			if ($("#ddlProject").attr('data-event') == 'off') return;
+
 			$('#divProjectDetail dd').text('');
 			$('#divProjectDetail').addClass('d-none');
 			$('#divProjectDetailOption').addClass('d-none');
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
-			var ProjectId = $($this).find('option:selected').val();
+			var ProjectId = $('#ddlProject option:selected').val();
 
 			if (typeof ProjectId != 'undefined' && ProjectId != null && ProjectId != '' && !isNaN(parseInt(ProjectId)) && parseInt(ProjectId) > 0) {
 				ShowLoader(true);

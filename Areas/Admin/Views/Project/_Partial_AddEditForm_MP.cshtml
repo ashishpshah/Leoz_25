@@ -68,7 +68,7 @@
 
 					if (Model.Data5 != null && (string)Model.Data5 == "COORD")
 					{
-						<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "":"none");">
+						<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "" : "none");">
 							<label for="Qty_Receive" class="col-2 col-form-label text-end">Receive Quantity</label>
 							<div class="col-3">
 								<input type="text" name="Qty_Receive" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Receive.ToString()">
@@ -139,7 +139,7 @@
 			</div>
 
 		</form>
-		@if ((IsEmployee || IsVendor) && Model.Data5 != null && ((string)Model.Data5 == "COORD" || (string)Model.Data5 == "MNGR"))
+		@if ((IsEmployee || IsVendor) && Model.Data5 != null && ((string)Model.Data5 == "COORD" || (string)Model.Data5 == "PUR"))
 		{
 			<div class="d-flex align-items-start justify-content-between">
 				<div class="d-flex justify-content-end"> &nbsp; </div>
@@ -216,7 +216,6 @@
 							@if ((IsEmployee || IsVendor))
 							{
 								<td class="text-center">
-									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
 									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
@@ -224,16 +223,15 @@
 											<i class="ri-pencil-fill"></i>
 										</button>
 									}
-									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
 									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP","Project", new {  area = "Admin" })?Id=@item.Id');">
+												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP", "Project", new { area = "Admin" })?Id=@item.Id');">
 											<i class="ri-delete-bin-2-line"></i>
 										</button>
 									}
 
-									@if ((IsEmployee || IsVendor) && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+									@if ((IsEmployee || IsVendor) && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "PUR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
