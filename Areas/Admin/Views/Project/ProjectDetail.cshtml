@@ -252,6 +252,8 @@
 				fnOpenModal(boxType);
 			});
 
+			$("#ddlProject").attr('data-event', 'off');
+
 			//fnChange_GetProjectDetails(null);
 			$('#ddlCustomer').trigger('change');
 		});
@@ -642,6 +644,8 @@
 		}
 
 		function fnChange_GetProjects($this) {
+
+			if ($("#ddlProject").attr('data-event') == 'off') return;
 
 			$('#divProjectDetail dd').text('');
 			$('#divProjectDetail').addClass('d-none');
