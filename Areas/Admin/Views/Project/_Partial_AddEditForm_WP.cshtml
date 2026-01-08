@@ -11,7 +11,7 @@
 
 <div class="col-md-12">
 
-	@if (IsEmployee)
+	@if ((IsEmployee && Model.Data5 != null && ((string)Model.Data5 == "MNGR" || (string)Model.Data5 != "COORD")) || IsCustomer || IsVendor)
 	{
 		<form id="formSave" action="@Url.Action("Save_WP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -64,6 +64,9 @@
 
 		</form>
 
+	}
+	@if ((IsEmployee && Model.Data5 != null && ((string)Model.Data5 == "MNGR" || (string)Model.Data5 != "COORD")) || IsCustomer || IsVendor)
+	{
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
@@ -78,7 +81,7 @@
 		<div class="row mb-1">
 			@foreach (string group in grouped.Where(x => IsCustomer ? x == "C" : true))
 			{
-				<div class="col-sm-12 col-md-@(grouped.Where(x => IsCustomer ? x == "C" : true).Count()>1?"6":"12")">
+				<div class="col-sm-12 col-md-@(grouped.Where(x => IsCustomer ? x == "C" : true).Count() > 1 ? "6" : "12")">
 					<div class="x_panel">
 						<div class="x_title">
 							<h2>@(Model.SelectListItems.FirstOrDefault(x => x.Value == group)?.Text) <small>&nbsp; pending point</small></h2>
@@ -134,7 +137,7 @@
 																@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
 																@{
 																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WP","Project", new {  area = "Admin" })?Id=@item.Id');">
+																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WP", "Project", new { area = "Admin" })?Id=@item.Id');">
 																		<i class="ri-delete-bin-2-line"></i>
 																	</button>
 																}
