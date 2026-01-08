@@ -216,14 +216,14 @@
 							@if ((IsEmployee || IsVendor))
 							{
 								<td class="text-center">
-									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+									@if ((item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
 											<i class="ri-pencil-fill"></i>
 										</button>
 									}
-									@if (item.Status == "S" && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+									@if ((item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 									{
 										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_MP", "Project", new { area = "Admin" })?Id=@item.Id');">

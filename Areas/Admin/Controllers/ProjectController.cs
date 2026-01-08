@@ -297,14 +297,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
 
-					if (viewModel.Id == 0 && (files == null || files.Count() <= 0))
-					{
-						CommonViewModel.IsSuccess = false;
-						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please upload file.";
+					//if (viewModel.Id == 0 && (files == null || files.Count() <= 0))
+					//{
+					//	CommonViewModel.IsSuccess = false;
+					//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					//	CommonViewModel.Message = "Please upload file.";
 
-						return Json(CommonViewModel);
-					}
+					//	return Json(CommonViewModel);
+					//}
 
 					if (string.IsNullOrEmpty(viewModel.Remark))
 					{
