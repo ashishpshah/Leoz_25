@@ -236,8 +236,8 @@
 
 			let change = '@(IsCustomer ? "1" : "")'
 
-			if (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)
-				$("#ddlProject").trigger('change');
+			// if (typeof change != 'undefined' && change != null && change != '' && !isNaN(parseInt(change)) && parseInt(change) > 0)
+			// 	$("#ddlProject").trigger('change');
 
 			$('.box').on('click', function () {
 				ShowLoader(true);
