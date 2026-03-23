@@ -16,7 +16,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="Name" class="col-sm-3 col-form-label text-end">Project Name</label>
+						<label for="Name" class="col-sm-3 col-form-label text-md-end">Project Name</label>
 						<div class="col-sm-6">
 							<input type="text" data-altType="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name" autocomplete="off">
 						</div>
@@ -26,7 +26,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="Description" class="col-sm-3 col-form-label text-end">Description</label>
+						<label for="Description" class="col-sm-3 col-form-label text-md-end">Description</label>
 						<div class="col-sm-9">
 							<textarea class="form-control form-control-sm" rows="3" id="Description" name="Description" autocomplete="off">@Model.Obj.Description</textarea>
 						</div>
@@ -36,12 +36,12 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label class="col-sm-3 col-form-label text-end">Start Date</label>
+						<label class="col-sm-3 col-form-label text-md-end">Start Date</label>
 						<div class="col-sm-2">
 							<input type="date" name="StartDate_Text" class="form-control form-control-sm" value="@(Model.Obj.StartDate.ToString("yyyy-MM-dd"))">
 						</div>
 
-						<label class="col-sm-3 col-form-label text-end">Handover Date</label>
+						<label class="col-sm-3 col-form-label text-md-end">Handover Date</label>
 						<div class="col-sm-2">
 							<input type="date" name="HandoverDate_Text" class="form-control form-control-sm" value="@(Model.Obj.HandoverDate?.ToString("yyyy-MM-dd"))">
 						</div>
@@ -51,7 +51,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="LocationLink" class="col-sm-3 col-form-label text-end">Google Location</label>
+						<label for="LocationLink" class="col-sm-3 col-form-label text-md-end">Google Location</label>
 						<div class="col-sm-9">
 							<input type="text" data-altType="text" class="form-control form-control-sm" id="LocationLink" name="LocationLink" value="@Model.Obj.LocationLink" autocomplete="off">
 						</div>
@@ -61,7 +61,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="ddlCoordinatorId" class="col-sm-3 col-form-label text-end">Coordinator</label>
+						<label for="ddlCoordinatorId" class="col-sm-3 col-form-label text-md-end">Coordinator</label>
 						<div class="col-sm-6">
 							<select id="ddlCoordinatorId" name="CoordinatorId" class="form-control form-control-sm select2" data-selected="@Model.Obj.CoordinatorId">
 								<option value="0">-- Select --</option>
@@ -88,7 +88,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="SiteDetails" class="col-sm-3 col-form-label text-end">Site Details</label>
+						<label for="SiteDetails" class="col-sm-3 col-form-label text-md-end">Site Details</label>
 						<div class="col-sm-9">
 							<textarea class="form-control form-control-sm" rows="3" id="SiteDetails" name="SiteDetails" autocomplete="off">@Model.Obj.SiteDetails</textarea>
 						</div>
@@ -98,7 +98,7 @@
 			<div class="row no-gutters mb-1">
 				<div class="col-sm-12">
 					<div class="form-group row d-flex align-items-center">
-						<label for="IsActive" class="col-sm-3 col-form-label text-end">Status</label>
+						<label for="IsActive" class="col-sm-3 col-form-label text-md-end">Status</label>
 						<div class="col-sm-6">
 							<div class="form-check form-check-inline form-control border-0">
 								<input type="checkbox" class="form-check-input" id="switch_Status"

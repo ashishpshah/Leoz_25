@@ -56,7 +56,7 @@
 				<div class="row no-gutters mb-1">
 					<div class="col-sm-4 @(IsCustomer ? "d-none" : "")">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
+							<label for="ddlCustomer" class="col-sm-3 col-form-label text-md-end"> Customer </label>
 							<div class="col-sm-9">
 								<select id="ddlCustomer" class="form-control form-control-sm select2"
 										data-selected="@Logged_In_CustomerId" onchange="fnChange_GetProjects(this)">
@@ -81,7 +81,7 @@
 					</div>
 					<div class="col-sm-6">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ddlProject" class="col-sm-1 col-form-label text-end"> Project </label>
+							<label for="ddlProject" class="col-sm-1 col-form-label text-md-end"> Project </label>
 							<div class="col-sm-10">
 								<select id="ddlProject" class="form-control form-control-sm select2"
 										onchange="fnChange_GetProjectDetails(this)" data-event="on">
@@ -114,19 +114,19 @@
 					<div class="col-md-6 my-1">
 						<dl class="row mb-0">
 
-							<dt class="col-sm-3 text-end">Project Name : </dt>
+							<dt class="col-sm-3 text-md-end">Project Name : </dt>
 							<dd class="col-sm-9" id="ProjectName"></dd>
 
-							<dt class="col-sm-3 text-end">Description : </dt>
+							<dt class="col-sm-3 text-md-end">Description : </dt>
 							<dd class="col-sm-9" id="Description"> </dd>
 
-							<dt class="col-sm-3 text-end">Start Date : </dt>
+							<dt class="col-sm-3 text-md-end">Start Date : </dt>
 							<dd class="col-sm-9" id="StartDate"></dd>
 
-							<dt class="col-sm-3 text-end">Handover Date : </dt>
+							<dt class="col-sm-3 text-md-end">Handover Date : </dt>
 							<dd class="col-sm-9" id="HandoverDate"></dd>
 
-							<dt class="col-sm-3 text-end">Address : </dt>
+							<dt class="col-sm-3 text-md-end">Address : </dt>
 							<dd class="col-sm-9" id="Address"> </dd>
 
 						</dl>
@@ -134,19 +134,19 @@
 
 					<div class="col-md-6 my-1">
 						<dl class="row mb-0">
-							<dt class="col-sm-3 text-end">Coordinator : </dt>
+							<dt class="col-sm-3 text-md-end">Coordinator : </dt>
 							<dd class="col-sm-9" id="Coordinator"></dd>
 
-							<dt class="col-sm-3 text-end">Site Detail : </dt>
+							<dt class="col-sm-3 text-md-end">Site Detail : </dt>
 							<dd class="col-sm-9" id="SiteDetail"> </dd>
 
-							<dt class="col-sm-3 text-end">Status : </dt>
+							<dt class="col-sm-3 text-md-end">Status : </dt>
 							<dd class="col-sm-9" id="Status"></dd>
 
-							<dt class="col-sm-3 text-end">&nbsp;</dt>
+							<dt class="col-sm-3 text-md-end">&nbsp;</dt>
 							<dd class="col-sm-9">&nbsp;</dd>
 
-							<dt class="col-sm-3 text-end">Location Link : </dt>
+							<dt class="col-sm-3 text-md-end">Location Link : </dt>
 							<dd class="col-sm-9" id="LocationLink">&nbsp;</dd>
 						</dl>
 					</div>
