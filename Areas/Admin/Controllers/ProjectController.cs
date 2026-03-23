@@ -1164,9 +1164,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true)
 			&& x.IsActive == true && x.VendorId == Logged_In_VendorId).ToList();
 
-			if (listCustomer != null && listCustomer.Count > 0)
-				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
-
 			var listProject = (from x in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList()
 							   join z in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList() on x.Id equals z.ProjectId
 							   into cpmGroup
@@ -1188,10 +1185,18 @@ namespace Leoz_25.Areas.Admin.Controllers
 					.Select(x => x.ProjectId).Distinct().ToList();
 
 				listProject = listProject.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
+
+				var listCustomerId = _context.Using<CustomerProjectMapping>().GetByCondition(x => listProjectId.Contains(x.ProjectId) && x.VendorId == Logged_In_VendorId)
+					.Select(x => x.CustomerId).Distinct().ToList();
+
+				listCustomer = listCustomer.Where(x => listCustomerId.Contains(x.Id)).ToList();
 			}
 
 			if (listProject != null && listProject.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listProject.Distinct().Select(x => new SelectListItem_Custom(x.ProjectId.ToString(), x.ProjectName, x.CustomerId.ToString(), "P")).ToList());
+
+			if (listCustomer != null && listCustomer.Count > 0)
+				CommonViewModel.SelectListItems.AddRange(listCustomer.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Fullname, "C")).ToList());
 
 			return View(CommonViewModel);
 		}
