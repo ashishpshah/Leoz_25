@@ -388,10 +388,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 									}
 								}
 							}
-							catch (Exception)
+							catch (Exception ex)
 							{
-								CommonViewModel.Message = "Issue in Uploading Image/PDF.";
-								CommonViewModel.IsSuccess = false;
+                                LogService.LogInsert(GetCurrentAction(), "", ex);
+                                CommonViewModel.Message = "Issue in Uploading Image/PDF.";                               
+                                CommonViewModel.IsSuccess = false;
 								CommonViewModel.StatusCode = ResponseStatusCode.Error;
 							}
 
