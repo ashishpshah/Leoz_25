@@ -19,7 +19,7 @@
 				<div class="row no-gutters p-0 m-0">
 					<div class="col-6">
 						<div class="form-group row d-flex align-items-center">
-							<label for="UserName" class="col-sm-3 col-form-label text-end">Username</label>
+							<label for="UserName" class="col-sm-3 col-form-label text-md-end">Username</label>
 							<div class="col-sm-6">
 								<input type="text" class="form-control form-control-sm" id="UserName" name="UserName" value="@Model.Obj.UserName" autocomplete="off">
 							</div>
@@ -28,7 +28,7 @@
 						<div class="form-group row d-flex align-items-center">
 							@if (Model.Obj != null && Model.Obj.Id > 0)
 							{
-								<label for="IsPassword_Reset" class="col-sm-3 col-form-label text-end">Password Reset</label>
+								<label for="IsPassword_Reset" class="col-sm-3 col-form-label text-md-end">Password Reset</label>
 								<div class="col-sm-6">
 									<div class="form-check form-check-inline form-control border-0">
 										<input type="checkbox" class="form-check-input" id="switch_Password_Reset"
@@ -39,7 +39,7 @@
 							}
 							else
 							{
-								<label for="Password" class="col-3 col-form-label text-end">Password</label>
+								<label for="Password" class="col-3 col-form-label text-md-end">Password</label>
 								<div class="col-6">
 									<div class="input-group input-group-merge">
 										<input type="password" id="Password" name="Password" class="form-control form-control-sm" placeholder="********" autocomplete="off">
@@ -55,7 +55,7 @@
 					</div>
 					<div class="col-6">
 						<div class="form-group row d-flex align-items-center">
-							<label for="IsActive" class="col-sm-3 col-form-label text-end">Status</label>
+							<label for="IsActive" class="col-sm-3 col-form-label text-md-end">Status</label>
 							<div class="col-sm-6">
 								<div class="form-check form-check-inline form-control border-0">
 									<input type="checkbox" class="form-check-input" id="switch_Status"
@@ -76,7 +76,7 @@
 				<div class="row no-gutters">
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="FirstName" class="col-sm-3 col-form-label text-end">Firstname</label>
+							<label for="FirstName" class="col-sm-3 col-form-label text-md-end">Firstname</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" id="FirstName" name="FirstName" value="@Model.Obj.FirstName" autocomplete="off">
 							</div>
@@ -84,7 +84,7 @@
 					</div>
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="MiddleName" class="col-sm-3 col-form-label text-end">Middlename</label>
+							<label for="MiddleName" class="col-sm-3 col-form-label text-md-end">Middlename</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" id="MiddleName" name="MiddleName" value="@Model.Obj.MiddleName" autocomplete="off">
 							</div>
@@ -92,7 +92,7 @@
 					</div>
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="LastName" class="col-sm-3 col-form-label text-end">Lastname</label>
+							<label for="LastName" class="col-sm-3 col-form-label text-md-end">Lastname</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" id="LastName" name="LastName" value="@Model.Obj.LastName" autocomplete="off">
 							</div>
@@ -102,7 +102,7 @@
 				<div class="row no-gutters">
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="Email" class="col-sm-3 col-form-label text-end">Email</label>
+							<label for="Email" class="col-sm-3 col-form-label text-md-end">Email</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" id="Email" name="Email" value="@Model.Obj.Email" autocomplete="off">
 							</div>
@@ -110,7 +110,7 @@
 					</div>
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ContactNo" class="col-sm-3 col-form-label text-end">Contact No.</label>
+							<label for="ContactNo" class="col-sm-3 col-form-label text-md-end">Contact No.</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="ContactNo" name="ContactNo" value="@Model.Obj.ContactNo" autocomplete="off">
 							</div>
@@ -118,7 +118,7 @@
 					</div>
 					<div class="col-sm-4" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ContactNo_Alternate" class="col-sm-3 col-form-label text-end">Alternate Contact No. </label>
+							<label for="ContactNo_Alternate" class="col-sm-3 col-form-label text-md-end">Alternate Contact No. </label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="ContactNo_Alternate" name="ContactNo_Alternate" value="@Model.Obj.ContactNo_Alternate" autocomplete="off">
 							</div>
@@ -130,7 +130,7 @@
 				<div class="row no-gutters box">
 					<div class="col-sm-6" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ContactNo" class="col-sm-2 col-form-label text-end">Logo</label>
+							<label for="ContactNo" class="col-sm-2 col-form-label text-md-end">Logo</label>
 							<div class="col-sm-9 row">
 								<span class="control-fileupload">
 									<label for="file1" class="text-left">Please choose a file on your computer.</label>

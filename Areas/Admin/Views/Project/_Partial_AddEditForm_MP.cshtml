@@ -20,23 +20,23 @@
 				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 
 				<div class="row mb-1">
-					<label for="MaterialFor" class="col-2 col-form-label text-end">Material For</label>
+					<label for="MaterialFor" class="col-2 col-form-label text-md-end">Material For</label>
 					<div class="col-6">
 						<input type="text" name="MaterialFor" class="form-control" value="@Model.Obj.MaterialFor">
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="MaterialName" class="col-2 col-form-label text-end">Material Name</label>
+					<label for="MaterialName" class="col-2 col-form-label text-md-end">Material Name</label>
 					<div class="col-6">
 						<input type="text" name="MaterialName" class="form-control" value="@Model.Obj.MaterialName">
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="MaterialCode" class="col-2 col-form-label text-end">Material Code</label>
+					<label for="MaterialCode" class="col-2 col-form-label text-md-end">Material Code</label>
 					<div class="col-3">
 						<input type="text" name="MaterialCode" class="form-control" value="@Model.Obj.MaterialCode">
 					</div>
-					<label for="MaterialBrand" class="col-2 col-form-label text-end">Material Brand</label>
+					<label for="MaterialBrand" class="col-2 col-form-label text-md-end">Material Brand</label>
 					<div class="col-5">
 						<input type="text" name="MaterialBrand" class="form-control" value="@Model.Obj.MaterialBrand">
 					</div>
@@ -45,13 +45,13 @@
 				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
-						<label class="col-2 col-form-label text-end">Required Quantity</label>
+						<label class="col-2 col-form-label text-md-end">Required Quantity</label>
 						<div class="col-3">
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()" @(Model.Obj != null && Model.Obj.Id > 0 ? "readonly" : "")>
 						</div>
 					</div>
 					<div class="row mb-1">
-						<label for="Qty_Order" class="col-2 col-form-label text-end">Order Quantity</label>
+						<label for="Qty_Order" class="col-2 col-form-label text-md-end">Order Quantity</label>
 						<div class="col-3">
 							<input type="text" name="Qty_Order" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Order.ToString()">
 						</div>
@@ -60,7 +60,7 @@
 				else
 				{
 					<div class="row mb-1">
-						<label for="Qty" class="col-2 col-form-label text-end">Quantity</label>
+						<label for="Qty" class="col-2 col-form-label text-md-end">Quantity</label>
 						<div class="col-3">
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
 						</div>
@@ -69,7 +69,7 @@
 					if (Model.Data5 != null && (string)Model.Data5 == "COORD")
 					{
 						<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "" : "none");">
-							<label for="Qty_Receive" class="col-2 col-form-label text-end">Receive Quantity</label>
+							<label for="Qty_Receive" class="col-2 col-form-label text-md-end">Receive Quantity</label>
 							<div class="col-3">
 								<input type="text" name="Qty_Receive" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Receive.ToString()">
 							</div>
@@ -78,7 +78,7 @@
 				}
 
 				<div class="row mb-1">
-					<label for="UOM" class="col-2 col-form-label text-end">UOM</label>
+					<label for="UOM" class="col-2 col-form-label text-md-end">UOM</label>
 					<div class="col-3">
 						<select name="UOM" class="form-control form-control-sm select2">
 							<option value="">-- Select --</option>
@@ -110,7 +110,7 @@
 				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
 					<div class="row mb-1">
-						<label class="col-2 col-form-label text-end">Status</label>
+						<label class="col-2 col-form-label text-md-end">Status</label>
 						<div class="col-3 col-form-label">
 
 							<div class="form-check form-check-inline">
@@ -130,7 +130,7 @@
 				}
 
 				<div class="row mb-1">
-					<label class="col-2 col-form-label text-end">&nbsp;</label>
+					<label class="col-2 col-form-label text-md-end">&nbsp;</label>
 					<div class="col-9">
 						<button type="button" class="btn btn-success btnSubmit">Save</button>
 						<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>

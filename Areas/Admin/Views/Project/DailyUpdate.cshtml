@@ -81,7 +81,7 @@
 				<div class="row no-gutters mb-1">
 					<div class="col-sm-4 @(IsCustomer ? "d-none" : "")">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ddlCustomer" class="col-sm-3 col-form-label text-end"> Customer </label>
+							<label for="ddlCustomer" class="col-sm-3 col-form-label text-md-end"> Customer </label>
 							<div class="col-sm-9">
 								<select id="ddlCustomer" name="CustomerId" class="form-control form-control-sm select2"
 										data-selected="@Logged_In_CustomerId" onchange="fnChange_GetProjects(this)">
@@ -106,7 +106,7 @@
 					</div>
 					<div class="col-sm-6">
 						<div class="form-group row d-flex align-items-center">
-							<label for="ddlProject" class="col-sm-1 col-form-label text-end"> Project </label>
+							<label for="ddlProject" class="col-sm-1 col-form-label text-md-end"> Project </label>
 							<div class="col-sm-10">
 								<select id="ddlProject" name="ProjectId" class="form-control form-control-sm select2"
 										onchange="fnLoadTableData()" data-event="on">

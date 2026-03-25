@@ -16,7 +16,7 @@
 			<div class="row no-gutters">
 				<div class="col-12">
 					<div class="form-group row">
-						<label for="Name" class="col-2 col-form-label text-end">Name</label>
+						<label for="Name" class="col-2 col-form-label text-md-end">Name</label>
 						<div class="col-sm-4">
 							<input type="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name"
 								   data-required data-msg="The Role Name field is required." placeholder="Role" autocomplete="off">
@@ -26,7 +26,7 @@
 					@if (Common.IsSuperAdmin())
 					{
 						<div class="form-group row">
-							<label for="IsAdmin" class="col-2 col-form-label text-end">Admin</label>
+							<label for="IsAdmin" class="col-2 col-form-label text-md-end">Admin</label>
 							<div class="col-sm-4">
 								<div class="form-check form-check-inline form-control border-0">
 									<input type="checkbox" class="form-check-input"
@@ -39,7 +39,7 @@
 					}
 
 					<div class="form-group row">
-						<label for="IsActive" class="col-2 col-form-label text-end">Status</label>
+						<label for="IsActive" class="col-2 col-form-label text-md-end">Status</label>
 						<div class="col-sm-4">
 							<div class="form-check form-check-inline form-control border-0">
 								<input type="checkbox" class="form-check-input"
@@ -55,7 +55,7 @@
 						var selectedValue = Model.Obj.CreatedDate_Text.Split(',').ToList();
 
 						<div class="form-group row">
-							<label class="col-2 col-form-label text-end">Select Menu</label>
+							<label class="col-2 col-form-label text-md-end">Select Menu</label>
 							<div class="col-sm-8 d-flex flex-wrap">
 								<select multiple id="selectMenu" class="form-control form-control-sm select2 w-100" onchange="fnChange_Select('Menu')">
 									<option value="">-- Select --</option>
@@ -85,7 +85,7 @@
 						var selectedValue = Model.Obj.ProjectDetailTypeAccess?.Split(',').ToList();
 
 						<div class="form-group row">
-							<label class="col-2 col-form-label text-end">Select Project Detail Type</label>
+							<label class="col-2 col-form-label text-md-end">Select Project Detail Type</label>
 							<div class="col-sm-8 d-flex flex-wrap">
 								<select multiple id="selectProjectDetailTypeAccess" class="form-control form-control-sm select2 w-100" onchange="fnChange_Select('ProjectDetailTypeAccess')">
 									<option value="">-- Select --</option>

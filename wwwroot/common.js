@@ -1773,13 +1773,15 @@ function fnLoadCommonTable($selector) {
     }
 
     dataTable_main = $($selector).DataTable({
+        scrollX: true,
+        scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: true,
-        responsive: true,
+        autoWidth: false,
+        responsive: false,
         pageLength: 25,
         lengthMenu: [
             [10, 25, 50, -1],
@@ -1808,13 +1810,14 @@ function fnLoadCommonTable_ScrollX($selector) {
 
     $($selector).DataTable({
         scrollX: true,
+        scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: true,
-        responsive: true,
+        autoWidth: false,
+        responsive: false,
         pageLength: 25,
         lengthMenu: [
             [10, 25, 50, -1],
@@ -1842,13 +1845,15 @@ function fnLoadCommonTable_Checkboxes($selector) {
     }
 
     dataTable_Checkboxes = $($selector).DataTable({
+        scrollX: true,
+        scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: true,
-        responsive: true,
+        autoWidth: false,
+        responsive: false,
         pageLength: 25,
         lengthMenu: [
             [10, 25, 50, -1],
@@ -1871,7 +1876,10 @@ function fnLoadCommonTable_Checkboxes($selector) {
         fixedColumns: true,
         dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
             "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded")
+        }
     });
 
     $($selector + " thead th.no_sorting").removeClass('sorting');
@@ -1888,13 +1896,15 @@ function fnLoadCommonTable_SrNo($selector) {
     }
 
     dataTable_SrNo = $($selector).DataTable({
+        scrollX: true,
+        scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: true,
-        responsive: true,
+        autoWidth: false,
+        responsive: false,
         pageLength: 25,
         lengthMenu: [
             [10, 25, 50, -1],
@@ -1912,6 +1922,9 @@ function fnLoadCommonTable_SrNo($selector) {
             var index = iDisplayIndexFull + 1;
             $("td:first", nRow).html(index);
             return nRow;
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded")
         }
     });
 
@@ -1933,13 +1946,15 @@ function fnLoadCommonTable_Buttons($selector) {
         $title = 'Data export';
 
     $($selector).DataTable({
+        scrollX: true,
+        scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: true,
-        responsive: true,
+        autoWidth: false,
+        responsive: false,
         columnDefs: [
             { "targets": 0, "className": "text-center", "width": "3%", "autoWidth": false, "searchable": false, "orderable": false },
             { "targets": -1, "className": "text-center", "width": "3%", "autoWidth": false, "searchable": false, "orderable": false }
