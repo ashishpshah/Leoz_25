@@ -362,38 +362,42 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							try
 							{
-								if (files != null && files.Count() > 0 && files[0].Length > 0)
+                                LogService.LogInsert(GetCurrentAction(), "Step 1", null);
+                                if (files != null && files.Count() > 0 && files[0].Length > 0)
 								{
-									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "ProjectSiteDoc", $"{viewModel.ProjectId}");
-
-									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-									var file = files[0];
+									string folderPath = Path.Combine(AppHttpContextAccessor.ContentRootPath, "Uploads", "ProjectSiteDoc", $"{viewModel.ProjectId}");
+                                    LogService.LogInsert(GetCurrentAction(), "Step 2:"+folderPath, null);
+                                  
+                                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+                                    LogService.LogInsert(GetCurrentAction(), "Step 3", null);
+                                    var file = files[0];
 									string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName); // Ensure file name is safe
 									string filePath = Path.Combine(folderPath, fileName);
-
-									// Save the file
-									using (var stream = new FileStream(filePath, FileMode.Create))
+                                    LogService.LogInsert(GetCurrentAction(), "Step 4:"+ filePath, null);
+                                    // Save the file
+                                    using (var stream = new FileStream(filePath, FileMode.Create))
 									{
 										file.CopyTo(stream);
 									}
-
-									obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
-
-									if (obj != null)
+                                    LogService.LogInsert(GetCurrentAction(), "Step 5:", null);
+                                    obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+                                    LogService.LogInsert(GetCurrentAction(), "Step 6:", null);
+                                    if (obj != null)
 									{
-										obj.FilePath = filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/");
-
-										_context.Using<ProjectSiteDoc>().Update(obj);
+										obj.FilePath = filePath.Replace(AppHttpContextAccessor.ContentRootPath, "").Replace("\\", "/");
+                                        LogService.LogInsert(GetCurrentAction(), "Step 7:", null);
+                                        _context.Using<ProjectSiteDoc>().Update(obj);
 									}
-								}
-							}
+                                    LogService.LogInsert(GetCurrentAction(), "Step 8:", null);
+                                }
+                                LogService.LogInsert(GetCurrentAction(), "Step 9:", null);
+                            }
 							catch (Exception ex)
 							{
                                 LogService.LogInsert(GetCurrentAction(), "", ex);
-                                CommonViewModel.Message = "Issue in Uploading Image/PDF.";                               
-                                CommonViewModel.IsSuccess = false;
-								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+        //                        CommonViewModel.Message = "Issue in Uploading Image/PDF.";                               
+        //                        CommonViewModel.IsSuccess = false;
+								//CommonViewModel.StatusCode = ResponseStatusCode.Error;
 							}
 
 							transaction.Commit();
@@ -1502,7 +1506,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 								{
 									List<string> filePaths = new List<string>();
 
-									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "Project_Daily_Update", $"{viewModel.ProjectId}");
+									string folderPath = Path.Combine(AppHttpContextAccessor.ContentRootPath, "Uploads", "Project_Daily_Update", $"{viewModel.ProjectId}");
 
 									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
@@ -1525,7 +1529,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 										using (var stream = new FileStream(filePath, FileMode.Create)) { file.CopyTo(stream); }
 
-										filePaths.Add(filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/"));
+										filePaths.Add(filePath.Replace(AppHttpContextAccessor.ContentRootPath, "").Replace("\\", "/"));
 									}
 
 									if (filePaths != null && filePaths.Count() > 0)

@@ -8,9 +8,13 @@ internal class Program
 	private static void Main(string[] args)
 	{
 		var builder = WebApplication.CreateBuilder(args);
-
-		// Add services to the container.
-		builder.Services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+        // Set max request size (10 MB)
+        builder.WebHost.ConfigureKestrel(serverOptions =>
+        {
+            serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
+        });
+        // Add services to the container.
+        builder.Services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 		builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 		{
