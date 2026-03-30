@@ -327,6 +327,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
+							if (viewModel.Type == "F3D") obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == viewModel.ProjectId && x.Type == "F3D").FirstOrDefault();
+
 							if (obj != null && obj.Status != "R")
 							{
 								obj.Remark = viewModel.Remark;
@@ -335,6 +337,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.Type = viewModel.Type;
 
 								_context.Using<ProjectSiteDoc>().Update(obj);
+								viewModel.Id = obj.Id;
 							}
 							else if (obj != null && obj.Status == "R")
 							{
@@ -364,36 +367,31 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								if (files != null && files.Count() > 0 && files[0].Length > 0)
 								{
-									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "ProjectSiteDoc", $"{viewModel.ProjectId}");
-
-									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
 									var file = files[0];
-									string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName); // Ensure file name is safe
-									string filePath = Path.Combine(folderPath, fileName);
 
-									// Save the file
-									using (var stream = new FileStream(filePath, FileMode.Create))
+									using (var memoryStream = new MemoryStream())
 									{
-										file.CopyTo(stream);
-									}
+										file.CopyTo(memoryStream);
 
-									obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+										obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-									if (obj != null)
-									{
-										obj.FilePath = filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/");
+										if (obj != null && memoryStream.ToArray().Length > 0)
+										{
+											obj.FileName = Path.GetFileName(file.FileName);
+											obj.FileContentType = file.ContentType;
+											obj.FileData = memoryStream.ToArray();
 
-										_context.Using<ProjectSiteDoc>().Update(obj);
+											_context.Using<ProjectSiteDoc>().Update(obj);
+										}
 									}
 								}
 							}
 							catch (Exception ex)
 							{
-                                LogService.LogInsert(GetCurrentAction(), "", ex);
-                                CommonViewModel.Message = "Issue in Uploading Image/PDF.";                               
-                                CommonViewModel.IsSuccess = false;
-								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								LogService.LogInsert(GetCurrentAction(), "", ex);
+								//CommonViewModel.Message = "Issue in Uploading Image/PDF.";
+								//CommonViewModel.IsSuccess = false;
+								//CommonViewModel.StatusCode = ResponseStatusCode.Error;
 							}
 
 							transaction.Commit();
@@ -1339,7 +1337,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 							//Customer_Name = dr["Customer_Name"] != DBNull.Value ? Convert.ToString(dr["Customer_Name"]) : "",
 							Notes = dr["Notes"] != DBNull.Value ? Convert.ToString(dr["Notes"]) : "",
 							Date_Text = dr["Date_Text"] != DBNull.Value ? Convert.ToString(dr["Date_Text"]) : "",
-							FilePath = dr["FilePath"] != DBNull.Value ? Convert.ToString(dr["FilePath"]) : ""
+							FilePath = dr["FilePath"] != DBNull.Value ? Convert.ToString(dr["FilePath"]) : "",
+							HasFiles = dr["HasFiles"] != DBNull.Value ? Convert.ToBoolean(dr["HasFiles"]) : false,
+							CreatedBy = dr["CreatedBy"] != DBNull.Value ? Convert.ToInt32(dr["CreatedBy"]) : 0,
+							LastModifiedBy = dr["LastModifiedBy"] != DBNull.Value ? Convert.ToInt32(dr["LastModifiedBy"]) : 0,
 						});
 
 
@@ -1382,21 +1383,38 @@ namespace Leoz_25.Areas.Admin.Controllers
 					parameters.Add(new SqlParameter("DisplayStart", SqlDbType.Int) { Value = 0, IsNullable = true });
 					parameters.Add(new SqlParameter("DisplayLength", SqlDbType.Int) { Value = 10, IsNullable = true });
 
-					var dt = DataContext_Command.ExecuteStoredProcedure_DataTable("SP_Project_Daily_Update_GET", parameters.ToList());
+					var ds = DataContext_Command.ExecuteStoredProcedure_DataSet("SP_Project_Daily_Update_GET", parameters.ToList());
 
-					if (dt != null && dt.Rows.Count > 0)
+					if (ds != null && ds.Tables.Count > 0 && ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0)
 						_CommonViewModel.Obj = new ProjectDailyUpdate()
 						{
-							Id = dt.Rows[0]["Id"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["Id"]) : 0,
-							ProjectId = dt.Rows[0]["ProjectId"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["ProjectId"]) : 0,
-							Project_Name = dt.Rows[0]["Project_Name"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Project_Name"]) : "",
-							//CustomerId = dt.Rows[0]["CustomerId"] != DBNull.Value ? Convert.ToInt64(dt.Rows[0]["CustomerId"]) : 0,
-							//Customer_Name = dt.Rows[0]["Customer_Name"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Customer_Name"]) : "",
-							Notes = dt.Rows[0]["Notes"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Notes"]) : "",
-							Date = dt.Rows[0]["Date"] != DBNull.Value ? Convert.ToDateTime(dt.Rows[0]["Date_Text"]) : nullDateTime,
-							Date_Text = dt.Rows[0]["Date_Text"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["Date_Text"]) : "",
-							FilePath = dt.Rows[0]["FilePath"] != DBNull.Value ? Convert.ToString(dt.Rows[0]["FilePath"]) : ""
+							Id = ds.Tables[0].Rows[0]["Id"] != DBNull.Value ? Convert.ToInt64(ds.Tables[0].Rows[0]["Id"]) : 0,
+							ProjectId = ds.Tables[0].Rows[0]["ProjectId"] != DBNull.Value ? Convert.ToInt64(ds.Tables[0].Rows[0]["ProjectId"]) : 0,
+							Project_Name = ds.Tables[0].Rows[0]["Project_Name"] != DBNull.Value ? Convert.ToString(ds.Tables[0].Rows[0]["Project_Name"]) : "",
+							//CustomerId = ds.Tables[0].Rows[0]["CustomerId"] != DBNull.Value ? Convert.ToInt64(ds.Tables[0].Rows[0]["CustomerId"]) : 0,
+							//Customer_Name = ds.Tables[0].Rows[0]["Customer_Name"] != DBNull.Value ? Convert.ToString(ds.Tables[0].Rows[0]["Customer_Name"]) : "",
+							Notes = ds.Tables[0].Rows[0]["Notes"] != DBNull.Value ? Convert.ToString(ds.Tables[0].Rows[0]["Notes"]) : "",
+							Date = ds.Tables[0].Rows[0]["Date"] != DBNull.Value ? Convert.ToDateTime(ds.Tables[0].Rows[0]["Date_Text"]) : nullDateTime,
+							Date_Text = ds.Tables[0].Rows[0]["Date_Text"] != DBNull.Value ? Convert.ToString(ds.Tables[0].Rows[0]["Date_Text"]) : "",
+							FilePath = ds.Tables[0].Rows[0]["FilePath"] != DBNull.Value ? Convert.ToString(ds.Tables[0].Rows[0]["FilePath"]) : "",
+							HasFiles = ds.Tables[0].Rows[0]["HasFiles"] != DBNull.Value ? Convert.ToBoolean(ds.Tables[0].Rows[0]["HasFiles"]) : false,
+							CreatedBy = ds.Tables[0].Rows[0]["CreatedBy"] != DBNull.Value ? Convert.ToInt32(ds.Tables[0].Rows[0]["CreatedBy"]) : 0,
+							LastModifiedBy = ds.Tables[0].Rows[0]["LastModifiedBy"] != DBNull.Value ? Convert.ToInt32(ds.Tables[0].Rows[0]["LastModifiedBy"]) : 0,
+							Files = new List<ProjectDailyUpdateFiles>()
 						};
+
+					if (ds != null && ds.Tables.Count > 1 && ds.Tables[1] != null && ds.Tables[1].Rows.Count > 0)
+					{
+						foreach (DataRow dr in ds.Tables[1].Rows)
+							_CommonViewModel.Obj.Files.Add(new ProjectDailyUpdateFiles()
+							{
+								Id = dr["Id"] != DBNull.Value ? Convert.ToInt64(dr["Id"]) : 0,
+								DailyUpdateId = dr["DailyUpdateId"] != DBNull.Value ? Convert.ToInt64(dr["DailyUpdateId"]) : 0,
+								FileName = dr["FileName"] != DBNull.Value ? Convert.ToString(dr["FileName"]) : "",
+								FileContentType = dr["FileContentType"] != DBNull.Value ? Convert.ToString(dr["FileContentType"]) : "",
+								FileData = dr["FileData"] != DBNull.Value ? (byte[])dr["FileData"] : null
+							});
+					}
 				}
 				catch { }
 			}
@@ -1500,54 +1518,33 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								if (files != null && files.Count() > 0)
 								{
-									List<string> filePaths = new List<string>();
-
-									string folderPath = Path.Combine(AppHttpContextAccessor.WebRootPath, "Uploads", "Project_Daily_Update", $"{viewModel.ProjectId}");
-
-									if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
 									foreach (var file in files)
 									{
-										string fileName = $"{viewModel.Id} " + Path.GetFileName(file.FileName);
-										string filePath = Path.Combine(folderPath, fileName);
-
-										int counter = 1;
-										while (System.IO.File.Exists(filePath))
+										using (var memoryStream = new MemoryStream())
 										{
-											// If the file exists, append a number to the file name
-											string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
-											string fileExtension = Path.GetExtension(file.FileName);
-											string newFileName = $"{fileNameWithoutExtension}_{counter}{fileExtension}";
+											file.CopyTo(memoryStream);
 
-											filePath = Path.Combine(folderPath, newFileName);
-											counter++;
-										}
+											if (memoryStream.ToArray().Length > 0)
+											{
+												var objFile = new ProjectDailyUpdateFiles();
 
-										using (var stream = new FileStream(filePath, FileMode.Create)) { file.CopyTo(stream); }
+												objFile.DailyUpdateId = viewModel.Id;
+												objFile.FileName = Path.GetFileName(file.FileName);
+												objFile.FileContentType = file.ContentType;
+												objFile.FileData = memoryStream.ToArray();
 
-										filePaths.Add(filePath.Replace(AppHttpContextAccessor.WebRootPath, "").Replace("\\", "/"));
-									}
-
-									if (filePaths != null && filePaths.Count() > 0)
-									{
-										obj = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
-
-										if (obj != null)
-										{
-											if (!string.IsNullOrEmpty(obj.FilePath)) filePaths.Insert(0, obj.FilePath);
-
-											obj.FilePath = string.Join(",", filePaths.ToArray());
-
-											_context.Using<ProjectDailyUpdate>().Update(obj);
+												_context.Using<ProjectDailyUpdateFiles>().Add(objFile);
+											}
 										}
 									}
 								}
 							}
-							catch (Exception)
+							catch (Exception ex)
 							{
-								CommonViewModel.Message = "Issue in Uploading Image/PDF.";
-								CommonViewModel.IsSuccess = false;
-								CommonViewModel.StatusCode = ResponseStatusCode.Error;
+								LogService.LogInsert(GetCurrentAction(), "", ex);
+								//CommonViewModel.Message = "Issue in Uploading Image/PDF.";
+								//CommonViewModel.IsSuccess = false;
+								//CommonViewModel.StatusCode = ResponseStatusCode.Error;
 							}
 
 							transaction.Commit();
@@ -1569,6 +1566,53 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
+		public IActionResult ViewDocument(long ProjectId = 0, long ProjectSiteDocId = 0, long CustomerId = 0)
+		{
+			var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).FirstOrDefault();
+			if (obj?.FileData == null) return NotFound();
+
+			Response.Headers.Add("Content-Disposition", "inline; filename=" + obj?.FileName);
+
+			return File(obj?.FileData, obj?.FileContentType ?? "application/pdf");
+		}
+
+		public IActionResult ViewDocument_DailyUpdateFile(long DailyUpdateFileId)
+		{
+			var obj = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
+			if (obj?.FileData == null) return NotFound();
+
+			Response.Headers.Add("Content-Disposition", "inline; filename=" + obj?.FileName);
+
+			return File(obj?.FileData, obj?.FileContentType ?? "application/pdf");
+		}
+
+		[HttpPost]
+		public IActionResult Delete_DailyUpdateFile(long DailyUpdateFileId)
+		{
+			try
+			{
+				var file = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
+
+				if (file != null)
+				{
+					_context.Using<ProjectDailyUpdateFiles>().Delete(file);
+
+					CommonViewModel.IsConfirm = true;
+					CommonViewModel.IsSuccess = true;
+					CommonViewModel.StatusCode = ResponseStatusCode.Success;
+					CommonViewModel.Message = "File deleted successfully ! ";
+
+					return Json(CommonViewModel);
+				}
+			}
+			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
+
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+			return Json(CommonViewModel);
+		}
 	}
 
 }

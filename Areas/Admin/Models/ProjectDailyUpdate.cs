@@ -18,4 +18,7 @@ public partial class ProjectDailyUpdate : EntitiesBase
 	[NotMapped] public virtual string Date_Text { get; set; }
 
 	public string? FilePath { get; set; }
+	[NotMapped] public List<ProjectDailyUpdateFiles> Files { get; set; }
+	[NotMapped] public bool HasFiles { get; set; }
+	//[NotMapped] public bool HasFiles => Files?.Any() == true;
 }

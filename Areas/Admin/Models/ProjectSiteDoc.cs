@@ -14,6 +14,12 @@ public partial class ProjectSiteDoc : EntitiesBase
 
     public string? FilePath { get; set; }
 
+	public string? FileName { get; set; }
+
+	public string? FileContentType { get; set; }
+
+	public byte[]? FileData { get; set; }
+
 	public string Remark { get; set; } = null!;
 
     public string Type { get; set; } = null!;

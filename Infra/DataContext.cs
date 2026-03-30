@@ -42,12 +42,18 @@ namespace Leoz_25.Infra
 
 
 		public virtual DbSet<ProjectDailyUpdate> ProjectDailyUpdates { get; set; }
+		public virtual DbSet<ProjectDailyUpdateFiles> ProjectDailyUpdateFiles { get; set; }
 
 		public virtual DbSet<AgencyMaster> AgencyMasters { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			//modelBuilder.HasDefaultSchema("padhyaso_Leoz");
+
+			modelBuilder.Entity<ProjectDailyUpdateFiles>(entity =>
+			{
+				entity.ToTable("Project_Daily_Update_Files", "dbo");
+			});
 
 			modelBuilder.Entity<ProjectDailyUpdate>(entity =>
 			{
