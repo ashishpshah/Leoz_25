@@ -19,10 +19,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var list = _context.Using<Package>().GetByCondition(x => x.IsActive == true || x.Id == (CommonViewModel.Obj != null ? CommonViewModel.Obj.PackageId : -1)).ToList();
 
-			if (CommonViewModel.Obj != null) CommonViewModel.Obj.Selected_Package = list.Where(x => x.Id == CommonViewModel.Obj.PackageId).FirstOrDefault();
-
-			if (CommonViewModel.Obj != null != null)
+			if (CommonViewModel.Obj != null)
 			{
+				CommonViewModel.Obj.Selected_Package = list.Where(x => x.Id == CommonViewModel.Obj.PackageId).FirstOrDefault();
+
 				CommonViewModel.Obj.StartDate_Text = CommonViewModel.Obj.StartDate != DateTime.MinValue ? CommonViewModel.Obj.StartDate.ToString("dd/MM/yyyy").Replace("-", "/") : "";
 				CommonViewModel.Obj.EndDate_Text = CommonViewModel.Obj.EndDate != DateTime.MinValue ? CommonViewModel.Obj.EndDate?.ToString("dd/MM/yyyy").Replace("-", "/") : "";
 			}
