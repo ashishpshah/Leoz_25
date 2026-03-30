@@ -430,7 +430,7 @@ $(document).ready(function () {
     $(document).on("keyup", "form", function (event) {
         event.preventDefault();
         if (event.keyCode === 13 && $('#btnSubmit').length > 0) {
-            
+
             $('#btnSubmit').trigger('click');
         }
     });
@@ -2012,7 +2012,7 @@ function fnLoadCommonTable_Buttons($selector) {
 function fnView_File($filePath, $title) {
     if (typeof $filePath != 'undefined' && $filePath != null && $filePath != '' && $filePath.trim().length > 0) {
         ShowLoader(true);
-        
+
         if ($('#largeModal').hasClass('show')) {
             $('#largeModal .modal-body').hide();
             $('#largeModal .modal-body-embed').show().html(`
@@ -2040,6 +2040,76 @@ function fnView_File($filePath, $title) {
                 $('#largeModal .modal-form').removeAttr('action');
 
                 $('#largeModal').modal('show');
+                ShowLoader(false);
+            }, 1000);
+        }
+    }
+}
+
+function fnView_File_New($url, $title, $button = false) {
+
+    if (typeof $url != 'undefined' && $url != null && $url != '' && $url.trim().length > 0) {
+        ShowLoader(true);
+
+        $('#largeModal .modal-body-embed').hide().html('');
+        $('#largeModal .modal-btn-save').css('display', 'block');
+        $('#largeModal .modal-btn-close').css('display', 'block');
+
+        if ($('#largeModal').hasClass('show')) {
+            $('#largeModal .modal-body').hide();
+            $('#largeModal .modal-body-embed').show().html(`
+                <div class="d-flex flex-column h-100">
+        
+                    <div class="text-end mb-2 me-3">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnBackToBody">
+                            ← Back
+                        </button>
+                    </div>
+
+                    <div class="d-flex justify-content-center align-items-center flex-grow-1">
+                        <iframe src="${$url}" style="width:80%; height:90vh; border:none;"></iframe>
+                    </div>
+
+                </div>
+            `);
+
+            $('#largeModal .modal-title').html($title);
+            $('#largeModal .modal-form').removeAttr('action');
+
+            if ($button == false) {
+                $('#largeModal .modal-btn-save').css('display', 'none');
+                $('#largeModal .modal-btn-close').css('display', 'none');
+            }
+
+            ShowLoader(false);
+        } else {
+
+            $('div.loader-overlay').remove();
+            $('body #div-modal-backdrop').remove();
+            $('#largeModal .modal-btn-save').css('display', 'block');
+            $('#largeModal .modal-btn-close').css('display', 'block');
+
+            if ($('#largeModal').hasClass('show')) $('#largeModal').hide();
+
+            setTimeout(function () {
+
+                $('#largeModal .modal-body').hide();
+                $('#largeModal .modal-body-embed').show().html(`<div class="d-flex flex-column h-100"><div class="d-flex justify-content-center align-items-center flex-grow-1"> <iframe src="${$url}" style="width:100%; height:90vh; border:none;"> </iframe> </div></div>`);
+                //$('#largeModal .modal-body-embed').show().html(`
+                //    <div class="text-center mb-2"> <button type="button" class="btn btn-danger btn-sm" id="btnBackToBody">← Back</button> </div>
+                //    <iframe src="${$url}" style="width:100%; height:90vh; border:none;"> </iframe>
+                //`);
+
+                $('#largeModal .modal-title').html($title);
+                $('#largeModal .modal-form').removeAttr('action');
+
+                if ($button == false) {
+                    $('#largeModal .modal-btn-save').css('display', 'none');
+                    $('#largeModal .modal-btn-close').css('display', 'none');
+                }
+
+                $('#largeModal').modal('show');
+
                 ShowLoader(false);
             }, 1000);
         }

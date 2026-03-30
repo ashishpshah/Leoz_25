@@ -55,7 +55,10 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Obj != null ? Model.Obj.Type : "")')"> Add new record </button>
+				@if (!(Model.ObjList?.Any() == true && Model.Obj?.Type == "F3D"))
+				{
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Obj != null ? Model.Obj.Type : "")')"> Add new record </button>
+				}
 			</div>
 		</div>
 	}
@@ -81,11 +84,12 @@
 							<td>@item.Remark</td>
 							<td>@item.Status_Text</td>
 							<td>
-								@if (index == 0)
+								@if (index == 0 && item?.FileData != null)
 								{
 									//<a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a>
 									<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
-											onclick="fnView_File('@(Url.Content("~" + item.FilePath))', 'View Document');">
+											onclick="fnView_File_New('@Url.Action("ViewDocument", "Project", new { area = "Admin" })?ProjectId=@item.ProjectId&ProjectSiteDocId=@item.Id&CustomerId=@item.CustomerId', 'View Document');">
+										@* onclick="fnView_File('@(Url.Content("~" + item.FilePath))', 'View Document');"> *@
 										<i class="ri-file-download-fill me-1"></i>
 									</button>
 								}
@@ -105,7 +109,7 @@
 										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
 										@{
 											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc","Project", new {  area = "Admin" })?Id=@item.Id');">
+													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc", "Project", new { area = "Admin" })?Id=@item.Id');">
 												<i class="ri-delete-bin-2-line"></i>
 											</button>
 										}
