@@ -120,8 +120,7 @@
 				@if (Model.Data5 != null && !(bool)Model.Data5)
 				{
 					<div class="row no-gutters mb-1">
-						<div class="col-sm-2">&nbsp;</div>
-						<div class="col-sm-6 text-left">
+						<div class="col-sm-12 text-center">
 							<button type="submit" class="btn btn-success btnSubmit">Save</button>
 							<a href="@Url.Action("DailyUpdate","Project", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
 						</div>
