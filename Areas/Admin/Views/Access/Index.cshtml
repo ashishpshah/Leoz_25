@@ -31,7 +31,7 @@
 
                                     <div class="form-group row">
                                         <label for="Obj.RoleId" class="col-sm-2 col-form-label text-md-end">Role</label>
-                                        <div class="col-sm-6">
+                                        <div class="col-sm-4">
                                             <select id="ddlRole" name="Obj.RoleId" class="form-control form-control-sm select2" onchange="fnChange_GetUsers(this)">
                                                 <option value="0" selected>-- Select --</option>
                                                 @if (Model.SelectListItems != null)
@@ -43,18 +43,16 @@
                                                 }
                                             </select>
                                         </div>
-                                    </div>
-
-                                    <div class="form-group row">
                                         <label for="Obj.UserId" class="col-sm-2 col-form-label text-md-end">User</label>
-                                        <div class="col-sm-6">
+                                        <div class="col-sm-4">
                                             <select id="ddlUser" name="Obj.UserId" class="form-control form-control-sm select2">
                                                 <option value="0" selected>-- Select --</option>
                                             </select>
                                         </div>
                                     </div>
+                                   
 
-                                    <div class="form-group row">
+                                    <div class="form-group row" style="margin-top:20px">
                                         <label for="Obj.IsActive" class="col-sm-2 col-form-label text-md-end">Status</label>
                                         <div class="col-sm-6">
                                             <div class="form-check form-check-inline form-control border-0">
@@ -214,16 +212,35 @@
 			$('.divformSave_Hide').addClass('d-none');
 			$('.divformSave_Display').removeClass('d-none');
 
-			$('#example').DataTable({
-				scrollY: '450px',
+            $('#table_Access').DataTable({
+				scrollY: true,
+                scrollX: true,
 				scrollCollapse: true,
 				searching: false,
 				sorting: false,
 				paging: false,
 				info: false,
-				ordering: false
-			});
-		}
+				ordering: false,
+                autoWidth: true,
+                responsive: true,
+                columnDefs: [
+                    { "targets": 0, "className": "text-center", "width": "3%", "autoWidth": false, "searchable": false, "orderable": false },
+                    { "targets": -1, "className": "text-center", "width": "3%", "autoWidth": false, "searchable": false, "orderable": false }
+                ],
+                fixedColumns: true,
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                "fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    var index = iDisplayIndexFull + 1;
+                    $("td:first", nRow).html(index);
+                    return nRow;
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass("pagination-rounded")
+                }
+			        });
+		        }
 
 		function fnClose() {
 			$('#divformSave').html('');
