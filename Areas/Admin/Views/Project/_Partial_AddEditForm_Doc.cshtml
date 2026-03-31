@@ -22,27 +22,34 @@
 				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 				<input type="text" class="form-control d-none" name="Type" value="@(Model.Obj != null ? Model.Obj.Type : "")">
 				<div class="row mb-1">
-					<label for="UploadDate_Text" class="col-2 col-form-label text-md-end">Upload Date</label>
-					<div class="col-4">
-						<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+					<label for="UploadDate_Text" class="col-md-2 col-form-label text-md-end">Upload Date</label>
+					<div class="col-md-4">
+						@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Obj?.Type) || Model.Obj?.UploadDate == null)
+						{
+							<input type="date" name="UploadDate_Text" class="form-control" value="@(DateTime.Now.ToString("yyyy-MM-dd"))">
+						}
+						else
+						{
+							<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+						}
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="UploadFile" class="col-2 col-form-label text-md-end">Upload File</label>
-					<div class="col-6">
+					<label for="UploadFile" class="col-md-2 col-form-label text-md-end">Upload File</label>
+					<div class="col-md-6">
 						<span class="control-fileupload">
 							<input type="file" id="UploadFile" accept="image/png, image/gif, image/jpeg, application/pdf" class="form-control">
 						</span>
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="Remark" class="col-2 col-form-label text-md-end">Remarks</label>
+					<label for="Remark" class="col-md-2 col-form-label text-md-end">Remarks</label>
 					<div class="col-9">
 						<input type="text" class="form-control" name="Remark">
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label class="col-2 col-form-label text-md-end">&nbsp;</label>
+					<label class="col-md-2 col-form-label text-md-end">&nbsp;</label>
 					<div class="col-9">
 						<button type="button" class="btn btn-success btnSubmit">Save</button>
 						<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
@@ -55,7 +62,7 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				@if (!(Model.ObjList?.Any() == true && Model.Obj?.Type == "F3D"))
+				@if (!(Model.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Obj?.Type)))
 				{
 					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Obj != null ? Model.Obj.Type : "")')"> Add new record </button>
 				}

@@ -238,7 +238,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				//var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
 				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).FirstOrDefault();
-				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
+				if (obj != null) obj.UploadDate_Text = ((new[] { "F3D", "DRW", "MB" }).Contains(obj.Type) || obj.UploadDate == nullDateTime ? DateTime.Now : obj.UploadDate).ToString("yyyy-MM-dd");
 
 				return Json(obj);
 			}
@@ -327,7 +327,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-							if (viewModel.Type == "F3D") obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == viewModel.ProjectId && x.Type == "F3D").FirstOrDefault();
+							if ((new[] { "F3D", "DRW", "MB" }).Contains(viewModel.Type)) obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == viewModel.ProjectId && x.Type == viewModel.Type).OrderByDescending(x => x.Id).FirstOrDefault();
 
 							if (obj != null && obj.Status != "R")
 							{

@@ -26,9 +26,9 @@
 			{
 				<input type="text" class="form-control d-none" id="ProjectMap" name="ProjectMap" value="true">
 
-				<div class="row row-cols-lg-auto g-3 align-items-center">
+				<div class="row">
 					<div class="col-sm-4" style="margin: 0rem !important;">
-						<div class="row row-cols-lg-auto g-3 align-items-center">
+						<div class="row">
 							<label class="col-sm-3 col-form-label text-md-end">Customer</label>
 							<div class="col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" value="@Model.Obj.Fullname" autocomplete="off" readonly>
@@ -36,11 +36,10 @@
 						</div>
 					</div>
 					<div class="col-sm-8" style="margin: 0rem !important;">
-						<div class="row row-cols-lg-auto g-3 align-items-center">
+						<div class="row">
 							<label for="ddlProjectIds" class="col-sm-3 col-form-label text-md-end">Project(s)</label>
 							<div class="col-sm-9">
 								<select id="ddlProjectIds" name="ProjectIds" class="form-control form-control-sm select2_multiple" data-selected="@Model.Obj.ProjectIds">
-									<option value="0">-- Select --</option>
 									@if (Model.SelectListItems != null)
 									{
 										foreach (var item in Model.SelectListItems)
@@ -59,9 +58,9 @@
 
 				<div class="panel-divider">
 					<span>Credencial Details</span>
-					<div class="row row-cols-lg-auto g-3 align-items-center p-0 m-0">
-						<div class="col-6">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="row p-0 m-0">
+						<div class="col-md-6">
+							<div class="row">
 								<label for="UserName" class="col-sm-3 col-form-label text-md-end">Username</label>
 								<div class="col-sm-6">
 									<input type="text" class="form-control form-control-sm" id="UserName" name="UserName" value="@Model.Obj.UserName" autocomplete="off">
@@ -69,7 +68,7 @@
 
 							</div>
 
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								@if (Model.Obj != null && Model.Obj.Id > 0)
 								{
 									<label for="IsPassword_Reset" class="col-sm-3 col-form-label text-md-end">Password Reset</label>
@@ -83,8 +82,8 @@
 								}
 								else
 								{
-									<label for="Password" class="col-3 col-form-label text-md-end">Password</label>
-									<div class="col-6">
+									<label for="Password" class="col-md-3 col-form-label text-md-end">Password</label>
+									<div class="col-md-6">
 										<div class="input-group input-group-merge">
 											<input type="password" id="Password" name="Password" class="form-control form-control-sm" placeholder="********" autocomplete="off">
 											<div class="input-group-text input-group-text-sm" data-password="true">
@@ -97,8 +96,8 @@
 							</div>
 
 						</div>
-						<div class="col-6">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+						<div class="col-md-6">
+							<div class="row">
 								<label for="IsActive" class="col-sm-3 col-form-label text-md-end">Status</label>
 								<div class="col-sm-6">
 									<div class="form-check form-check-inline form-control border-0">
@@ -117,9 +116,9 @@
 				</div>
 				<div class="panel-divider">
 					<span>Pesonal Details</span>
-					<div class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="row">
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="FirstName" class="col-sm-3 col-form-label text-md-end">Firstname</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="FirstName" name="FirstName" value="@Model.Obj.FirstName" autocomplete="off">
@@ -127,7 +126,7 @@
 							</div>
 						</div>
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="MiddleName" class="col-sm-3 col-form-label text-md-end">Middlename</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="MiddleName" name="MiddleName" value="@Model.Obj.MiddleName" autocomplete="off">
@@ -135,7 +134,7 @@
 							</div>
 						</div>
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="LastName" class="col-sm-3 col-form-label text-md-end">Lastname</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="LastName" name="LastName" value="@Model.Obj.LastName" autocomplete="off">
@@ -143,9 +142,9 @@
 							</div>
 						</div>
 					</div>
-					<div class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="row">
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="Email" class="col-sm-3 col-form-label text-md-end">Email</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="Email" name="Email" value="@Model.Obj.Email" autocomplete="off">
@@ -153,7 +152,7 @@
 							</div>
 						</div>
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="ContactNo" class="col-sm-3 col-form-label text-md-end">Contact No.</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="ContactNo" name="ContactNo" value="@Model.Obj.ContactNo" autocomplete="off">
@@ -161,9 +160,9 @@
 							</div>
 						</div>
 					</div>
-					<div class="row row-cols-lg-auto g-3 align-items-center">
+					<div class="row">
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="Contact_PersonName" class="col-sm-3 col-form-label text-md-end">Contact Person Name </label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="Contact_PersonName" name="Contact_PersonName" value="@Model.Obj.Contact_PersonName" autocomplete="off">
@@ -171,7 +170,7 @@
 							</div>
 						</div>
 						<div class="col-sm-4" style="margin: 0rem !important;">
-							<div class="row row-cols-lg-auto g-3 align-items-center">
+							<div class="row">
 								<label for="Contact_PersonNo" class="col-sm-3 col-form-label text-md-end">Contact Person Contact No.</label>
 								<div class="col-sm-9">
 									<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="Contact_PersonNo" name="Contact_PersonNo" value="@Model.Obj.Contact_PersonNo" autocomplete="off">
@@ -185,7 +184,7 @@
 		</div>
 
 		<div class="card-footer">
-			<div class="row row-cols-lg-auto g-3 align-items-center">
+			<div class="row">
 				<div class="col-sm-1">&nbsp;</div>
 				<div class="col-sm-6 text-left">
 					<button type="submit" class="btn btn-success btnSubmit">Save</button>
