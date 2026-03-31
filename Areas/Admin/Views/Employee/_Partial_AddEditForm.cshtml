@@ -53,52 +53,26 @@
 							}
 
 						</div>
-
-					<div class="col-md-6">
-
-						@* <div class="form-group row">
-							<label for="ddlUserType" class="col-sm-2 col-form-label text-md-end">Type</label>
-							<div class="col-sm-6">
-								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
-									<option value="0">-- Select --</option>
-									@if (Model.SelectListItems != null)
-									{
-										foreach (var item in Model.SelectListItems)
-										{
-											if (Convert.ToString(Model.Obj.UserType) == item.Value)
-											{
-												<option value="@item.Value" selected>@item.Text</option>
-											}
-											else
-											{
-												<option value="@item.Value">@item.Text</option>
-											}
-										}
-									}
-								</select>
-							</div>
 						</div>
- *@
-						<div class="row">
-							<label for="IsActive" class="col-sm-2 col-form-label text-md-end">Status</label>
-							<div class="col-sm-6">
-								<div class="form-check form-check-inline form-control border-0">
-									<input type="checkbox" class="form-check-input" id="switch_Status"
-										   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
-										   onchange="fnChange_Switch(this, 'label_Switch_Status')">
-									<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
-										@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
-									</label>
+						<div class="col-sm-4" style="margin: 0rem !important;">
+							<div class="form-group row d-flex align-items-center" style="margin-bottom:20px">
+								<label for="IsActive" class="col-sm-3 col-form-label text-md-end">Status</label>
+								<div class="col-sm-6">
+									<div class="form-check form-check-inline form-control border-0">
+										<input type="checkbox" class="form-check-input" id="switch_Status"
+											   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
+											   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+										<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
+											@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
+										</label>
+									</div>
 								</div>
 							</div>
 						</div>
 
-					</div>
-
 					
 				</div>
-			</div>			
-		</div>
+			</div>
 			<div class="panel-divider">
 				<span>Personal Details</span>
 				<div class="row no-gutters">
@@ -169,14 +143,16 @@
 						</div>
 					</div>
 				</div>
-			</div>		
+			</div>
+		</div>
+			
 	</div>
-		<div class="card-footer">
+	<div class="card-footer">
 			<div class="row">
 				<div class="col-sm-12 text-center">
 					<button type="submit" class="btn btn-success btnSubmit">Save</button>
 					@*<button type="button" class="btn btn-danger">Cancel</button>*@
-					<a href="@Url.Action("Index", "Employee", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
+					<a href="@Url.Action("Index","Employee", new {  area = "Admin" })" class="btn btn-danger">Cancel</a>
 				</div>
 			</div>
 		</div>
