@@ -97,7 +97,8 @@
 
 					
 				</div>
-			</div>
+			</div>			
+		</div>
 			<div class="panel-divider">
 				<span>Personal Details</span>
 				<div class="row no-gutters">
@@ -148,14 +149,14 @@
 									}
 								</select>
 							</div>
-						</div>			
+						</div>
 					</div>
 					<div class="col-sm-8" style="margin: 0rem !important;">
 						<div class="form-group row d-flex align-items-center" style="margin-bottom:20px">
 							<label for="ddlProjectIds" class="col-sm-3 col-form-label text-md-end">Project(s)</label>
 							<div class="col-sm-9">
 								<select id="ddlProjectIds" name="ProjectIds" class="form-control form-control-sm select2_multiple" data-selected="@Model.Obj.ProjectIds">
-									
+
 									@if (Model.SelectListItems != null)
 									{
 										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P"))
@@ -168,19 +169,17 @@
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
-
+			</div>		
+	</div>
 		<div class="card-footer">
 			<div class="row">
 				<div class="col-sm-12 text-center">
 					<button type="submit" class="btn btn-success btnSubmit">Save</button>
 					@*<button type="button" class="btn btn-danger">Cancel</button>*@
-					<a href="@Url.Action("Index","Employee", new {  area = "Admin" })" class="btn btn-danger">Cancel</a>
+					<a href="@Url.Action("Index", "Employee", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
 				</div>
 			</div>
 		</div>
-	</div>
 </div>
 
 @section Scripts {
