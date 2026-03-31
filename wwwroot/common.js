@@ -1896,15 +1896,15 @@ function fnLoadCommonTable_SrNo($selector) {
     }
 
     dataTable_SrNo = $($selector).DataTable({
-        scrollX: true,
-        scrollCollapse: true,
+        //scrollX: true,
+        //scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: false,
-        responsive: false,
+        autoWidth: true,
+        responsive: true,
         pageLength: 25,
         lengthMenu: [
             [10, 25, 50, -1],

@@ -4,7 +4,13 @@
 	ViewBag.Title = "Index";
 	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
 }
-
+@section Styles {
+	<style type="text/css">
+		.select2-container .select2-selection--multiple .select2-selection__rendered {
+			display: contents !important;
+		}
+	</style>
+}
 <!-- start page title -->
 <div class="row">
 	<div class="col-12">
@@ -37,7 +43,7 @@
 				</form>
 			</div>
 			<div class="card-body divformSave_Hide">
-				<div class="row no-gooters ">
+				<div class="row no-gooters">
 					<div class="col-md-12 my-1">
 						<div class="responsive-table-plugin">
 							<div class="table-rep-plugin">
@@ -45,13 +51,13 @@
 									<table class="table table-sm table-bordered table-striped dt-responsive nowrap w-100 table_Common_SrNo">
 										<thead>
 											<tr>
-												@*<th>#</th>*@
+												
 												<th>#</th>
 												<th>Customer Name</th>
 												<th>Email</th>
 												<th>Contact No.</th>
 												<th>Project(s)</th>
-												<th width="5%">Status</th>
+												<th>Status</th>
 												<th>Action</th>
 											</tr>
 										</thead>
@@ -62,7 +68,7 @@
 												foreach (var item in Model.ObjList)
 												{
 													<tr>
-														@*<td></td>*@
+														
 														<td></td>
 														<td>@item.Fullname</td>
 														<td>@item.Email</td>
@@ -71,26 +77,23 @@
 														<td class="text-center"><span class="badge bg-@(item.IsActive == true ? "success" : "danger")">@(item.IsActive == true ? "Active" : "Inactive")</span></td>
 														<td>
 															<div class="btn-group">
-																@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-																@{
+																
 																	<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 																			onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Customer", new {  area = "Admin" })?Id=@item.Id');">
 																		<i class="ri-pencil-fill"></i>
 																	</button>
-																}
-																@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-																@{
+																
+																
 																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","Customer", new {  area = "Admin" })?Id=@item.Id');">
 																		<i class="ri-delete-bin-2-line"></i>
 																	</button>
-																}
-																@{
+																
 																	<button type="button" class="btn btn-primary btn-sm btn-flat ml-3" data-toggle="tooltip" data-placement="top" title="Project(s)"
 																			onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Customer", new {  area = "Admin" })?Id=@item.Id&IsMapProject=true');">
 																		Project(s)
 																	</button>
-																}
+																
 															</div>
 														</td>
 													</tr>

@@ -99,7 +99,32 @@
 				margin-bottom: 0px;
 				cursor: text;
 			}
+		@@media (max-width: 576px) {
+			.control-fileupload
 
+		{
+			height: auto;
+			line-height: normal;
+			padding: 6px 10px;
+		}
+
+		.control-fileupload label {
+			white-space: normal; /* اجازه wrapping */
+			margin-right: 0; /* remove space for button */
+			display: block;
+		}
+
+		.control-fileupload:before {
+			position: static; /* button comes below */
+			display: inline-block;
+			margin-top: 5px;
+		}
+
+		.box input[type="file"] {
+			height: 100%;
+		}
+
+		}
 	</style>
 }
 
@@ -133,8 +158,8 @@
 					<div class="row no-gutters" id="divformSave"></div>
 				</form>
 			</div>
-			<div class="card-body">
-				<div class="row no-gooters divformSave_Hide">
+			<div class="card-body divformSave_Hide">
+				<div class="row no-gooters">
 					<div class="col-md-12 my-1">
 						<div class="responsive-table-plugin">
 							<div class="table-rep-plugin">
