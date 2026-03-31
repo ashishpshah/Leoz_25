@@ -339,6 +339,12 @@
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
+			$('#largeModal .modal-body').show();
+			$('#largeModal .modal-body-embed').hide().html('');
+
+			$('#largeModal .modal-btn-save').css('display', 'block');
+			$('#largeModal .modal-btn-close').css('display', 'block');
+
 			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
 			let change = '@(IsCustomer ? "1" : "")'
@@ -402,6 +408,12 @@
 			$('#largeModal .modal-body form #divProjectSiteDoc input[type="radio"]').prop('checked', false).trigger('change');
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
+
+			$('#largeModal .modal-body').show();
+			$('#largeModal .modal-body-embed').hide().html('');
+
+			$('#largeModal .modal-btn-save').css('display', 'block');
+			$('#largeModal .modal-btn-close').css('display', 'block');
 
 			$('#largeModal .modal-body form #divProjectSiteDoc div.divQty_Receive').css('display', 'none');
 
@@ -490,6 +502,12 @@
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
+			$('#largeModal .modal-body').show();
+			$('#largeModal .modal-body-embed').hide().html('');
+
+			$('#largeModal .modal-btn-save').css('display', 'block');
+			$('#largeModal .modal-btn-close').css('display', 'block');
+
 			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
 
 			let change = '@(IsCustomer ? "1" : "")'
@@ -560,6 +578,12 @@
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body .btn-add').css('display', 'none');
 
+			$('#largeModal .modal-body').show();
+			$('#largeModal .modal-body-embed').hide().html('');
+
+			$('#largeModal .modal-btn-save').css('display', 'block');
+			$('#largeModal .modal-btn-close').css('display', 'block');
+
 			$('#largeModal .modal-body form #divProjectSiteDoc div.divQty_Receive').css('display', 'none');
 
 			var ProjectId = $('#ddlProject option:selected').val();
@@ -618,6 +642,13 @@
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'block');
 			$('#largeModal .modal-body form #divProjectSiteDoc').css('display', 'none');
 			$('#largeModal .modal-body .btn-add').css('display', 'block');
+
+			$('#largeModal .modal-body').show();
+			$('#largeModal .modal-body-embed').hide().html('');
+
+			$('#largeModal .modal-btn-save').css('display', 'block');
+			$('#largeModal .modal-btn-close').css('display', 'block');
+
 		}
 
 		function fnSubmitForm_Success(response, $id) {

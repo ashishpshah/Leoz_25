@@ -20,14 +20,14 @@
 				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
 
 				<div class="row mb-1">
-					<label for="Name" class="col-2 col-form-label text-md-end">Agency Name</label>
-					<div class="col-6">
+					<label for="Name" class="col-md-2 col-form-label text-md-end">Agency Name</label>
+					<div class="col-md-6">
 						<input type="text" name="Name" class="form-control" value="@Model.Obj.Name" @(IsCustomer ? "readonly" : "")>
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="WorkType" class="col-2 col-form-label text-md-end">Type of Work</label>
-					<div class="col-3">
+					<label for="WorkType" class="col-md-2 col-form-label text-md-end">Type of Work</label>
+					<div class="col-md-3">
 						@if (IsCustomer)
 						{
 							<input type="text" name="WorkType_Text" class="form-control" value="@Model.Obj.WorkType_Text" readonly>
@@ -58,7 +58,7 @@
 				</div>
 
 				<div class="row mb-1">
-					<label for="Notes" class="col-2 col-form-label text-md-end">Notes</label>
+					<label for="Notes" class="col-md-2 col-form-label text-md-end">Notes</label>
 					<div class="col-10">
 						<input type="text" name="Notes" class="form-control" value="@Model.Obj.Notes">
 					</div>
@@ -67,7 +67,7 @@
 				@if (IsCustomer)
 				{
 					<div class="row mb-1">
-						<label class="col-2 col-form-label text-md-end">&nbsp;</label>
+						<label class="col-md-2 col-form-label text-md-end">&nbsp;</label>
 						<div class="col-9">
 							<input type="text" name="Status" class="form-control d-none" value="A">
 							<button type="button" class="btn btn-success btnSubmit">Approve</button>
@@ -78,7 +78,7 @@
 				else if (IsEmployee && Model.Data5 != null && (string)Model.Data5 != "COORD")
 				{
 					<div class="row mb-1">
-						<label class="col-2 col-form-label text-md-end">&nbsp;</label>
+						<label class="col-md-2 col-form-label text-md-end">&nbsp;</label>
 						<div class="col-9">
 							<input type="text" name="Status" class="form-control d-none" value="@Model.Obj.Status">
 							<button type="button" class="btn btn-success btnSubmit">Save</button>
