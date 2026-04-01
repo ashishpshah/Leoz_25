@@ -37,8 +37,8 @@
 
 	<style type="text/css">
 		/* .table > :not(caption) > * > * {
-																			padding: .35rem 0.95rem !important;
-																		} */
+																					padding: .35rem 0.95rem !important;
+																				} */
 
 		.input-group-text-sm {
 			min-height: calc(1.5em + .56rem + calc(var(--tz-border-width) * 2));
@@ -97,7 +97,7 @@
 			}
 
 			.panel-divider > div.row {
-				margin: 1rem 2rem 0rem 2rem !important;
+				margin: 1rem 2rem 1rem 2rem !important;
 			}
 
 			.panel-divider table td {
@@ -109,10 +109,10 @@
 		}
 
 		/* @@media (min-width: 576px) {
-																																			.form-group.row > .text-right {
-																																				text-align: left !important;
-																																			}
-																																		} */
+																																					.form-group.row > .text-right {
+																																						text-align: left !important;
+																																					}
+																																				} */
 
 		.page-title-box .page-title-right {
 			display: block !important;
@@ -177,12 +177,8 @@
 				<ul class="topbar-menu d-flex align-items-center gap-3">
 
 					<li class="dropdown">
-						<a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#" role="button"
-						   aria-haspopup="false" aria-expanded="false">
-
-							<span class="d-lg-block d-none">
-								<h5 class="my-0 fw-normal">@Common.Get_Session(SessionKey.KEY_USER_NAME)  <i class="ri-arrow-down-s-line d-none d-sm-inline-block align-middle"></i></h5>
-							</span>
+						<a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+							<h5 class="my-0 fw-normal">@Common.Get_Session(SessionKey.KEY_USER_NAME)  <i class="ri-arrow-down-s-line d-none d-sm-inline-block align-middle"></i></h5>
 						</a>
 						<div class="dropdown-menu dropdown-menu-end dropdown-menu-animated profile-dropdown">
 							<!-- item-->
@@ -341,7 +337,7 @@
 
 
 					@RenderBody()
-					
+
 
 					<!-- Modal -->
 					<div class="modal fade" id="largeModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="largeModalLabel" aria-hidden="true">

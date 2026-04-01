@@ -75,7 +75,7 @@
 								{
 									<label for="IsPassword_Reset" class="col-sm-3 col-form-label text-md-end">Password Reset</label>
 									<div class="col-sm-6">
-										<div class="form-check form-check-inline form-control border-0">
+										<div class="form-check form-check-inline form-control border-0 my-0 py-0">
 											<input type="checkbox" class="form-check-input" id="switch_Password_Reset"
 												   name="IsPassword_Reset" onchange="fnChange_Switch(this, 'label_Switch_Password_Reset')">
 											<label class="form-check-label" for="switch_Password_Reset" id="label_Switch_Password_Reset" data-true="Yes" data-false="No">No</label>
@@ -102,7 +102,7 @@
 							<div class="form-group row d-flex align-items-center" style="margin-bottom:20px">
 								<label for="IsActive" class="col-sm-3 col-form-label text-md-end">Status</label>
 								<div class="col-sm-6">
-									<div class="form-check form-check-inline form-control border-0">
+									<div class="form-check form-check-inline form-control border-0 my-0 py-0">
 										<input type="checkbox" class="form-check-input" id="switch_Status"
 											   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
 											   onchange="fnChange_Switch(this, 'label_Switch_Status')">
