@@ -16,10 +16,15 @@
 			<div class="row no-gutters">
 				<div class="col-12">
 					<div class="form-group row">
-						<label for="Name" class="col-sm-2 col-form-label text-md-end">Name</label>
+						<label for="Name" class="col-sm-2 col-form-label text-md-end">Name<span style="color:red">*</span></label>
 						<div class="col-sm-4">
 							<input type="text" id="Name" name="Name" class="form-control form-control-sm" value="@Model.Obj.Name"
 								   data-required data-msg="The Package Name field is required." autocomplete="off">
+						</div>
+						<label for="Price" class="col-sm-2 col-form-label text-md-end">Price</label>
+						<div class="col-sm-4">
+							<input type="text" id="Price" name="Price" class="form-control form-control-sm text-right decimal-number2" value="@Model.Obj.Price"
+								   data-required data-msg="The Package Price field is required." autocomplete="off">
 						</div>
 					</div>
 					<div class="form-group row">
@@ -56,11 +61,9 @@
 					</div>
 					<div class="form-group row">
 						<label for="Description" class="col-sm-2 col-form-label text-md-end ">Description</label>
-						<div class="col-sm-8">
+						<div class="col-sm-4">
 							<textarea id="Description" name="Description" rows="3" class="form-control form-control-sm" autocomplete="off">@Model.Obj.Description</textarea>
 						</div>
-					</div>
-					<div class="form-group row">
 						<label for="Obj.IsActive" class="col-sm-2 col-form-label text-md-end">Status</label>
 						<div class="col-sm-4">
 							<div class="form-check form-check-inline form-control border-0">
@@ -70,6 +73,9 @@
 								<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active" : "Inactive")</label>
 							</div>
 						</div>
+					</div>
+					<div class="form-group row">
+						
 					</div>
 				</div>
 			</div>

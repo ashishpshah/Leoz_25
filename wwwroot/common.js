@@ -1896,8 +1896,8 @@ function fnLoadCommonTable_SrNo($selector) {
     }
 
     dataTable_SrNo = $($selector).DataTable({
-        scrollX: true,
-        scrollCollapse: true,
+        //scrollX: true,
+        //scrollCollapse: true,
         paging: true,
         lengthChange: true,
         searching: true,

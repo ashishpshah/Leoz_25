@@ -197,8 +197,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
+                        if (!string.IsNullOrEmpty(viewModel.Contact_PersonNo) && !ValidateField.IsValidMobileNo(viewModel.Contact_PersonNo))
+                        {
+                            CommonViewModel.IsSuccess = false;
+                            CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                            CommonViewModel.Message = "Please enter valid Contact Person No.";
 
-						if (/*Logged_In_VendorId <= 0 && */_context.Using<User>().Any(x => x.UserName.ToLower() == viewModel.UserName.ToLower() && x.Id != viewModel.UserId))
+                            return Json(CommonViewModel);
+                        }
+                        if (/*Logged_In_VendorId <= 0 && */_context.Using<User>().Any(x => x.UserName.ToLower() == viewModel.UserName.ToLower() && x.Id != viewModel.UserId))
 						{
 							CommonViewModel.Message = "Username already exist. Please try another Username.";
 							CommonViewModel.IsSuccess = false;

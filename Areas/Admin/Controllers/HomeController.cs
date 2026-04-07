@@ -61,7 +61,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							listMenuAccess = (from y in _context.Using<Menu>().GetAll().ToList()
 											  where y.IsActive == true && y.IsDeleted == false
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, IsCreate = true, IsUpdate = true, IsRead = true, IsDelete = true, DisplayOrder = y.DisplayOrder, IsActive = y.IsActive, IsDeleted = y.IsDeleted }).ToList();
+											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, Icon = y.Icon,IsCreate = true, IsUpdate = true, IsRead = true, IsDelete = true, DisplayOrder = y.DisplayOrder, IsActive = y.IsActive, IsDeleted = y.IsDeleted }).ToList();
 						}
 						else if (role != null && (role.IsAdmin || role.Name.ToUpper() == "VENDOR"))
 						{
@@ -70,7 +70,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 											  where x.UserId == obj.Id && x.RoleId == obj.RoleId
 											  && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false && y.Name != "Menu"
 											  && x.IsRead == true
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
+											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder, Icon = y.Icon, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
 						}
 						else if (role != null && !role.IsAdmin && role.IsActive && !role.IsDeleted)
 						{
@@ -79,7 +79,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 											  where x.UserId == obj.Id && x.RoleId == obj.RoleId
 											  && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false && y.Id != 1 && y.ParentId != 1 && y.Name != "Menu"
 											  && x.IsRead == true
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
+											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder,Icon = y.Icon ,IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
 						}
 
 						if (role != null && role.Id == 1)
@@ -89,7 +89,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 												  join y in _context.Using<Menu>().GetAll().ToList() on x.MenuId equals y.Id
 												  where x.UserId == obj.Id && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false
 												  && listMenuAccess.Any(z => z.Id == y.Id)
-												  select new UserMenuAccess() { MenuId = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, IsCreate = x.IsCreate, IsUpdate = x.IsUpdate, IsRead = x.IsRead, IsDelete = x.IsDelete, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
+												  select new UserMenuAccess() { MenuId = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name,Icon = y.Icon ,IsCreate = x.IsCreate, IsUpdate = x.IsUpdate, IsRead = x.IsRead, IsDelete = x.IsDelete, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
 
 						Common.Configure_UserMenuAccess(listMenuAccess.Where(x => x.IsActive == true && x.IsDeleted == false).ToList(), listMenuPermission.Where(x => x.IsActive == true && x.IsDeleted == false).ToList());
 

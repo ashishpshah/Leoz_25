@@ -278,14 +278,14 @@
 									if (string.IsNullOrEmpty(menu.Url))
 									{
 										<a href="@(string.IsNullOrEmpty(menu.Area) ? "" : "/" + menu.Area)/@menu.Controller/Index" class="side-nav-link">
-											<i class="ri-dashboard-3-line"></i>
+											<i class="@menu.Icon"></i>
 											<span> @menu.MenuName </span>
 										</a>
 									}
 									else
 									{
 										<a href="@(Url.Content("~/") + menu.Url)" class="side-nav-link">
-											<i class="ri-dashboard-3-line"></i>
+											<i class="@menu.Icon"></i>
 											<span> @menu.MenuName </span>
 										</a>
 									}
@@ -293,7 +293,7 @@
 								else
 								{
 									<a data-bs-toggle="collapse" href="#sidebarPages_@(menu.Id)" class="side-nav-link" aria-expanded="false" aria-controls="sidebarPages_@(menu.Id)">
-										<i class="ri-pages-line"></i>
+										<i class="@menu.Icon"></i>
 										<span> @menu.MenuName </span>
 										<span class="menu-arrow"></span>
 									</a>
@@ -304,7 +304,10 @@
 											@foreach (var item in childMenus.Where(x => x.ParentMenuId == menu.Id).ToList())
 											{
 												<li>
-													<a href="@(string.IsNullOrEmpty(item.Url) ? string.IsNullOrEmpty(item.Area) ? "" : "/" + item.Area + "/" + item.Controller + "/Index" : Url.Content("~/") + item.Url)"> @item.MenuName </a>
+													<a href="@(string.IsNullOrEmpty(item.Url) ? string.IsNullOrEmpty(item.Area) ? "" : "/" + item.Area + "/" + item.Controller + "/Index" : Url.Content("~/") + item.Url)">
+														<i class="@item.Icon"></i>
+														<span>@item.MenuName </span>
+														</a>
 												</li>
 											}
 										</ul>

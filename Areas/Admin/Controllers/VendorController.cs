@@ -71,9 +71,26 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				if (viewModel != null && viewModel != null && (Common.IsAdmin() || IsVendor))
 				{
-					#region Validation
+                    #region Validation
+                    if (string.IsNullOrEmpty(viewModel.UserName))
+                    {
+                        CommonViewModel.IsSuccess = false;
+                        CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                        CommonViewModel.Message = "Please enter Username.";
 
-					if (string.IsNullOrEmpty(viewModel.FirstName))
+                        return Json(CommonViewModel);
+                    }
+
+                    if (viewModel.Id == 0 && string.IsNullOrEmpty(viewModel.Password))
+                    {
+                        CommonViewModel.IsSuccess = false;
+                        CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                        CommonViewModel.Message = "Please enter Password.";
+
+                        return Json(CommonViewModel);
+                    }
+
+                    if (string.IsNullOrEmpty(viewModel.FirstName))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;

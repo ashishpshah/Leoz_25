@@ -79,8 +79,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
+                    if (viewModel.StartDate != null && viewModel.HandoverDate != null
+					&& viewModel.HandoverDate < viewModel.StartDate)
+                    {
+                        CommonViewModel.IsSuccess = false;
+                        CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                        CommonViewModel.Message = "Handover Date must be greater than or equal to Start Date.";
 
-					if (viewModel.Id == 0 && string.IsNullOrEmpty(viewModel.StartDate_Text))
+                        return Json(CommonViewModel);
+                    }
+
+                    if (viewModel.Id == 0 && string.IsNullOrEmpty(viewModel.StartDate_Text))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;

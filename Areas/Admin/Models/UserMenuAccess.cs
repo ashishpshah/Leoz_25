@@ -25,8 +25,8 @@ namespace Leoz_25
 		[NotMapped] public long ParentMenuId { get; set; }
 		[NotMapped] public string ParentMenuName { get; set; } = null;
 		[NotMapped] public int? DisplayOrder { get; set; } = null;
-
-	}
+        [NotMapped] public string? Icon { get; set; } = null;
+    }
 
 
 	//public class MenuAccess

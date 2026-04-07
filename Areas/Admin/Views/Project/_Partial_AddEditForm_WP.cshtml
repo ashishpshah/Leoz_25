@@ -21,13 +21,13 @@
 				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 
 				<div class="row mb-1">
-					<label for="UploadDate_Text" class="col-2 col-form-label text-md-end">Upload Date</label>
+					<label for="UploadDate_Text" class="col-2 col-form-label text-md-end">Upload Date<span style="color:red">*</span></label>
 					<div class="col-md-4">
 						<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="PendingFrom" class="col-2 col-form-label text-md-end">Pending From</label>
+					<label for="PendingFrom" class="col-2 col-form-label text-md-end">Pending From<span style="color:red">*</span></label>
 					<div class="col-9">
 						<select name="PendingFrom" class="form-control form-control-sm select2">
 							<option value="">-- Select --</option>
@@ -42,13 +42,13 @@
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="Remarks" class="col-2 col-form-label text-md-end">Remarks</label>
+					<label for="Remarks" class="col-2 col-form-label text-md-end">Remarks<span style="color:red">*</span></label>
 					<div class="col-9">
 						<input type="text" class="form-control" name="Remarks">
 					</div>
 				</div>
 				<div class="row mb-1">
-					<label for="PendingPoint" class="col-2 col-form-label text-md-end">Pending Point</label>
+					<label for="PendingPoint" class="col-2 col-form-label text-md-end">Pending Point<span style="color:red">*</span></label>
 					<div class="col-10">
 						<textarea rows="3" class="form-control" name="PendingPoint"></textarea>
 					</div>
