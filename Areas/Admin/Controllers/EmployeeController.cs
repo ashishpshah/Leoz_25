@@ -76,9 +76,20 @@ namespace Leoz_25.Areas.Admin.Controllers
 		//[CustomAuthorizeAttribute(AccessType_Enum.Write)]
 		public ActionResult Save(Employee viewModel)
 		{
-			try
+            var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
+
+           
+            try
 			{
-				if (viewModel != null && viewModel != null)
+                if (subscription == null)
+                {
+                    CommonViewModel.IsSuccess = false;
+                    CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                    CommonViewModel.Message = "You are not subscribe any plan.";
+
+                    return Json(CommonViewModel);
+                }
+                if (viewModel != null && viewModel != null)
 				{
 					#region Validation
 
