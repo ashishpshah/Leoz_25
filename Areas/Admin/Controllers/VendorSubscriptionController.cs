@@ -93,16 +93,16 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
+					//var listEmployee = _context.Using<Employee>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
 
-					if (listEmployee == null || listEmployee.Count() == 0)
-					{
-						CommonViewModel.IsSuccess = false;
-						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = $"There are no employees associated with this vendor. Please First Add Employee of your company";
+					//if (listEmployee == null || listEmployee.Count() == 0)
+					//{
+					//	CommonViewModel.IsSuccess = false;
+					//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					//	CommonViewModel.Message = $"There are no employees associated with this vendor. Please First Add Employee of your company";
 
-						return Json(CommonViewModel);
-					}
+					//	return Json(CommonViewModel);
+					//}
 
 
 					#endregion
