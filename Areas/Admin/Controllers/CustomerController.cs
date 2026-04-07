@@ -170,6 +170,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
+						if (string.IsNullOrEmpty(viewModel.MiddleName))
+						{
+							CommonViewModel.IsSuccess = false;
+							CommonViewModel.StatusCode = ResponseStatusCode.Error;
+							CommonViewModel.Message = "Please enter MiddleName.";
+
+							return Json(CommonViewModel);
+						}
 
 						if (string.IsNullOrEmpty(viewModel.LastName))
 						{
@@ -214,17 +222,25 @@ namespace Leoz_25.Areas.Admin.Controllers
 							return Json(CommonViewModel);
 						}
 
-						//if (Logged_In_VendorId > 0 && _context.Using<User>().GetByCondition(x => x.UserName.ToLower() == viewModel.UserName.ToLower() && x.Id != viewModel.UserId).ToList()
-						//	.Any(x => _context.Using<UserVendorMapping>().Any(z => z.VendorId == Logged_In_VendorId && z.UserId == x.Id) ))
-						//{
-						//	CommonViewModel.Message = "Username already exist. Please try another Username.";
-						//	CommonViewModel.IsSuccess = false;
-						//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                        if (!string.IsNullOrWhiteSpace(viewModel.Contact_PersonNo) && !System.Text.RegularExpressions.Regex.IsMatch(viewModel.Contact_PersonNo.Trim(), @"^\d{10}$"))
+                        {
+                            CommonViewModel.IsSuccess = false;
+                            CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                            CommonViewModel.Message = "Contact Person No must be exactly 10 digits.";
 
-						//	return Json(CommonViewModel);
-						//}
+                            return Json(CommonViewModel);
+                        }
+                        //if (Logged_In_VendorId > 0 && _context.Using<User>().GetByCondition(x => x.UserName.ToLower() == viewModel.UserName.ToLower() && x.Id != viewModel.UserId).ToList()
+                        //	.Any(x => _context.Using<UserVendorMapping>().Any(z => z.VendorId == Logged_In_VendorId && z.UserId == x.Id) ))
+                        //{
+                        //	CommonViewModel.Message = "Username already exist. Please try another Username.";
+                        //	CommonViewModel.IsSuccess = false;
+                        //	CommonViewModel.StatusCode = ResponseStatusCode.Error;
 
-						if (_context.Using<Customer>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.Id != viewModel.Id).Any(x => x.Fullname.ToLower() == viewModel.Fullname.ToLower()))
+                        //	return Json(CommonViewModel);
+                        //}
+
+                        if (_context.Using<Customer>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.Id != viewModel.Id).Any(x => x.Fullname.ToLower() == viewModel.Fullname.ToLower()))
 						{
 							CommonViewModel.Message = "Customer already exist. Please try another Customer name(s).";
 							CommonViewModel.IsSuccess = false;
