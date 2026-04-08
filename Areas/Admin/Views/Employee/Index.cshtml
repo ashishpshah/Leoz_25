@@ -10,17 +10,7 @@
 			display: contents !important;
 		}
 
-		.panel-divider .form-group {
-			margin-bottom: 12px; /* same spacing for all */
-		}
-
-		.panel-divider .row {
-			row-gap: 12px; /* equal vertical spacing */
-		}
-
-		.panel-divider [class*="col-"] {
-			padding-bottom: 0;
-		}
+	
 	</style>
 }
 <!-- start page title -->
@@ -30,12 +20,12 @@
 			<div class="page-title-right">
 				@if (@* Model.IsCreate ==  *@true)
 				{
-					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2"
+					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2 divformSave_Hide"
 							onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm", "Employee", new { area = "Admin" })');">
 						<i class="fas fa-plus"></i> &nbsp; Add new
 					</button>
 				}
-				<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 d-none" onclick="fnBackToList();">
+				<button type="button" id="btnBackToList" class="btn btn-warning btn-md pull-right mr-2 divformSave_Display d-none" onclick="fnBackToList();">
 					<i class="fas fa-arrow-left"></i> &nbsp; Back To List
 				</button>
 			</div>

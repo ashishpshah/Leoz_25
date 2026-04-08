@@ -79,14 +79,21 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
-                    if (viewModel.StartDate != null && viewModel.HandoverDate != null
-					&& viewModel.HandoverDate < viewModel.StartDate)
-                    {
-                        CommonViewModel.IsSuccess = false;
-                        CommonViewModel.StatusCode = ResponseStatusCode.Error;
-                        CommonViewModel.Message = "Handover Date must be greater than or equal to Start Date.";
+                    DateTime startDate, handoverDate;
 
-                        return Json(CommonViewModel);
+                    if (!string.IsNullOrEmpty(viewModel.StartDate_Text) &&
+                        !string.IsNullOrEmpty(viewModel.HandoverDate_Text) &&
+                        DateTime.TryParse(viewModel.StartDate_Text, out startDate) &&
+                        DateTime.TryParse(viewModel.HandoverDate_Text, out handoverDate))
+                    {
+                        if (handoverDate < startDate)
+                        {
+                            CommonViewModel.IsSuccess = false;
+                            CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                            CommonViewModel.Message = "Handover Date must be greater than or equal to Start Date.";
+
+                            return Json(CommonViewModel);
+                        }
                     }
 
                     if (viewModel.Id == 0 && string.IsNullOrEmpty(viewModel.StartDate_Text))
@@ -305,17 +312,38 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
+                    string[] allowedExtensions = { ".png", ".jpg", ".jpeg", ".pdf" };
+                    string[] allowedMimeTypes = { "image/png", "image/jpeg", "application/pdf" };
 
-					//if (viewModel.Id == 0 && (files == null || files.Count() <= 0))
-					//{
-					//	CommonViewModel.IsSuccess = false;
-					//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
-					//	CommonViewModel.Message = "Please upload file.";
+                    foreach (var file in files)
+                    {
+                        if (file.Length > 0)
+                        {
+                            var extension = Path.GetExtension(file.FileName).ToLower();
+                            var mimeType = file.ContentType.ToLower();
 
-					//	return Json(CommonViewModel);
-					//}
+                            // Check extension
+                            if (!allowedExtensions.Contains(extension))
+                            {
+                                CommonViewModel.IsSuccess = false;
+                                CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                                CommonViewModel.Message = "Invalid file type.Only PNG, JPG, JPEG, and PDF files are allowed.";
+                                return Json(CommonViewModel);
+                            }
 
-					if (string.IsNullOrEmpty(viewModel.Remark))
+                            // Check MIME type
+                            if (!allowedMimeTypes.Contains(mimeType))
+                            {
+                                CommonViewModel.IsSuccess = false;
+                                CommonViewModel.StatusCode = ResponseStatusCode.Error;
+                                CommonViewModel.Message = "Invalid file type. Only PNG, JPG, JPEG, and PDF are allowed.";
+                                return Json(CommonViewModel);
+                            }
+                        }
+                    }
+
+
+                    if (string.IsNullOrEmpty(viewModel.Remark))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;

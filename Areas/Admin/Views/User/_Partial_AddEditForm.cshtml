@@ -16,17 +16,14 @@
 		</div>
 
 		<div class="card-body form-horizontal">
-			<div class="row mb-3">
-				<label for="Username" class="col-md-2 col-form-label text-md-end">Username</label>
+			<div class="form-group row align-items-center" style="padding-top:20px">
+				<label for="Username" class="col-md-2 col-form-label">Username</label>
 				<div class="col-md-4">
 					<input type="text" class="form-control form-control-sm" id="Username" name="Obj.Username" value="@Model.Obj.UserName" placeholder="Username" autocomplete="off">
 				</div>
-			</div>
-
-			@if (Model.Obj == null || Model.Obj.Id == 0)
-			{
-				<div class="row mb-3 @(Model.Obj != null && Model.Obj.Id > 0 ? "d-none": "")">
-					<label for="Password" class="col-md-3 col-form-label text-md-end">Password</label>
+				@if (Model.Obj == null || Model.Obj.Id == 0)
+				{
+					<label for="Password" class="col-md-2 col-form-label">Password</label>
 					<div class="col-md-4">
 						<div class="input-group input-group-merge">
 							<input type="password" id="Password" name="Obj.Password" class="form-control form-control-sm" placeholder="********" autocomplete="off">
@@ -35,12 +32,10 @@
 							</div>
 						</div>
 					</div>
-				</div>
-			}
-			else
-			{
-				<div class="row mb-3">
-					<label for="Obj.IsPassword_Reset" class="col-md-3 col-form-label text-md-end">Password Reset</label>
+				}
+				else
+				{
+					<label for="Obj.IsPassword_Reset" class="col-md-2 col-form-label">Password Reset</label>
 					<div class="col-md-4">
 						<div class="form-check form-check-inline form-control border-0">
 							<input type="checkbox" class="form-check-input" id="switch_Password_Reset"
@@ -48,25 +43,10 @@
 							<label class="form-check-label" for="switch_Password_Reset" id="label_Switch_Password_Reset" data-true="Yes" data-false="No">No</label>
 						</div>
 					</div>
-				</div>
-			}
-
-			<div class="row mb-3">
-				<label for="Status" class="col-md-3 col-form-label text-md-end">Status</label>
-				<div class="col-md-4">
-					<div class="form-check form-check-inline form-control border-0">
-						<input type="checkbox" class="form-check-input" id="switch_Status"
-							   name="Obj.IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
-							   onchange="fnChange_Switch(this, 'label_Switch_Status')">
-						<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
-							@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
-						</label>
-					</div>
-				</div>
+				}
 			</div>
-
-			<div class="row mb-3">
-				<label for="Role" class="col-md-3 col-form-label text-md-end">Role</label>
+			<div class="form-group row align-items-center" style="padding-top:20px">
+				<label for="Role" class="col-md-2 col-form-label">Role</label>
 				<div class="col-md-4">
 					<select id="ddlUser_Role_Id" name="Obj.User_Role_Id" class="form-control form-control-sm select2">
 						<option value="0">-- Select --</option>
@@ -86,14 +66,28 @@
 						}
 					</select>
 				</div>
+				<label for="Status" class="col-md-2 col-form-label">Status</label>
+				<div class="col-md-4">
+					<div class="form-check form-check-inline form-control border-0">
+						<input type="checkbox" class="form-check-input" id="switch_Status"
+							   name="Obj.IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
+							   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+						<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
+							@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
+						</label>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-group row align-items-center">
+				
 			</div>
 
 		</div>
 
-		< class="card-footer">
-			
+		<div class="card-footer">			
 				<div class="col-sm-12 text-center">
-					<button type="button" class="btn btn-success btnSubmit px-5">Save</button>
+					<button type="button" class="btn btn-success btnSubmit">Save</button>
 					<button type="button" class="btn btn-danger" onclick="fnBackToList();">Cancel</button>
 				</div>
 			

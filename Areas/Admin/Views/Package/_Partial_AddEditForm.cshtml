@@ -15,7 +15,7 @@
 		<div class="card-body form-horizontal">
 			<div class="row no-gutters">
 				<div class="col-12">
-					<div class="form-group row">
+					<div class="form-group row" style="padding-top:20px">
 						<label for="Name" class="col-sm-2 col-form-label text-md-end">Name<span style="color:red">*</span></label>
 						<div class="col-sm-4">
 							<input type="text" id="Name" name="Name" class="form-control form-control-sm" value="@Model.Obj.Name"
@@ -27,17 +27,17 @@
 								   data-required data-msg="The Package Price field is required." autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" style="padding-top:20px">
 						<label for="Price" class="col-sm-2 col-form-label text-md-end">Price</label>
 						<div class="col-sm-4">
 							<input type="text" id="Price" name="Price" class="form-control form-control-sm text-right decimal-number2" value="@Model.Obj.Price"
 								   data-required data-msg="The Package Price field is required." autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" style="padding-top:20px">
 						<label for="Price" class="col-sm-2 col-form-label text-md-end">Select Option</label>
 						<div class="col-sm-6">
-							<div class="form-group clearfix">
+							<div class="form-check form-check-inline form-control border-0">
 								<div class="icheck-primary d-inline ml-2 mr-3">
 									<input type="radio" id="radioIsYearly" name="Option" value="IsYearly" @(Model.Obj.IsYearly ? "checked" : "")>
 									<label for="radioIsYearly" class="ml-1"> Is Yearly </label>
@@ -49,7 +49,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" style="padding-top:20px">
 						<label for="DurationInDays" class="col-sm-2 col-form-label text-md-end IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">Duration In Days</label>
 						<div class="col-sm-1 IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">
 							<input type="text" id="DurationInDays" name="DurationInDays" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.DurationInDays" data-value="@Model.Obj.DurationInDays" autocomplete="off">
@@ -59,7 +59,7 @@
 							<input type="text" id="ProjectLimit" name="ProjectLimit" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.ProjectLimit" data-value="@Model.Obj.ProjectLimit" autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" style="padding-top:20px">
 						<label for="Description" class="col-sm-2 col-form-label text-md-end ">Description</label>
 						<div class="col-sm-4">
 							<textarea id="Description" name="Description" rows="3" class="form-control form-control-sm" autocomplete="off">@Model.Obj.Description</textarea>
@@ -73,10 +73,7 @@
 								<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj == null || Model.Obj.Id == 0 ? "Active" : "Inactive")</label>
 							</div>
 						</div>
-					</div>
-					<div class="form-group row">
-						
-					</div>
+					</div>					
 				</div>
 			</div>
 		</div>

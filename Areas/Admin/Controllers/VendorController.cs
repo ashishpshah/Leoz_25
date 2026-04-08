@@ -76,7 +76,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                     {
                         CommonViewModel.IsSuccess = false;
                         CommonViewModel.StatusCode = ResponseStatusCode.Error;
-                        CommonViewModel.Message = "Please enter Username.";
+                        CommonViewModel.Message = "Please Enter User Name.";
 
                         return Json(CommonViewModel);
                     }
@@ -85,7 +85,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                     {
                         CommonViewModel.IsSuccess = false;
                         CommonViewModel.StatusCode = ResponseStatusCode.Error;
-                        CommonViewModel.Message = "Please enter Password.";
+                        CommonViewModel.Message = "Please Enter Password.";
 
                         return Json(CommonViewModel);
                     }
@@ -94,7 +94,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Firstname.";
+						CommonViewModel.Message = "Please Enter First Name.";
 
 						return Json(CommonViewModel);
 					}
@@ -103,7 +103,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Lastname.";
+						CommonViewModel.Message = "Please Enter Last Name.";
 
 						return Json(CommonViewModel);
 					}
@@ -112,7 +112,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter valid Email.";
+						CommonViewModel.Message = "Please Enter valid Email.";
 
 						return Json(CommonViewModel);
 					}
@@ -121,7 +121,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter valid Contact No.";
+						CommonViewModel.Message = "Please Enter valid Contact No.";
 
 						return Json(CommonViewModel);
 					}
@@ -130,7 +130,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter valid Alternate Contact No.";
+						CommonViewModel.Message = "Please Enter valid Alternate Contact No.";
 
 						return Json(CommonViewModel);
 					}

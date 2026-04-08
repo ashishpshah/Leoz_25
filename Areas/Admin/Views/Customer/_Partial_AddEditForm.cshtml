@@ -26,18 +26,18 @@
 			{
 				<input type="text" class="form-control d-none" id="ProjectMap" name="ProjectMap" value="true">
 
-				<div class="form-group row d-flex align-items-center">
+				<div class="form-group row align-items-center">
 					<div class="col-12 col-md-4">
 						<div class="row">
-							<label class="col-12 col-sm-3 col-form-label text-md-end">Customer</label>
+							<label class="col-12 col-sm-3 col-form-label">Customer</label>
 							<div class="col-12 col-sm-9">
 								<input type="text" data-altType="text" class="form-control form-control-sm" value="@Model.Obj.Fullname" autocomplete="off" readonly>
 							</div>
 						</div>
 					</div>
 					<div class="col-12 col-md-8" style="margin: 0rem !important;">
-						<div class="form-group row d-flex align-items-center">
-							<label for="ddlProjectIds" class="col-12 col-sm-3 col-form-label text-md-end">Project(s)</label>
+						<div class="form-group row align-items-center">
+							<label for="ddlProjectIds" class="col-12 col-sm-3 col-form-label">Project(s)</label>
 							<div class="col-12 col-sm-9">
 								<select id="ddlProjectIds" name="ProjectIds" class="form-control form-control-sm select2_multiple" data-selected="@Model.Obj.ProjectIds">
 									@* <option value="0">-- Select --</option> *@
@@ -65,8 +65,8 @@
 
 						<!-- Username -->
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="row align-items-center">
-								<label class="col-12 col-sm-4 col-form-label text-sm-end">Username<span style="color:red">*</span></label>
+							<div class="form-group row align-items-center">
+								<label class="col-12 col-sm-4 col-form-label">User Name<span style="color:red">*</span></label>
 								<div class="col-12 col-sm-8">
 									<input type="text" class="form-control form-control-sm"
 										   id="UserName" name="UserName"
@@ -77,11 +77,11 @@
 
 						<!-- Password / Reset -->
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="row align-items-center">
+							<div class="form-group row align-items-center">
 
 								@if (Model.Obj != null && Model.Obj.Id > 0)
 								{
-									<label class="col-12 col-sm-4 col-form-label text-sm-end">Password Reset</label>
+									<label class="col-12 col-sm-4 col-form-label">Password Reset</label>
 									<div class="col-12 col-sm-8">
 										<div class="form-check form-switch">
 											<input type="checkbox" class="form-check-input"
@@ -96,7 +96,7 @@
 								}
 								else
 								{
-									<label class="col-12 col-sm-4 col-form-label text-sm-end">Password<span style="color:red">*</span></label>
+									<label class="col-12 col-sm-4 col-form-label">Password<span style="color:red">*</span></label>
 									<div class="col-12 col-sm-8">
 										<div class="input-group input-group-sm">
 											<input type="password" id="Password" name="Password"
@@ -113,8 +113,8 @@
 
 						<!-- Status -->
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="row align-items-center">
-								<label class="col-12 col-sm-4 col-form-label text-sm-end">Status</label>
+							<div class="form-group row align-items-center">
+								<label class="col-12 col-sm-4 col-form-label">Status</label>
 								<div class="col-12 col-sm-8">
 									<div class="form-check form-check-inline form-control border-0 my-0 py-0">
 										<input type="checkbox" class="form-check-input" id="switch_Status"
@@ -134,24 +134,24 @@
 					<span>Personal Details</span>
 					<div class="row no-gutters">
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center">
-								<label for="FirstName" class="col-12 col-sm-4 col-form-label text-md-end">Firstname<span style="color:red">*</span></label>
+							<div class="form-group row align-items-center">
+								<label for="FirstName" class="col-12 col-sm-4 col-form-label">First Name<span style="color:red">*</span></label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="FirstName" name="FirstName" value="@Model.Obj.FirstName" autocomplete="off">
 								</div>
 							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center">
-								<label for="MiddleName" class="col-12 col-sm-4 col-form-label text-md-end">Middlename</label>
+							<div class="form-group row align-items-center">
+								<label for="MiddleName" class="col-12 col-sm-4 col-form-label">Middle Name</label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="MiddleName" name="MiddleName" value="@Model.Obj.MiddleName" autocomplete="off">
 								</div>
 							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center">
-								<label for="LastName" class="col-12 col-sm-4 col-form-label text-md-end">Lastname<span style="color:red">*</span></label>
+							<div class="form-group row align-items-center">
+								<label for="LastName" class="col-12 col-sm-4 col-form-label">Last Name<span style="color:red">*</span></label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="LastName" name="LastName" value="@Model.Obj.LastName" autocomplete="off">
 								</div>
@@ -160,16 +160,16 @@
 					</div>
 					<div class="row no-gutters">
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center">
-								<label for="Email" class="col-12 col-sm-4 col-form-label text-md-end">Email<span style="color:red">*</span></label>
+							<div class="form-group row align-items-center">
+								<label for="Email" class="col-12 col-sm-4 col-form-label">Email<span style="color:red">*</span></label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="Email" name="Email" value="@Model.Obj.Email" autocomplete="off">
 								</div>
 							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-4" style="margin: 0rem !important;">
-							<div class="form-group row d-flex align-items-center">
-								<label for="ContactNo" class="col-12 col-sm-4 col-form-label text-md-end">Contact No.<span style="color:red">*</span></label>
+							<div class="form-group row align-items-center">
+								<label for="ContactNo" class="col-12 col-sm-4 col-form-label">Contact No.<span style="color:red">*</span></label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="ContactNo" name="ContactNo" value="@Model.Obj.ContactNo" autocomplete="off">
 								</div>
@@ -178,16 +178,16 @@
 					</div>
 					<div class="row no-gutters">
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center">
-								<label for="Contact_PersonName" class="col-12 col-sm-4 col-form-label text-md-end">Contact Person Name </label>
+							<div class="form-group row align-items-center">
+								<label for="Contact_PersonName" class="col-12 col-sm-4 col-form-label">Contact Person Name </label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm" id="Contact_PersonName" name="Contact_PersonName" value="@Model.Obj.Contact_PersonName" autocomplete="off">
 								</div>
 							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-4">
-							<div class="form-group row d-flex align-items-center" style="margin-bottom:20px">
-								<label for="Contact_PersonNo" class="col-12 col-sm-4 col-form-label text-md-end">Contact Person Contact No.</label>
+							<div class="form-group row align-items-center" style="margin-bottom:20px">
+								<label for="Contact_PersonNo" class="col-12 col-sm-4 col-form-label">Contact Person Contact No.</label>
 								<div class="col-12 col-sm-8">
 									<input type="text" data-altType="text" class="form-control form-control-sm isNumberKey" id="Contact_PersonNo" name="Contact_PersonNo" value="@Model.Obj.Contact_PersonNo" autocomplete="off">
 								</div>
@@ -205,7 +205,7 @@
 			</div>
 		</div>
 	</div>
-</div>
+
 
 @section Scripts {
 	<script type="text/javascript">

@@ -148,7 +148,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
-							CommonViewModel.Message = "Please enter Username.";
+							CommonViewModel.Message = "Please enter User Name.";
 
 							return Json(CommonViewModel);
 						}
@@ -166,7 +166,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
-							CommonViewModel.Message = "Please enter Firstname.";
+							CommonViewModel.Message = "Please enter First Name.";
 
 							return Json(CommonViewModel);
 						}
@@ -174,7 +174,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
-							CommonViewModel.Message = "Please enter MiddleName.";
+							CommonViewModel.Message = "Please enter Middle Name.";
 
 							return Json(CommonViewModel);
 						}
@@ -183,7 +183,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
-							CommonViewModel.Message = "Please enter Lastname.";
+							CommonViewModel.Message = "Please enter Last Name.";
 
 							return Json(CommonViewModel);
 						}
@@ -215,7 +215,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                         }
                         if (/*Logged_In_VendorId <= 0 && */_context.Using<User>().Any(x => x.UserName.ToLower() == viewModel.UserName.ToLower() && x.Id != viewModel.UserId))
 						{
-							CommonViewModel.Message = "Username already exist. Please try another Username.";
+							CommonViewModel.Message = "User Name already exist. Please try another User Name.";
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
 
