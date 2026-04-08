@@ -170,14 +170,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						if (string.IsNullOrEmpty(viewModel.MiddleName))
-						{
-							CommonViewModel.IsSuccess = false;
-							CommonViewModel.StatusCode = ResponseStatusCode.Error;
-							CommonViewModel.Message = "Please enter Middle Name.";
+						//if (string.IsNullOrEmpty(viewModel.MiddleName))
+						//{
+						//	CommonViewModel.IsSuccess = false;
+						//	CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						//	CommonViewModel.Message = "Please enter Middle Name.";
 
-							return Json(CommonViewModel);
-						}
+						//	return Json(CommonViewModel);
+						//}
 
 						if (string.IsNullOrEmpty(viewModel.LastName))
 						{
