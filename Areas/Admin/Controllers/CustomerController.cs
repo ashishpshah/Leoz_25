@@ -287,7 +287,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 										obj.UserName = viewModel.UserName;
 										obj.Password = viewModel.Password;
 										obj.IsActive = viewModel.IsActive;
-
+										
 										var _obj = _context.Using<User>().Add(obj);
 										viewModel.UserId = _obj.Id;
 									}
