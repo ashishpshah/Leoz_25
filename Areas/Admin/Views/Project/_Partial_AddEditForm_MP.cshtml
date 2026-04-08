@@ -13,7 +13,7 @@
 	@if (IsEmployee || IsVendor)
 	{
 		<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
-
+			
 			<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
 				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
 				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
