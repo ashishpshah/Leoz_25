@@ -13,73 +13,81 @@
 	@if (IsEmployee || IsVendor)
 	{
 		<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
-			
-			<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+
+			<div class="card-body form-horizontal" id="divProjectSiteDoc" style="display:none">
 				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
 				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
 				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 
-				<div class="row mb-1">
-					<label for="MaterialFor" class="col-md-2 col-form-label text-md-end">Material For<span style="color:red">*</span></label>
-					<div class="col-md-6">
+				<div class="form-group row" style="padding-top:20px">
+					<label for="MaterialFor" class="col-md-2 col-form-label">Material For<span style="color:red">*</span></label>
+					<div class="col-md-8">
 						<input type="text" name="MaterialFor" class="form-control" value="@Model.Obj.MaterialFor">
-					</div>
+					</div>					
 				</div>
-				<div class="row mb-1">
-					<label for="MaterialName" class="col-md-2 col-form-label text-md-end">Material Name<span style="color:red">*</span></label>
-					<div class="col-md-6">
+				<div class="form-group row" style="padding-top:20px">					
+					<label for="MaterialName" class="col-md-2 col-form-label">Material Name<span style="color:red">*</span></label>
+					<div class="col-md-8">
 						<input type="text" name="MaterialName" class="form-control" value="@Model.Obj.MaterialName">
 					</div>
 				</div>
-				<div class="row mb-1">
-					<label for="MaterialCode" class="col-md-2 col-form-label text-md-end">Material Code</label>
-					<div class="col-md-3">
+				<div class="form=group row" style="padding-top:20px" >
+					<label for="MaterialCode" class="col-md-2 col-form-label">Material Code</label>
+					<div class="col-md-8">
 						<input type="text" name="MaterialCode" class="form-control" value="@Model.Obj.MaterialCode">
-					</div>
-					<label for="MaterialBrand" class="col-md-2 col-form-label text-md-end">Material Brand</label>
-					<div class="col-5">
+					</div>					
+				</div>
+				<div class="form=group row" style="padding-top:20px">					
+					<label for="MaterialBrand" class="col-md-2 col-form-label">Material Brand</label>
+					<div class="col-md-8">
 						<input type="text" name="MaterialBrand" class="form-control" value="@Model.Obj.MaterialBrand">
 					</div>
 				</div>
 
 				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
 				{
-					<div class="row mb-1">
+					<div class="form=group row" style="padding-top:20px">
 						<label class="col-md-2 col-form-label text-md-end">Required Quantity</label>
-						<div class="col-md-3">
+						<div class="col-md-8">
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()" @(Model.Obj != null && Model.Obj.Id > 0 ? "readonly" : "")>
 						</div>
 					</div>
-					<div class="row mb-1">
-						<label for="Qty_Order" class="col-md-2 col-form-label text-md-end">Order Quantity</label>
-						<div class="col-md-3">
+					<div class="form=group row" style="padding-top:20px">
+						<label for="Qty_Order" class="col-md-2 col-form-label">Order Quantity</label>
+						<div class="col-md-8">
 							<input type="text" name="Qty_Order" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Order.ToString()">
 						</div>
-					</div>
+					</div>					
 				}
 				else
 				{
-					<div class="row mb-1">
-						<label for="Qty" class="col-md-2 col-form-label text-md-end">Quantity</label>
-						<div class="col-md-3">
+					<div class="form=group row" style="padding-top:20px">
+						<label for="Qty" class="col-md-2 col-form-label">Quantity</label>
+						<div class="col-md-8">
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
 						</div>
 					</div>
-
 					if (Model.Data5 != null && (string)Model.Data5 == "COORD")
 					{
-						<div class="row mb-1 divQty_Receive" style="display:@(IsEmployee && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "" : "none");">
-							<label for="Qty_Receive" class="col-md-2 col-form-label text-md-end">Receive Quantity</label>
-							<div class="col-md-3">
+						<div class="form=group row" style="padding-top:20px">
+
+							<label for="Qty_Receive" class="col-md-2 col-form-label divQty_Receive">Receive Quantity</label>
+							<div class="col-md-8 divQty_Receive">
 								<input type="text" name="Qty_Receive" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty_Receive.ToString()">
 							</div>
+						
 						</div>
 					}
-				}
 
-				<div class="row mb-1">
-					<label for="UOM" class="col-md-2 col-form-label text-md-end">UOM</label>
-					<div class="col-md-3">
+
+					
+						
+				}
+				
+
+				<div class="form=group row">
+					<label for="UOM" class="col-md-2 col-form-label">UOM</label>
+					<div class="col-md-8">
 						<select name="UOM" class="form-control form-control-sm select2">
 							<option value="">-- Select --</option>
 							@if (Model.SelectListItems != null)
@@ -106,36 +114,35 @@
 						</select>
 					</div>
 				</div>
+				
+					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+					{
+						<div class="form=group row">
+							<label class="col-md-2 col-form-label">Status</label>
+					
+							<div class="col-md-8 col-form-label">
 
-				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
-				{
-					<div class="row mb-1">
-						<label class="col-md-2 col-form-label text-md-end">Status</label>
-						<div class="col-md-3 col-form-label">
-
-							<div class="form-check form-check-inline">
-								<input type="radio" id="Ordered" name="Status" class="form-check-input" value="O" @(Model.Obj != null && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "checked" : "")>
-								<label class="form-check-label" for="Ordered">
-									Ordered
-								</label>
-							</div>
-							<div class="form-check form-check-inline">
-								<input type="radio" id="Rejected" name="Status" class="form-check-input" value="R" @(Model.Obj != null && Model.Obj.Status == "R" ? "checked" : "")>
-								<label class="form-check-label" for="Rejected">
-									Rejected
-								</label>
+								<div class="form-check form-check-inline">
+									<input type="radio" id="Ordered" name="Status" class="form-check-input" value="O" @(Model.Obj != null && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "checked" : "")>
+									<label class="form-check-label" for="Ordered">
+										Ordered
+									</label>
+								</div>
+								<div class="form-check form-check-inline">
+									<input type="radio" id="Rejected" name="Status" class="form-check-input" value="R" @(Model.Obj != null && Model.Obj.Status == "R" ? "checked" : "")>
+									<label class="form-check-label" for="Rejected">
+										Rejected
+									</label>
+								</div>
 							</div>
 						</div>
-					</div>
-				}
-
-				<div class="row mb-1">
-					<label class="col-md-2 col-form-label text-md-end">&nbsp;</label>
-					<div class="col-9">
-						<button type="button" class="btn btn-success btnSubmit">Save</button>
-						<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
-					</div>
-				</div>
+					}
+				</div>				
+				
+			
+			<div class="card-footer text-center" style="padding-top:20px;display:none" id="divProjectSiteDoc">
+				<button type="button" class="btn btn-success btnSubmit">Save</button>
+				<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
 			</div>
 
 		</form>

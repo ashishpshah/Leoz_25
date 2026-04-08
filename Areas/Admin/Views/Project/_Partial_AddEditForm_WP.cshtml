@@ -15,20 +15,21 @@
 	{
 		<form id="formSave" action="@Url.Action("Save_WP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
-			<div class="row no-gutters" id="divProjectSiteDoc" style="display:none">
+			<div class="card-body form-horizontal" id="divProjectSiteDoc" style="display:none">
 				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
 				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
 				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
 
-				<div class="row mb-1">
-					<label for="UploadDate_Text" class="col-2 col-form-label text-md-end">Upload Date<span style="color:red">*</span></label>
-					<div class="col-md-4">
+				<div class="form-group row" style="padding-top:20px">
+					<label for="UploadDate_Text" class="col-2 col-form-label">Upload Date<span style="color:red">*</span></label>
+					<div class="col-md-8">
 						<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
-					</div>
+					</div>				
 				</div>
-				<div class="row mb-1">
-					<label for="PendingFrom" class="col-2 col-form-label text-md-end">Pending From<span style="color:red">*</span></label>
-					<div class="col-9">
+				<div class="form-group row" style="padding-top:20px">
+					
+					<label for="PendingFrom" class="col-2 col-form-label">Pending From<span style="color:red">*</span></label>
+					<div class="col-md-8">
 						<select name="PendingFrom" class="form-control form-control-sm select2">
 							<option value="">-- Select --</option>
 							@if (Model.SelectListItems != null)
@@ -41,27 +42,23 @@
 						</select>
 					</div>
 				</div>
-				<div class="row mb-1">
-					<label for="Remarks" class="col-2 col-form-label text-md-end">Remarks<span style="color:red">*</span></label>
-					<div class="col-9">
+				<div class="form-group row" style="padding-top:20px">
+					<label for="Remarks" class="col-2 col-form-label">Remarks<span style="color:red">*</span></label>
+					<div class="col-md-8">
 						<input type="text" class="form-control" name="Remarks">
+					</div>			
+				</div>
+				<div class="form-group row" style="padding-top:20px">					
+					<label for="PendingPoint" class="col-2 col-form-label">Pending Point<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<textarea rows="5" class="form-control" name="PendingPoint"></textarea>
 					</div>
 				</div>
-				<div class="row mb-1">
-					<label for="PendingPoint" class="col-2 col-form-label text-md-end">Pending Point<span style="color:red">*</span></label>
-					<div class="col-10">
-						<textarea rows="3" class="form-control" name="PendingPoint"></textarea>
-					</div>
 				</div>
-				<div class="row mb-1">
-					<label class="col-2 col-form-label text-md-end">&nbsp;</label>
-					<div class="col-9">
-						<button type="button" class="btn btn-success btnSubmit">Save</button>
-						<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
-					</div>
-				</div>
+			<div class="card-footer text-center" style="padding-top:20px;display:none" id="divProjectSiteDoc">
+				<button type="button" class="btn btn-success btnSubmit">Save</button>
+				<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
 			</div>
-
 		</form>
 
 	}

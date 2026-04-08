@@ -15,27 +15,27 @@
 		<div class="card-body form-horizontal">
 			<div class="row no-gutters">
 				<div class="col-12">
-					<div class="form-group row" style="padding-top:20px">
-						<label for="Name" class="col-sm-2 col-form-label text-md-end">Name<span style="color:red">*</span></label>
+					<div class="form-group row mt-1">
+						<label for="Name" class="col-sm-2 col-form-label">Name<span style="color:red">*</span></label>
 						<div class="col-sm-4">
 							<input type="text" id="Name" name="Name" class="form-control form-control-sm" value="@Model.Obj.Name"
 								   data-required data-msg="The Package Name field is required." autocomplete="off">
 						</div>
-						<label for="Price" class="col-sm-2 col-form-label text-md-end">Price</label>
+						<label for="Price" class="col-sm-2 col-form-label">Price</label>
 						<div class="col-sm-4">
 							<input type="text" id="Price" name="Price" class="form-control form-control-sm text-right decimal-number2" value="@Model.Obj.Price"
 								   data-required data-msg="The Package Price field is required." autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row" style="padding-top:20px">
-						<label for="Price" class="col-sm-2 col-form-label text-md-end">Price</label>
+					<div class="form-group row mt-1">
+						<label for="Price" class="col-sm-2 col-form-label">Price</label>
 						<div class="col-sm-4">
 							<input type="text" id="Price" name="Price" class="form-control form-control-sm text-right decimal-number2" value="@Model.Obj.Price"
 								   data-required data-msg="The Package Price field is required." autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row" style="padding-top:20px">
-						<label for="Price" class="col-sm-2 col-form-label text-md-end">Select Option</label>
+					<div class="form-group row mt-1">
+						<label for="Price" class="col-sm-2 col-form-label">Select Option</label>
 						<div class="col-sm-6">
 							<div class="form-check form-check-inline form-control border-0">
 								<div class="icheck-primary d-inline ml-2 mr-3">
@@ -49,22 +49,22 @@
 							</div>
 						</div>
 					</div>
-					<div class="form-group row" style="padding-top:20px">
-						<label for="DurationInDays" class="col-sm-2 col-form-label text-md-end IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">Duration In Days</label>
+					<div class="form-group row mt-1">
+						<label for="DurationInDays" class="col-sm-2 col-form-label IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">Duration In Days</label>
 						<div class="col-sm-1 IsYearly" style="display: @(Model.Obj.IsYearly ? "block" : "none");">
 							<input type="text" id="DurationInDays" name="DurationInDays" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.DurationInDays" data-value="@Model.Obj.DurationInDays" autocomplete="off">
 						</div>
-						<label for="ProjectLimit" class="col-sm-2 col-form-label text-md-end IsProjectBased" style="display: @(Model.Obj.IsProjectBased ? "block" : "none");">Project Limit</label>
+						<label for="ProjectLimit" class="col-sm-2 col-form-label IsProjectBased" style="display: @(Model.Obj.IsProjectBased ? "block" : "none");">Project Limit</label>
 						<div class="col-sm-1 IsProjectBased" style="display: @(Model.Obj.IsProjectBased ? "block" : "none");">
 							<input type="text" id="ProjectLimit" name="ProjectLimit" class="form-control form-control-sm text-right decimal-number" value="@Model.Obj.ProjectLimit" data-value="@Model.Obj.ProjectLimit" autocomplete="off">
 						</div>
 					</div>
-					<div class="form-group row" style="padding-top:20px">
-						<label for="Description" class="col-sm-2 col-form-label text-md-end ">Description</label>
+					<div class="form-group row mt-1">
+						<label for="Description" class="col-sm-2 col-form-label">Description</label>
 						<div class="col-sm-4">
 							<textarea id="Description" name="Description" rows="3" class="form-control form-control-sm" autocomplete="off">@Model.Obj.Description</textarea>
 						</div>
-						<label for="Obj.IsActive" class="col-sm-2 col-form-label text-md-end">Status</label>
+						<label for="Obj.IsActive" class="col-sm-2 col-form-label">Status</label>
 						<div class="col-sm-4">
 							<div class="form-check form-check-inline form-control border-0">
 								<input type="checkbox" class="form-check-input"

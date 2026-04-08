@@ -15,7 +15,7 @@
 		<div class="card-body form-horizontal">
 			<div class="row no-gutters">
 				<div class="col-12">
-					<div class="form-group row align-items-center" style="padding-top:20px">
+					<div class="form-group row align-items-center mt-1">
 						<label for="Name" class="col-md-2 col-form-label">Name</label>
 						<div class="col-md-4">
 							<input type="text" class="form-control form-control-sm" id="Name" name="Name" value="@Model.Obj.Name"
@@ -35,7 +35,7 @@
 						}
 					</div>
 					
-					<div class="form-group row align-items-center" style="padding-top:20px">
+					<div class="form-group row align-items-center mt-1">
 						@if (Common.IsAdmin())
 					{
 						var selectedValue = Model.Obj.CreatedDate_Text.Split(',').ToList();
