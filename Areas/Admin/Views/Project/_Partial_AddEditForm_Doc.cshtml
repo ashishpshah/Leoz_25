@@ -1,4 +1,4 @@
-﻿@model ResponseModel<ProjectSiteDoc>
+﻿@model Tuple<ResponseModel<ProjectSiteDoc>, ResponseModel<ProjectSiteDoc_History>>
 
 @{
 	Layout = null;
@@ -17,25 +17,37 @@
 		<form id="formSave" action="@Url.Action("Save_Doc","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
 			<div class="card-body form-horizontal"id="divProjectSiteDoc" style="display:none">
-				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
-				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
-				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
-				<input type="text" class="form-control d-none" name="Type" value="@(Model.Obj != null ? Model.Obj.Type : "")">
+				<input type="text" class="form-control d-none" name="Id" value="@(Model.Item1.Obj != null && Model.Item1.Obj.Id > 0 ? Model.Item1.Obj.Id.ToString() : "")">
+				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Item1.Obj != null && Model.Item1.Obj.ProjectId > 0 ? Model.Item1.Obj.ProjectId.ToString() : "")">
+				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Item1.Obj != null && Model.Item1.Obj.CustomerId > 0 ? Model.Item1.Obj.CustomerId.ToString() : "")">
+				<input type="text" class="form-control d-none" name="Type" value="@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")">
 				<div class="form-group row" style="padding-top:20px">
 					<label for="UploadDate_Text" class="col-md-2 col-form-label">Upload Date</label>
-					<div class="col-md-8">
-						@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Obj?.Type) || Model.Obj?.UploadDate == null)
+					@* <div class="col-md-8">
+						@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type) || Model.Item1.Obj?.UploadDate == null)
 						{
-							<input type="date" name="UploadDate_Text" class="form-control" value="@(DateTime.Now.ToString("yyyy-MM-dd"))">
+							<input type="date" name="UploadDate" class="form-control" value="@(DateTime.Now.ToString("yyyy-MM-dd"))">
 						}
 						else
 						{
-							<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+							<input type="date" name="UploadDate" class="form-control" value="@(Model.Item1.Obj.UploadDate.ToString("yyyy-MM-dd"))">
 						}
-					</div>					
+					</div> *@
+					<div class="col-md-8">
+						@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type) || Model.Item1.Obj?.UploadDate == null)
+						{
+							<input type="datetime-local" name="UploadDate" class="form-control"
+								   value="@(DateTime.Now.ToString("yyyy-MM-ddTHH:mm"))">
+						}
+						else
+						{
+							<input type="datetime-local" name="UploadDate" class="form-control"
+								   value="@(Model.Item1.Obj.UploadDate.ToString("yyyy-MM-ddTHH:mm"))">
+						}
+					</div>
 				</div>
 				<div class="form-group row" style="padding-top:20px">
-					<label for="UploadFile" class="col-md-2 col-form-label">Upload File</label>
+					<label for="UploadFile" class="col-md-2 col-form-label">Upload File<span style="color:red">*</span></label>
 					<div class="col-md-8">
 						<span class="control-fileupload">
 							<input type="file" id="UploadFile" accept="image/png, image/jpg, image/jpeg, application/pdf" class="form-control">
@@ -61,9 +73,9 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				@if (!(Model.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Obj?.Type)))
+				@if (!(Model.Item1.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type)))
 				{
-					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Obj != null ? Model.Obj.Type : "")')"> Add new record </button>
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Add new record </button>
 				}
 			</div>
 		</div>
@@ -75,20 +87,20 @@
 				<tr>
 					<th width="20%">Upload Date</th>
 					<th>Remarks</th>
-					<th width="10%">Status</th>
+					@* <th width="10%">Status</th> *@
 					<th width="10%">View File</th>
 					<th class="text-center" width="10%">Action</th>
 				</tr>
 			</thead>
 			<tbody>
-				@if (Model.ObjList != null)
+				@if (Model.Item1.ObjList != null)
 				{
-					foreach (var (item, index) in Model.ObjList.OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks).Select((item, index) => (item, index)))
+					foreach (var (item, index) in Model.Item1.ObjList.OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks).Select((item, index) => (item, index)))
 					{
 						<tr>
-							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy)</td>
+							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy_HHmm)</td>
 							<td>@item.Remark</td>
-							<td>@item.Status_Text</td>
+							@* <td>@item.Status_Text</td> *@
 							<td>
 								@if (index == 0 && item?.FileData != null)
 								{
@@ -114,10 +126,10 @@
 										}
 										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
 										@{
-											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc", "Project", new { area = "Admin" })?Id=@item.Id');">
-												<i class="ri-delete-bin-2-line"></i>
-											</button>
+											// <button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+											// 		onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc", "Project", new { area = "Admin" })?Id=@item.Id');">
+											// 	<i class="ri-delete-bin-2-line"></i>
+											// </button>
 										}
 									</div>
 								</td>
@@ -146,6 +158,36 @@
 			</tbody>
 		</table>
 	</div>
+
+	@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type))
+	{
+		<h5 class="mt-4 mb-2">Recent Uploads</h5>
+		<div class="table-responsive-sm mt-3" id="divProjectSiteDocList">
+			<table class="table table-bordered table-centered mb-0">
+				<thead>
+					<tr>
+						<th width="20%">Upload Date</th>
+						<th>Remarks</th>
+					</tr>
+				</thead>
+				<tbody>
+					@if (Model.Item2.ObjList != null)
+					{
+						foreach (var (item, index) in Model.Item2.ObjList.OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks).Select((item, index) => (item, index)))
+						{
+							<tr>
+								<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy_HHmm)</td>
+								<td>@item.Remark</td>
+
+
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+	
 
 </div>
 

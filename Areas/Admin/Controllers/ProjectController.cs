@@ -223,8 +223,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
-
-			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
+            var _CommonViewModel1 = new ResponseModel<ProjectSiteDoc_History>();
+            var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
 							  select new Project
@@ -261,8 +261,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 			else
 			{
 				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true && x.Type == Type).Distinct().ToList();
+                
+                _CommonViewModel1.ObjList = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true && x.Type == Type && x.IsLatest != true).Distinct().ToList();
 
-				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
+                if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
@@ -270,9 +272,16 @@ namespace Leoz_25.Areas.Admin.Controllers
 						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
-
-				return PartialView("_Partial_AddEditForm_Doc", _CommonViewModel);
-			}
+                if (_CommonViewModel1.ObjList != null || _CommonViewModel1.ObjList.Count() > 0)
+                {
+                    foreach (var item in _CommonViewModel1.ObjList)
+                    {
+                        item.Status_Text = item.Status == "U" ? "Upload" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
+                        if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
+                    }
+                }
+                return PartialView("_Partial_AddEditForm_Doc", Tuple.Create(_CommonViewModel, _CommonViewModel1));
+            }
 		}
 
 		[HttpPost]
@@ -302,7 +311,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					if (string.IsNullOrEmpty(viewModel.UploadDate_Text))
+					if (viewModel.UploadDate == null)
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -312,7 +321,18 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 
 					var files = AppHttpContextAccessor.AppHttpContext.Request.Form.Files;
-                    string[] allowedExtensions = { ".png", ".jpg", ".jpeg", ".pdf" };
+                    bool isFileUploaded = files != null && files.Any(f => f.Length > 0);
+                    var allowedTypes = new[] { "F3D", "DRW", "MB" };
+                    bool isHistoryType = allowedTypes.Contains(viewModel.Type);
+                    if ( viewModel.Id == 0 && (files == null || files.Count() <= 0))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please Upload Documents.";
+
+						return Json(CommonViewModel);
+					}
+					string[] allowedExtensions = { ".png", ".jpg", ".jpeg", ".pdf" };
                     string[] allowedMimeTypes = { "image/png", "image/jpeg", "application/pdf" };
 
                     foreach (var file in files)
@@ -360,7 +380,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						try
 						{
-							if (!string.IsNullOrEmpty(viewModel.UploadDate_Text)) { try { viewModel.UploadDate = DateTime.ParseExact(viewModel.UploadDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
+							long HistoryId = 0;
+
+                            //if (!string.IsNullOrEmpty(viewModel.UploadDate_Text)) { try { viewModel.UploadDate = DateTime.ParseExact(viewModel.UploadDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
 
 							ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
@@ -372,9 +394,40 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.UploadDate = viewModel.UploadDate;
 								//obj.FilePath = !string.IsNullOrEmpty(viewModel.FilePath) ? viewModel.FilePath : obj.FilePath;
 								obj.Type = viewModel.Type;
-
 								_context.Using<ProjectSiteDoc>().Update(obj);
-								viewModel.Id = obj.Id;
+                                var oldHistory = new List<ProjectSiteDoc_History>();
+                                if (isHistoryType)
+								{
+                                    oldHistory = _context.Using<ProjectSiteDoc_History>()
+                                   .GetByCondition(x => x.ProjectId == obj.ProjectId && x.Type == obj.Type && x.IsLatest == true)
+                               .ToList();
+                                }
+                               
+                                
+                                // ✅ Insert history ONLY if file uploaded
+                                if (isFileUploaded && isHistoryType)
+                                {
+                                    foreach (var item in oldHistory)
+                                    {
+                                        item.IsLatest = false;
+                                        _context.Using<ProjectSiteDoc_History>().Update(item);
+                                    }
+                                    var objHistory = new ProjectSiteDoc_History()
+                                    {
+                                        Status = obj.Status,
+										StatusDate = obj.StatusDate,
+										Type = obj.Type,
+                                        ProjectId = obj.ProjectId,
+                                        CustomerId = obj.CustomerId,
+                                        UploadDate = obj.UploadDate,
+                                        Remark = obj.Remark,
+										IsLatest = true
+                                    };
+
+                                    var _objHistory =  _context.Using<ProjectSiteDoc_History>().Add(objHistory);
+                                    HistoryId = _objHistory.Id;
+                                }
+                                viewModel.Id = obj.Id;
 							}
 							else if (obj != null && obj.Status == "R")
 							{
@@ -390,9 +443,36 @@ namespace Leoz_25.Areas.Admin.Controllers
 								viewModel.StatusDate = DateTime.Now;
 
 								viewModel.CustomerId = (IsCustomer ? Logged_In_CustomerId : viewModel.CustomerId);
-
 								var _obj = _context.Using<ProjectSiteDoc>().Add(viewModel);
+                                if (isHistoryType)
+                                {
+                                    var objHistory = new ProjectSiteDoc_History()
+                                    {
+                                        Status = viewModel.Status,
+                                        StatusDate = viewModel.StatusDate,
+                                        ProjectId = viewModel.ProjectId,
+                                        CustomerId = viewModel.CustomerId,
+                                        UploadDate = viewModel.UploadDate,
+                                        Remark = viewModel.Remark,
+                                        Type = viewModel.Type,
+                                        IsLatest = true
+                                    };
+
+                                    var _objHistory = _context.Using<ProjectSiteDoc_History>().Add(objHistory);
+                                    HistoryId = _objHistory.Id;
+                                }
+        //                        var objHistory = new ProjectSiteDoc_History();
+								//objHistory.Status = viewModel.Status;
+								//objHistory.StatusDate = viewModel.StatusDate;
+								//objHistory.ProjectId = viewModel.ProjectId;
+								//objHistory.CustomerId = viewModel.CustomerId;
+								//objHistory.UploadDate = viewModel.UploadDate;
+								//objHistory.Remark = viewModel.Remark;
+								//objHistory.Type = viewModel.Type;
+								//objHistory.IsLatest = true;
+        //                        var _objHistory = _context.Using<ProjectSiteDoc_History>().Add(objHistory);
 								viewModel.Id = _obj.Id;
+								//HistoryId = _objHistory.Id;
 							}
 
 							CommonViewModel.IsConfirm = true;
@@ -412,15 +492,28 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 										obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
-										if (obj != null && memoryStream.ToArray().Length > 0)
+                                        var historyObj = _context.Using<ProjectSiteDoc_History>()
+										.GetByCondition(x => x.Id == HistoryId)
+										.FirstOrDefault();
+
+                                        if (obj != null && memoryStream.ToArray().Length > 0)
 										{
 											obj.FileName = Path.GetFileName(file.FileName);
 											obj.FileContentType = file.ContentType;
-											obj.FileData = memoryStream.ToArray();
+											obj.FileData = memoryStream.ToArray();                                           
 
-											_context.Using<ProjectSiteDoc>().Update(obj);
-										}
-									}
+                                            _context.Using<ProjectSiteDoc>().Update(obj);
+                                            
+                                        }
+                                        if (historyObj != null && memoryStream.ToArray().Length > 0)
+                                        {
+                                            historyObj.FileName = Path.GetFileName(file.FileName);
+                                            historyObj.FileContentType = file.ContentType;
+                                            historyObj.FileData = memoryStream.ToArray();
+
+                                            _context.Using<ProjectSiteDoc_History>().Update(historyObj);
+                                        }
+                                    }
 								}
 							}
 							catch (Exception ex)
@@ -451,15 +544,22 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult DeleteConfirmed_Doc(long Id)
+		public ActionResult DeleteConfirmed_Doc(long Id )
 		{
 			try
 			{
 				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
-
-				if (objProject != null)
+                string type = objProject?.Type;
+                var objProjecthistory = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.Type == type).FirstOrDefault();
+                if (objProject != null)
 				{
 					_context.Using<ProjectSiteDoc>().Delete(objProject);
+					if(objProjecthistory != null)
+					{
+						_context.Using<ProjectSiteDoc_History>().Delete(objProjecthistory);
+
+                    }
+					
 
 					CommonViewModel.IsConfirm = true;
 					CommonViewModel.IsSuccess = true;

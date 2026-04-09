@@ -28,6 +28,7 @@ namespace Leoz_25.Infra
 		public virtual DbSet<Project> Projects { get; set; }
 
 		public virtual DbSet<ProjectSiteDoc> ProjectSiteDocs { get; set; }
+		public virtual DbSet<ProjectSiteDoc_History> ProjectSiteDocs_History { get; set; }
 
 		public virtual DbSet<ProjectSiteMaterial> ProjectSiteMaterials { get; set; }
 
@@ -101,8 +102,12 @@ namespace Leoz_25.Infra
 			{
 				entity.ToTable("Project_Site_Doc", "dbo");
 			});
+            modelBuilder.Entity<ProjectSiteDoc_History>(entity =>
+            {
+                entity.ToTable("Project_Site_Doc_History", "dbo");
+            });
 
-			modelBuilder.Entity<ProjectSiteMaterial>(entity =>
+            modelBuilder.Entity<ProjectSiteMaterial>(entity =>
 			{
 				entity.ToTable("Project_Site_Material", "dbo");
 
