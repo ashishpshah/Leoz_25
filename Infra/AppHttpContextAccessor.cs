@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Leoz_25.Infra
 {
@@ -22,12 +22,7 @@ namespace Leoz_25.Infra
 			_iConfig = iConfig;
 			_clientFactory = clientFactory;
 
-			ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-			string path = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-			configurationBuilder.AddJsonFile(path, optional: false);
-			IConfigurationRoot configurationRoot = configurationBuilder.Build();
-
-			_connectionString = configurationRoot.GetSection("ConnectionStrings").GetSection("DataConnection").Value;
+			_connectionString = iConfig.GetConnectionString("DataConnection") ?? iConfig.GetSection("ConnectionStrings")?.GetSection("DataConnection")?.Value;
 		}
 
 		public static string EncrKey => "20250409095731001";

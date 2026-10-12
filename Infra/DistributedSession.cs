@@ -81,9 +81,11 @@ END";
 
 			try
 			{
-				using (var connection = new SqlConnection(connectionString))
+				var builder = new SqlConnectionStringBuilder(connectionString) { ConnectTimeout = 5 };
+				using (var connection = new SqlConnection(builder.ConnectionString))
 				using (var command = new SqlCommand(sql, connection))
 				{
+					command.CommandTimeout = 10;
 					connection.Open();
 					command.ExecuteNonQuery();
 				}
@@ -112,14 +114,23 @@ END";
 		{
 			var list = new List<XElement>();
 
-			using (var connection = new SqlConnection(_connectionString))
-			using (var command = new SqlCommand($"SELECT [Xml] FROM {_tableName} ORDER BY [Id]", connection))
+			try
 			{
-				connection.Open();
+				var builder = new SqlConnectionStringBuilder(_connectionString) { ConnectTimeout = 5 };
+				using (var connection = new SqlConnection(builder.ConnectionString))
+				using (var command = new SqlCommand($"SELECT [Xml] FROM {_tableName} ORDER BY [Id]", connection))
+				{
+					command.CommandTimeout = 10;
+					connection.Open();
 
-				using (var reader = command.ExecuteReader())
-					while (reader.Read())
-						if (!reader.IsDBNull(0)) list.Add(XElement.Parse(reader.GetString(0)));
+					using (var reader = command.ExecuteReader())
+						while (reader.Read())
+							if (!reader.IsDBNull(0)) list.Add(XElement.Parse(reader.GetString(0)));
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("SqlXmlRepository.GetAllElements error: " + ex.Message);
 			}
 
 			return list.AsReadOnly();
@@ -127,14 +138,23 @@ END";
 
 		public void StoreElement(XElement element, string friendlyName)
 		{
-			using (var connection = new SqlConnection(_connectionString))
-			using (var command = new SqlCommand($"INSERT INTO {_tableName} ([FriendlyName], [Xml]) VALUES (@FriendlyName, @Xml)", connection))
+			try
 			{
-				command.Parameters.AddWithValue("@FriendlyName", (object)friendlyName ?? DBNull.Value);
-				command.Parameters.AddWithValue("@Xml", element.ToString(SaveOptions.DisableFormatting));
+				var builder = new SqlConnectionStringBuilder(_connectionString) { ConnectTimeout = 5 };
+				using (var connection = new SqlConnection(builder.ConnectionString))
+				using (var command = new SqlCommand($"INSERT INTO {_tableName} ([FriendlyName], [Xml]) VALUES (@FriendlyName, @Xml)", connection))
+				{
+					command.CommandTimeout = 10;
+					command.Parameters.AddWithValue("@FriendlyName", (object)friendlyName ?? DBNull.Value);
+					command.Parameters.AddWithValue("@Xml", element.ToString(SaveOptions.DisableFormatting));
 
-				connection.Open();
-				command.ExecuteNonQuery();
+					connection.Open();
+					command.ExecuteNonQuery();
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("SqlXmlRepository.StoreElement error: " + ex.Message);
 			}
 		}
 	}
