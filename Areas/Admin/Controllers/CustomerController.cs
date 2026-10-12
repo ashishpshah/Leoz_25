@@ -28,7 +28,113 @@ namespace Leoz_25.Areas.Admin.Controllers
 				foreach (var item in CommonViewModel.ObjList)
 					item.Projects = string.Join(", ", listProject.Where(x => x.CustomerId == item.Id).Select(x => x.ProjectName).ToArray());
 
+			if (CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
+			{
+				var listInUseCustomerId = Get_InUse_CustomerIds(CommonViewModel.ObjList.ToList());
+
+				foreach (var item in CommonViewModel.ObjList) item.IsInUse = listInUseCustomerId.Contains(item.Id);
+			}
+
 			return View(CommonViewModel);
+		}
+
+		/// <summary>
+		/// Edit Customer : protect projects which are already started.
+		/// 1. Project(s) mapping : Project where work is already started can not be removed from Customer.
+		/// 2. Customer mapped to an active Project can not be made In-Active.
+		/// Returns error message, or null when valid.
+		/// </summary>
+		private string Get_ProjectMapping_Error(Customer viewModel, bool IsProjectMap)
+		{
+			if (viewModel == null || viewModel.Id <= 0) return null;
+
+			var objCustomer = _context.Using<Customer>().GetByCondition(x => x.Id == viewModel.Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+
+			if (objCustomer == null) return "Customer not found.";
+
+			var dictProject = _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToDictionary(x => x.Id, x => x);
+
+			string ProjectNames(IEnumerable<long> ids) => string.Join(", ", ids.Distinct().Select(x => dictProject.TryGetValue(x, out var p) ? p.Name : x.ToString()));
+
+			var listOldProjectId = _context.Using<CustomerProjectMapping>().GetByCondition(x => x.CustomerId == objCustomer.Id && x.VendorId == Logged_In_VendorId).Select(x => x.ProjectId).Distinct().ToList();
+
+			if (IsProjectMap)
+			{
+				var listNewProjectId = (viewModel.ProjectIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+					.Select(x => long.TryParse(x.Trim(), out var id) ? id : 0).Where(x => x > 0).Distinct().ToList();
+
+				// Project is mapped to only one Customer (documents / pending work of project are shown to mapped Customer)
+				var listOtherCustomerProjectId = _context.Using<CustomerProjectMapping>().GetByCondition(x => listNewProjectId.Contains(x.ProjectId) && x.CustomerId != objCustomer.Id && x.VendorId == Logged_In_VendorId).Select(x => x.ProjectId).Distinct().ToList();
+
+				if (listOtherCustomerProjectId.Count > 0)
+					return $"Project(s) : {ProjectNames(listOtherCustomerProjectId)} already mapped to another Customer.";
+
+				var listRemovedProjectId = listOldProjectId.Where(x => !listNewProjectId.Contains(x)).ToList();
+
+				if (listRemovedProjectId.Count > 0)
+				{
+					// Work started in Project (Project Detail / Daily Update need Customer mapping to open project)
+					var listStartedProjectId = new List<long>();
+
+					listStartedProjectId.AddRange(_context.Using<ProjectSiteDoc>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+					listStartedProjectId.AddRange(_context.Using<ProjectSiteDoc_History>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+					listStartedProjectId.AddRange(_context.Using<ProjectSiteMaterial>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+					listStartedProjectId.AddRange(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+					listStartedProjectId.AddRange(_context.Using<AgencyMaster>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+					listStartedProjectId.AddRange(_context.Using<ProjectDailyUpdate>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+
+					if (listStartedProjectId.Count > 0)
+						return $"Work is already started in Project(s) : {ProjectNames(listStartedProjectId)}. Can not remove these Project(s) from Customer.";
+				}
+			}
+			else
+			{
+				var listActiveMappedProjectId = listOldProjectId.Where(x => dictProject.TryGetValue(x, out var p) && p.IsActive == true).ToList();
+
+				if (objCustomer.IsActive == true && viewModel.IsActive == false && listActiveMappedProjectId.Count > 0)
+					return $"Customer is mapped to active Project(s) : {ProjectNames(listActiveMappedProjectId)}. Please make Project(s) In-Active / remove Project(s) first, then make Customer In-Active.";
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Customers who are mapped to a project, or project work is started for them
+		/// (Documents, Document history, Material, Pending Work, Daily Update),
+		/// or Customer login has already worked (uploaded / approved) in project.
+		/// </summary>
+		private HashSet<long> Get_InUse_CustomerIds(List<Customer> listCustomer)
+		{
+			var result = new HashSet<long>();
+
+			if (listCustomer == null || listCustomer.Count == 0) return result;
+
+			var listCustomerId = listCustomer.Select(x => x.Id).ToList();
+
+			result.UnionWith(_context.Using<CustomerProjectMapping>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+			result.UnionWith(_context.Using<ProjectSiteDoc>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+			result.UnionWith(_context.Using<ProjectSiteDoc_History>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+			result.UnionWith(_context.Using<ProjectSiteMaterial>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+			result.UnionWith(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+			result.UnionWith(_context.Using<ProjectDailyUpdate>().GetByCondition(x => listCustomerId.Contains(x.CustomerId)).Select(x => x.CustomerId));
+
+			// Work done by Customer login is tracked by User Id (CreatedBy / LastModifiedBy)
+			var dictUserCustomer = listCustomer.Where(x => x.UserId > 0).GroupBy(x => x.UserId).ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToList());
+			var listUserId = dictUserCustomer.Keys.ToList();
+
+			if (listUserId.Count > 0)
+			{
+				var listWorkedUserId = new List<long>();
+
+				listWorkedUserId.AddRange(_context.Using<ProjectSiteDoc>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<AgencyMaster>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+
+				foreach (var userId in listWorkedUserId.Distinct())
+					if (dictUserCustomer.TryGetValue(userId, out var listId)) result.UnionWith(listId);
+			}
+
+			return result;
 		}
 
 		//[CustomAuthorizeAttribute(AccessType_Enum.Read)]
@@ -78,13 +184,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
+				var subscriptionError = Get_Subscription_Error();
 
-				if (subscription == null)
+				if (!string.IsNullOrEmpty(subscriptionError))
 				{
 					CommonViewModel.IsSuccess = false;
 					CommonViewModel.StatusCode = ResponseStatusCode.Error;
-					CommonViewModel.Message = "You are not subscribe any plan.";
+					CommonViewModel.Message = subscriptionError;
 
 					return Json(CommonViewModel);
 				}
@@ -252,6 +358,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 						#endregion
 					}
 
+					var projectError = Get_ProjectMapping_Error(viewModel, IsProjectMap: Request.Form.ContainsKey("ProjectMap") && Convert.ToBoolean(Request.Form["ProjectMap"]) == true);
+
+					if (!string.IsNullOrEmpty(projectError))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = projectError;
+
+						return Json(CommonViewModel);
+					}
+
 					#region Database-Transaction
 
 					try
@@ -359,7 +476,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 								}
 								else if (Request.Form.ContainsKey("ProjectMap") && Convert.ToBoolean(Request.Form["ProjectMap"]) == true)
 								{
-									Customer customer = _context.Using<Customer>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+									Customer customer = _context.Using<Customer>().GetByCondition(x => x.Id == viewModel.Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
 
 									if (customer != null)
 									{
@@ -368,8 +485,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 										if (listCustomerProjectMapping != null && listCustomerProjectMapping.Count() > 0)
 											foreach (var access in listCustomerProjectMapping) _context.Using<CustomerProjectMapping>().Delete(access);
 
+										// Map only Vendor's own projects
+										var listVendorProjectId = _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Select(x => x.Id.ToString()).ToList();
+
 										if (!string.IsNullOrEmpty(viewModel.ProjectIds))
-											foreach (var item in viewModel.ProjectIds.Split(','))
+											foreach (var item in viewModel.ProjectIds.Split(',').Select(x => x.Trim()).Where(x => listVendorProjectId.Contains(x)).Distinct())
 											{
 												var cp = new CustomerProjectMapping()
 												{
@@ -418,19 +538,29 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var objCustomer = _context.Using<Customer>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+				var objCustomer = IsVendor ? _context.Using<Customer>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault() : null;
 
-				if (objCustomer != null && objCustomer.UserId > 0)
+				if (objCustomer != null && Get_InUse_CustomerIds(new List<Customer>() { objCustomer }).Contains(objCustomer.Id))
 				{
-					var user = _context.Using<User>().GetByCondition(x => x.Id == objCustomer.UserId).FirstOrDefault();
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = "Customer is mapped to Project or work is already started. Can not delete.";
+
+					return Json(CommonViewModel);
+				}
+
+				if (objCustomer != null)
+				using (var transaction = _context.BeginTransaction())
+				{
+					var user = objCustomer.UserId > 0 ? _context.Using<User>().GetByCondition(x => x.Id == objCustomer.UserId).FirstOrDefault() : null;
 
 					if (user != null)
 					{
-						var UserRole = _context.Using<UserRoleMapping>().GetByCondition(x => x.UserId == Id).ToList();
+						var UserRole = _context.Using<UserRoleMapping>().GetByCondition(x => x.UserId == objCustomer.UserId).ToList();
 
 						if (UserRole != null) foreach (var obj in UserRole) _context.Using<UserRoleMapping>().Delete(obj);
 
-						var UserMenu = _context.Using<UserMenuAccess>().GetByCondition(x => x.UserId == Id).ToList();
+						var UserMenu = _context.Using<UserMenuAccess>().GetByCondition(x => x.UserId == objCustomer.UserId).ToList();
 
 						if (UserMenu != null) foreach (var obj in UserMenu) _context.Using<UserMenuAccess>().Delete(obj);
 
@@ -444,6 +574,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 						foreach (var access in listCustomerProjectMapping) _context.Using<CustomerProjectMapping>().Delete(access);
 
 					_context.Using<Customer>().Delete(objCustomer);
+
+					transaction.Commit();
 
 					CommonViewModel.IsConfirm = true;
 					CommonViewModel.IsSuccess = true;

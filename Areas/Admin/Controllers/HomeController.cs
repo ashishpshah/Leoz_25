@@ -133,11 +133,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							if (employee != null)
 							{
-								var ProjectDetailTypeAccess = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE" && x.LOV_Code == employee.UserType)
-									.Select(x => x.ProjectDetailTypeAccess).FirstOrDefault();
+								var objUserType = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE" && x.LOV_Code == employee.UserType).FirstOrDefault();
 
-								Common.Set_Session(SessionKey.ProjectDetailTypeAccess, ProjectDetailTypeAccess ?? "");
+								Common.Set_Session(SessionKey.ProjectDetailTypeAccess, objUserType?.ProjectDetailTypeAccess ?? "");
 								Common.Set_Session("Employee_UserType", employee.UserType);
+								Common.Set_Session(ProjectAccess.KEY_DESIGNATION, ProjectAccess.ResolveDesignation(employee.UserType, objUserType?.LOV_Desc));
+								Common.Set_Session(ProjectAccess.KEY_DESIGNATION_NAME, objUserType?.LOV_Desc ?? employee.UserType ?? "");
 							}
 						}
 

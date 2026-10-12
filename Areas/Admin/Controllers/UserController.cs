@@ -53,7 +53,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-			var listRole = _context.Using<Role>().GetByCondition(x => x.Id > 1 && (Logged_In_VendorId > 0 ? x.IsAdmin == false && x.Name.ToUpper() != "VENDOR" && x.Name.ToUpper() != "EMPLOYEE" : x.Name.ToUpper() == "VENDOR")).Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).Distinct().ToList();
+			var listRole = _context.Using<Role>().GetByCondition(x => x.Id > 1 && (Logged_In_VendorId > 0
+				? x.IsAdmin == false && x.Name.ToUpper() != "VENDOR" && x.Name.ToUpper() != "EMPLOYEE"
+				: true))
+				.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "R")).Distinct().ToList();
 
 			if (listRole != null && listRole.Count() > 0) CommonViewModel.SelectListItems.AddRange(listRole);
 

@@ -12,7 +12,7 @@
 
 <div class="col-md-12">
 
-	@if (IsCustomer || IsVendor || UserType == "MNGR" || UserType == "COORD")
+	@if (ProjectAccess.CanUpload)
 	{
 		<form id="formSave" action="@Url.Action("Save_Doc","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -77,6 +77,11 @@
 				{
 					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Add new record </button>
 				}
+				else if (!ProjectAccess.CanModify)
+				{
+					@* F3D / DRW / MB keep only latest version : uploader without edit rights uploads new version *@
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Upload new version </button>
+				}
 			</div>
 		</div>
 	}
@@ -113,7 +118,7 @@
 								}
 							</td>
 
-							@if (IsCustomer || IsVendor || UserType == "MNGR")
+							@if (ProjectAccess.CanModify)
 							{
 								<td>
 									<div class="btn-group">
@@ -134,7 +139,7 @@
 									</div>
 								</td>
 							}
-							else if (IsCustomer || IsVendor || UserType == "MNGR" || UserType == "COORD")
+							else if (ProjectAccess.CanApproveDoc)
 							{
 								<td>
 									<div class="btn-group">
@@ -151,6 +156,10 @@
 										}
 									</div>
 								</td>
+							}
+							else
+							{
+								<td></td>
 							}
 						</tr>
 					}

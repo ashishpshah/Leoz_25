@@ -13,7 +13,7 @@
 	<meta content="Techzaa" name="author" />
 
 	<!-- App favicon -->
-	<link rel="shortcut icon" href="~/assets/images/favicon.ico">
+	<link rel="icon" type="image/webp" href="~/assets/images/logo.webp" asp-append-version="true">
 
 	<!-- Theme Config Js -->
 	<script src="~/assets/js/config.js"></script>
@@ -113,7 +113,15 @@
 
 	<script type="text/javascript">
 		$(document).ready(function () {
-			//initShowHidePassword();
+			$("[data-password]").off("click").on("click", function () {
+				var passwordInput = $(this).siblings("input");
+				var showPassword = passwordInput.attr("type") === "password";
+
+				passwordInput.attr("type", showPassword ? "text" : "password");
+				$(this)
+					.attr("data-password", showPassword ? "true" : "false")
+					.toggleClass("show-password", showPassword);
+			});
 		});
 	</script>
 </body>

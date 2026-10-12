@@ -50,6 +50,9 @@ namespace Leoz_25
 		[NotMapped] public string Password { get; set; }
 		[NotMapped] public bool IsPassword_Reset { get; set; }
 
+		/// <summary> Employee is assigned to a project or has already worked on a project : can not be deleted. </summary>
+		[NotMapped] public bool IsInUse { get; set; }
+
 		[NotMapped] public string Fullname { get { return (string.IsNullOrEmpty(FirstName) ? "" : FirstName.Trim()) + (string.IsNullOrEmpty(MiddleName) ? "" : " " + MiddleName.Trim()) + (string.IsNullOrEmpty(LastName) ? "" : " " + LastName.Trim()); } }
 	}
 }

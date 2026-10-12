@@ -33,5 +33,8 @@ public partial class Project : EntitiesBase
 	public long? CoordinatorId { get; set; }
 	[NotMapped] public string CoordinatorName { get; set; }
 
+	/// <summary> Project is assigned (Customer / Employee / Coordinator) or work is started : can not be deleted. </summary>
+	[NotMapped] public bool IsInUse { get; set; }
+
 	public string? SiteDetails { get; set; }
 }

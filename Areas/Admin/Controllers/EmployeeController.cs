@@ -21,10 +21,115 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			CommonViewModel.ObjList = DataContext_Command.Employee_Get(0, Logged_In_VendorId).ToList();
 
+			var listInUseEmployeeId = Get_InUse_EmployeeIds(CommonViewModel.ObjList?.ToList());
+
 			for (int i = 0; i < CommonViewModel.ObjList?.Count(); i++)
+			{
 				CommonViewModel.ObjList[i].UserType = listUOM.FirstOrDefault(x => x.LOV_Code == CommonViewModel.ObjList[i].UserType)?.LOV_Desc;
+				CommonViewModel.ObjList[i].IsInUse = listInUseEmployeeId.Contains(CommonViewModel.ObjList[i].Id);
+			}
 
 			return View(CommonViewModel);
+		}
+
+		/// <summary>
+		/// Edit Employee : protect projects which are already assigned / started.
+		/// 1. Project where Employee is Coordinator can not be removed (change Coordinator in Project first), and Coordinator designation can not be changed.
+		/// 2. Project where Employee has already worked can not be removed.
+		/// 3. Employee assigned to an active Project can not be made In-Active.
+		/// Returns error message, or null when valid.
+		/// </summary>
+		private string Get_ProjectAssignment_Error(Employee viewModel)
+		{
+			if (viewModel == null || viewModel.Id <= 0) return null;
+
+			var objEmployee = _context.Using<Employee>().GetByCondition(x => x.Id == viewModel.Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+
+			if (objEmployee == null) return "Employee not found.";
+
+			var dictProject = _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToDictionary(x => x.Id, x => x);
+
+			string ProjectNames(IEnumerable<long> ids) => string.Join(", ", ids.Distinct().Select(x => dictProject.TryGetValue(x, out var p) ? p.Name : x.ToString()));
+
+			var listNewProjectId = (viewModel.ProjectIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+				.Select(x => long.TryParse(x.Trim(), out var id) ? id : 0).Where(x => x > 0).Distinct().ToList();
+
+			var listOldProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == objEmployee.Id).Select(x => x.ProjectId).Distinct().ToList();
+
+			// 1. Coordinator of project(s)
+			var listCoordinatorProjectId = dictProject.Values.Where(x => x.CoordinatorId == objEmployee.Id).Select(x => x.Id).ToList();
+
+			if (listCoordinatorProjectId.Count > 0 && objEmployee.UserType == "COORD" && viewModel.UserType != "COORD")
+				return $"Employee is Coordinator of Project(s) : {ProjectNames(listCoordinatorProjectId)}. Please change Coordinator in Project first, then change Designation.";
+
+			var listRemovedCoordinatorProjectId = listCoordinatorProjectId.Where(x => !listNewProjectId.Contains(x)).ToList();
+
+			if (listRemovedCoordinatorProjectId.Count > 0)
+				return $"Employee is Coordinator of Project(s) : {ProjectNames(listRemovedCoordinatorProjectId)}. Please change Coordinator in Project first, then remove Project.";
+
+			// 2. Already worked project(s)
+			var listRemovedProjectId = listOldProjectId.Where(x => !listNewProjectId.Contains(x)).ToList();
+
+			if (listRemovedProjectId.Count > 0 && objEmployee.UserId > 0)
+			{
+				var userId = objEmployee.UserId;
+
+				var listWorkedProjectId = new List<long>();
+
+				listWorkedProjectId.AddRange(_context.Using<ProjectDailyUpdate>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId) && (x.CreatedBy == userId || x.LastModifiedBy == userId)).Select(x => x.ProjectId));
+				listWorkedProjectId.AddRange(_context.Using<ProjectSiteDoc>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId) && (x.CreatedBy == userId || x.LastModifiedBy == userId)).Select(x => x.ProjectId));
+				listWorkedProjectId.AddRange(_context.Using<ProjectSiteMaterial>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId) && (x.CreatedBy == userId || x.LastModifiedBy == userId)).Select(x => x.ProjectId));
+				listWorkedProjectId.AddRange(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId) && (x.CreatedBy == userId || x.LastModifiedBy == userId)).Select(x => x.ProjectId));
+				listWorkedProjectId.AddRange(_context.Using<AgencyMaster>().GetByCondition(x => listRemovedProjectId.Contains(x.ProjectId) && (x.CreatedBy == userId || x.LastModifiedBy == userId)).Select(x => x.ProjectId));
+
+				if (listWorkedProjectId.Count > 0)
+					return $"Employee has already worked on Project(s) : {ProjectNames(listWorkedProjectId)}. Can not remove these Project(s).";
+			}
+
+			// 3. In-Active while assigned to active project(s)
+			var listActiveAssignedProjectId = listNewProjectId.Where(x => dictProject.TryGetValue(x, out var p) && p.IsActive == true).ToList();
+
+			if (objEmployee.IsActive == true && viewModel.IsActive == false && listActiveAssignedProjectId.Count > 0)
+				return $"Employee is assigned to active Project(s) : {ProjectNames(listActiveAssignedProjectId)}. Please remove Project(s) / change Coordinator first, then make Employee In-Active.";
+
+			return null;
+		}
+
+		/// <summary>
+		/// Employees (any designation) who are assigned to a project / coordinator of a project,
+		/// or already started work on a project (Daily Update, Documents, Material, Pending Work, Work Completion).
+		/// </summary>
+		private HashSet<long> Get_InUse_EmployeeIds(List<Employee> listEmployee)
+		{
+			var result = new HashSet<long>();
+
+			if (listEmployee == null || listEmployee.Count == 0) return result;
+
+			var listEmployeeId = listEmployee.Select(x => x.Id).ToList();
+
+			foreach (var id in _context.Using<EmployeeProjectMapping>().GetByCondition(x => listEmployeeId.Contains(x.EmployeeId)).Select(x => x.EmployeeId)) result.Add(id);
+
+			foreach (var id in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.CoordinatorId != null && listEmployeeId.Contains(x.CoordinatorId.Value)).Select(x => x.CoordinatorId.Value)) result.Add(id);
+
+			// Work done is tracked by User Id (CreatedBy / LastModifiedBy)
+			var dictUserEmployee = listEmployee.Where(x => x.UserId > 0).GroupBy(x => x.UserId).ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToList());
+			var listUserId = dictUserEmployee.Keys.ToList();
+
+			if (listUserId.Count > 0)
+			{
+				var listWorkedUserId = new List<long>();
+
+				listWorkedUserId.AddRange(_context.Using<ProjectDailyUpdate>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<ProjectSiteDoc>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<ProjectSiteMaterial>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+				listWorkedUserId.AddRange(_context.Using<AgencyMaster>().GetByCondition(x => listUserId.Contains(x.CreatedBy) || listUserId.Contains(x.LastModifiedBy)).SelectMany(x => new[] { x.CreatedBy, x.LastModifiedBy }));
+
+				foreach (var userId in listWorkedUserId.Distinct())
+					if (dictUserEmployee.TryGetValue(userId, out var listId)) foreach (var id in listId) result.Add(id);
+			}
+
+			return result;
 		}
 
 		//[CustomAuthorizeAttribute(AccessType_Enum.Read)]
@@ -51,7 +156,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 			if (listUOM != null && listUOM.Count() > 0)
 				CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, x.DisplayOrder, x.ProjectDetailTypeAccess, "UT")).ToList());
 
-			var listProject = _context.Using<Project>().GetByCondition(x => x.IsActive == true && x.VendorId == Logged_In_VendorId).Distinct().ToList();
+			// Active projects + already assigned (even In-Active) projects, so assigned project is not removed on save
+			var listAssignedProjectId = CommonViewModel.Obj != null && CommonViewModel.Obj.Id > 0
+				? _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == CommonViewModel.Obj.Id).Select(x => x.ProjectId).Distinct().ToList()
+				: new List<long>();
+
+			var listProject = _context.Using<Project>().GetByCondition(x => (x.IsActive == true || listAssignedProjectId.Contains(x.Id)) && x.VendorId == Logged_In_VendorId).Distinct().ToList();
 
 			if (listProject != null && listProject.Count > 0)
 				CommonViewModel.SelectListItems.AddRange(listProject.Select(x => new SelectListItem_Custom(x.Id.ToString(), x.Name, "P")).ToList());
@@ -76,16 +186,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 		//[CustomAuthorizeAttribute(AccessType_Enum.Write)]
 		public ActionResult Save(Employee viewModel)
 		{
-            var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
-
-           
             try
 			{
-                if (subscription == null)
+                var subscriptionError = Get_Subscription_Error();
+
+                if (!string.IsNullOrEmpty(subscriptionError))
                 {
                     CommonViewModel.IsSuccess = false;
                     CommonViewModel.StatusCode = ResponseStatusCode.Error;
-                    CommonViewModel.Message = "You are not subscribe any plan.";
+                    CommonViewModel.Message = subscriptionError;
 
                     return Json(CommonViewModel);
                 }
@@ -143,6 +252,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
 						CommonViewModel.Message = "Please Select Designation.";
+
+						return Json(CommonViewModel);
+					}
+
+					var projectError = Get_ProjectAssignment_Error(viewModel);
+
+					if (!string.IsNullOrEmpty(projectError))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = projectError;
 
 						return Json(CommonViewModel);
 					}
@@ -226,6 +346,26 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				//if (Common.IsAdmin() && !_context.Using<UserRoleMapping>().Any(x => x.EmployeeId == Id)
 				//	&& _context.Employees.Any(x => x.Id > 1 && x.Id == Id))
+				var objEmployee = _context.Using<Employee>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+
+				if (objEmployee == null)
+				{
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = ResponseStatusMessage.Unable_Delete;
+
+					return Json(CommonViewModel);
+				}
+
+				if (Get_InUse_EmployeeIds(new List<Employee>() { objEmployee }).Contains(objEmployee.Id))
+				{
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = "Employee is assigned to Project / already worked on Project. Can not delete.";
+
+					return Json(CommonViewModel);
+				}
+
 				if (true)
 				{
 					var (IsSuccess, response) = DataContext_Command.Employee_Status(Id, Logged_In_VendorId, false, true);

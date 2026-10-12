@@ -15,7 +15,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		// GET: Admin/VendorSubscription
 		public ActionResult Index()
 		{
-			CommonViewModel.Obj = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
+			CommonViewModel.Obj = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.Id).FirstOrDefault();
 
 			var list = _context.Using<Package>().GetByCondition(x => x.IsActive == true || x.Id == (CommonViewModel.Obj != null ? CommonViewModel.Obj.PackageId : -1)).ToList();
 
@@ -38,7 +38,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (PackageId > 0)
+				if (PackageId > 0 && IsVendor && Logged_In_VendorId > 0)
 				{
 					#region Validation
 
@@ -51,12 +51,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
+					var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.Id).FirstOrDefault();
 
 					var selected_Package = _context.Using<Package>().GetByCondition(x => x.Id == (subscription != null ? subscription.PackageId : -1)).FirstOrDefault();
 
 
-					if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks && (subscription.IsActive == false || subscription.IsCancelled == true))
+					if (subscription != null && selected_Package?.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks && (subscription.IsActive == false || subscription.IsCancelled == true))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -64,7 +64,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
-					else if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks)
+					else if (subscription != null && selected_Package?.IsYearly == true && subscription.StartDate.Date.Ticks <= DateTime.Now.Date.Ticks && subscription.EndDate?.Date.Ticks >= DateTime.Now.Date.Ticks)
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -72,7 +72,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
-					else if (subscription != null && selected_Package.IsYearly == true && subscription.StartDate.Date.Ticks > DateTime.Now.Date.Ticks)
+					else if (subscription != null && selected_Package?.IsYearly == true && subscription.StartDate.Date.Ticks > DateTime.Now.Date.Ticks)
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -81,14 +81,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					var listCustomer = _context.Using<Customer>().GetByCondition(x => Logged_In_VendorId > 0 ? x.VendorId == Logged_In_VendorId : false).ToList();
-
-					if (selected_Package != null && selected_Package.IsProjectBased == true
-						&& selected_Package.ProjectLimit > (listCustomer != null ? listCustomer.Count() : 0))
+					// Current Project based plan still has Project Limit remaining → no need to subscribe again
+					if (subscription != null && subscription.IsActive == true && subscription.IsCancelled == false
+						&& selected_Package != null && selected_Package.IsProjectBased == true
+						&& Get_Subscription_ProjectCount(subscription) < selected_Package.ProjectLimit)
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = $"You are already used plan Project Limit.";
+						CommonViewModel.Message = $"You are already subscribe a plan. Project Limit is not used yet.";
 
 						return Json(CommonViewModel);
 					}

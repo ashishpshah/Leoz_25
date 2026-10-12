@@ -96,11 +96,14 @@
 																		<i class="ri-pencil-fill"></i>
 																	</button>
 																
-																
+																@* Delete hidden when Customer is mapped to Project / work is started *@
+																@if (item.IsInUse == false)
+																{
 																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed","Customer", new {  area = "Admin" })?Id=@item.Id');">
 																		<i class="ri-delete-bin-2-line"></i>
 																	</button>
+																}
 																
 																	<button type="button" class="btn btn-primary btn-sm btn-flat ml-3" data-toggle="tooltip" data-placement="top" title="Project(s)"
 																			onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm","Customer", new {  area = "Admin" })?Id=@item.Id&IsMapProject=true');">

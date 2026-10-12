@@ -76,8 +76,9 @@
 															<i class="ri-pencil-fill"></i>
 														</button>
 													}
-													@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-													@{
+													@* Delete hidden when Project is assigned (Customer / Employee / Coordinator) or work is started *@
+													@if (item.IsInUse == false)
+													{
 														<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
 																onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed", "Project", new { area = "Admin" })?Id=@item.Id');">
 															<i class="ri-delete-bin-2-line"></i>

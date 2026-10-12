@@ -13,9 +13,7 @@ namespace Leoz_25.Controllers
 
 		public IActionResult Index()
 		{
-			if (Common.LoggedUser_Id() <= 0)
-				return RedirectToAction("Account", "Home", new { Area = "Admin" });
-
+			// First run (empty database) : create default Super Admin login admin@leoz.com / admin, roles and configuration menus
 			var list = _context.Using<User>().GetAll().ToList();
 
 			var (IsSuccess, Message, Id) = (false, "", (long)0);
@@ -24,7 +22,7 @@ namespace Leoz_25.Controllers
 			{
 				Common.Set_Session_Int(SessionKey.KEY_USER_ID, 1);
 
-				var user = new User() { UserName = "Adnin", Password = Common.Encrypt("admin"), CreatedBy = 1 };
+				var user = new User() { UserName = "admin@leoz.com", Password = Common.Encrypt("admin"), CreatedBy = 1 };
 				user = _context.Using<User>().Add(user);
 				//_context.SaveChanges();
 				//_context.Entry(user).Reload();
@@ -37,28 +35,15 @@ namespace Leoz_25.Controllers
 				_context.Using<UserRoleMapping>().Add(userRole);
 				//_context.SaveChanges();
 
-				user = new User() { UserName = "Admin", Password = Common.Encrypt("admin"), CreatedBy = 1 };
-				user = _context.Using<User>().Add(user);
-				//_context.SaveChanges();
-				//_context.Entry(user).Reload();
-
 				role = new Role() { Name = "Admin", IsAdmin = true, CreatedBy = 1 };
 				role = _context.Using<Role>().Add(role);
 				//_context.SaveChanges();
 				//_context.Entry(role).Reload();
 
-				userRole = new UserRoleMapping() { UserId = user.Id, RoleId = role.Id, CreatedBy = 1 };
-				_context.Using<UserRoleMapping>().Add(userRole);
-				//_context.SaveChanges();
-
 				var menu = new Menu() { ParentId = 0, Area = "", Controller = "", Name = "Configuration", IsSuperAdmin = false, IsAdmin = true, DisplayOrder = 1, CreatedBy = 1 };
 				menu = _context.Using<Menu>().Add(menu);
 				//_context.SaveChanges();
 				//if (menu.Id <= 0) _context.Entry(menu).Reload();
-
-				var userMenuAccess = new UserMenuAccess() { UserId = user.Id, RoleId = role.Id, MenuId = menu.Id, IsCreate = true, IsUpdate = true, IsRead = true, IsDelete = true, CreatedBy = 1 };
-				_context.Using<UserMenuAccess>().Add(userMenuAccess);
-				//_context.SaveChanges();
 
 				List<Menu> listMenu_Child = new List<Menu>();
 
@@ -85,15 +70,15 @@ namespace Leoz_25.Controllers
 					//_context.SaveChanges();
 				}
 
-				foreach (var item in listMenu_Child.OrderBy(x => x.ParentId).ThenBy(x => x.Id).ToList())
-				{
-					userMenuAccess = new UserMenuAccess() { UserId = user.Id, RoleId = role.Id, MenuId = item.Id, IsCreate = true, IsUpdate = true, IsRead = true, IsDelete = true, CreatedBy = 1 };
-					_context.Using<UserMenuAccess>().Add(userMenuAccess);
-					//_context.SaveChanges();
-				}
+				// Remove temporary user id (used for audit columns while creating default data)
+				Common.Clear_Session();
 			}
 
-			return View();
+			if (Common.LoggedUser_Id() <= 0)
+				return RedirectToAction("Account", "Home", new { Area = "Admin" });
+
+			// Logged in user : open Admin dashboard (not default ASP.NET template page)
+			return RedirectToAction("Index", "Home", new { Area = "Admin" });
 		}
 
 		public IActionResult Privacy()

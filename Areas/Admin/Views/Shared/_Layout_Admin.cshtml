@@ -14,7 +14,7 @@
 	<link href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet">
 
 	<!-- App favicon -->
-	<link rel="shortcut icon" href="~/assets/images/favicon.ico">
+	<link rel="icon" type="image/webp" href="~/assets/images/logo.webp" asp-append-version="true">
 
 	<link href="~/assets/vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 	<link href="~/assets/vendor/select2/css/select2.min.css" rel="stylesheet" />
@@ -178,7 +178,7 @@
 
 					<li class="dropdown">
 						<a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-							<h5 class="my-0 fw-normal">@Common.Get_Session(SessionKey.KEY_USER_NAME)  <i class="ri-arrow-down-s-line d-none d-sm-inline-block align-middle"></i></h5>
+							<h5 class="my-0 fw-normal">@Common.Get_Session(SessionKey.KEY_USER_NAME)@(!string.IsNullOrEmpty(ProjectAccess.Header_Designation) ? $" ({ProjectAccess.Header_Designation})" : "")  <i class="ri-arrow-down-s-line d-none d-sm-inline-block align-middle"></i></h5>
 						</a>
 						<div class="dropdown-menu dropdown-menu-end dropdown-menu-animated profile-dropdown">
 							<!-- item-->

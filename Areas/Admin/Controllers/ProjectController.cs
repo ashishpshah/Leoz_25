@@ -28,7 +28,37 @@ namespace Leoz_25.Areas.Admin.Controllers
 				foreach (var item in CommonViewModel.ObjList)
 					item.CoordinatorName = listEmployee.Where(x => x.Id == item.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();
 
+			if (CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
+			{
+				var listInUseProjectId = Get_InUse_ProjectIds(CommonViewModel.ObjList.Select(x => x.Id).ToList());
+
+				foreach (var item in CommonViewModel.ObjList) item.IsInUse = listInUseProjectId.Contains(item.Id);
+			}
+
 			return View(CommonViewModel);
+		}
+
+		/// <summary>
+		/// Projects which are assigned (Customer mapping / Employee mapping / Coordinator)
+		/// or work is started (Documents, Document history, Material, Pending Work, Work Completion, Daily Update).
+		/// </summary>
+		private HashSet<long> Get_InUse_ProjectIds(List<long> listProjectId)
+		{
+			var result = new HashSet<long>();
+
+			if (listProjectId == null || listProjectId.Count == 0) return result;
+
+			result.UnionWith(_context.Using<Project>().GetByCondition(x => listProjectId.Contains(x.Id) && x.CoordinatorId != null && x.CoordinatorId > 0).Select(x => x.Id));
+			result.UnionWith(_context.Using<CustomerProjectMapping>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<EmployeeProjectMapping>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<ProjectSiteDoc>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<ProjectSiteDoc_History>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<ProjectSiteMaterial>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<ProjectSitePendingWork>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<AgencyMaster>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+			result.UnionWith(_context.Using<ProjectDailyUpdate>().GetByCondition(x => listProjectId.Contains(x.ProjectId)).Select(x => x.ProjectId));
+
+			return result;
 		}
 
 		//[CustomAuthorizeAttribute(AccessType_Enum.Read)]
@@ -36,7 +66,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			CommonViewModel.Obj = new Project() { StartDate = DateTime.Now };
 
-			if (Id > 0) CommonViewModel.Obj = _context.Using<Project>().GetByCondition(x => x.Id == Id && IsVendor == true ? x.VendorId == Logged_In_VendorId : false).FirstOrDefault();
+			if (Id > 0) CommonViewModel.Obj = _context.Using<Project>().GetByCondition(x => x.Id == Id && (IsVendor == true ? x.VendorId == Logged_In_VendorId : false)).FirstOrDefault();
+
+			if (CommonViewModel.Obj == null) return Json(null);
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
@@ -56,13 +88,27 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var subscription = _context.Using<VendorSubscription>().GetByCondition(x => x.VendorId == Logged_In_VendorId).OrderByDescending(x => x.EndDate?.Ticks).FirstOrDefault();
+				// Only Vendor can create / update Project
+				if (!IsVendor || Logged_In_VendorId <= 0 || viewModel == null) return Json_AccessDenied();
 
-				if (subscription == null)
+				var subscriptionError = Get_Subscription_Error(IsNewProject: viewModel.Id <= 0);
+
+				if (!string.IsNullOrEmpty(subscriptionError))
 				{
 					CommonViewModel.IsSuccess = false;
 					CommonViewModel.StatusCode = ResponseStatusCode.Error;
-					CommonViewModel.Message = "You are not subscribe any plan.";
+					CommonViewModel.Message = subscriptionError;
+
+					return Json(CommonViewModel);
+				}
+
+				if (viewModel.Id > 0 && !_context.Using<Project>().Any(x => x.Id == viewModel.Id && x.VendorId == Logged_In_VendorId)) return Json_AccessDenied();
+
+				if (viewModel.CoordinatorId > 0 && !_context.Using<Employee>().Any(x => x.Id == viewModel.CoordinatorId && x.VendorId == Logged_In_VendorId && x.UserType == "COORD"))
+				{
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = "Please select valid Coordinator.";
 
 					return Json(CommonViewModel);
 				}
@@ -100,7 +146,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
-						CommonViewModel.Message = "Please enter Password.";
+						CommonViewModel.Message = "Please enter Start Date.";
 
 						return Json(CommonViewModel);
 					}
@@ -130,6 +176,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								Project obj = _context.Using<Project>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
 
+								long? oldCoordinatorId = obj?.CoordinatorId;
+
 								if (obj != null)
 								{
 									obj.Name = viewModel.Name;
@@ -156,6 +204,40 @@ namespace Leoz_25.Areas.Admin.Controllers
 									var _obj = _context.Using<Project>().Add(viewModel);
 									viewModel.Id = _obj.Id;
 								}
+
+								#region Coordinator-Project Mapping
+
+								// Coordinator sees a project only through EmployeeProjectMapping, so keep it in sync with the selected Coordinator
+								// Old Coordinator keeps project if already worked on it (work history must stay with an assigned employee)
+								var oldCoordinatorUserId = oldCoordinatorId > 0 ? _context.Using<Employee>().GetByCondition(x => x.Id == oldCoordinatorId).Select(x => x.UserId).FirstOrDefault() : 0;
+
+								bool IsOldCoordinatorWorked = oldCoordinatorUserId > 0
+									&& (_context.Using<ProjectDailyUpdate>().Any(x => x.ProjectId == viewModel.Id && (x.CreatedBy == oldCoordinatorUserId || x.LastModifiedBy == oldCoordinatorUserId))
+										|| _context.Using<ProjectSiteDoc>().Any(x => x.ProjectId == viewModel.Id && (x.CreatedBy == oldCoordinatorUserId || x.LastModifiedBy == oldCoordinatorUserId))
+										|| _context.Using<ProjectSiteMaterial>().Any(x => x.ProjectId == viewModel.Id && (x.CreatedBy == oldCoordinatorUserId || x.LastModifiedBy == oldCoordinatorUserId))
+										|| _context.Using<ProjectSitePendingWork>().Any(x => x.ProjectId == viewModel.Id && (x.CreatedBy == oldCoordinatorUserId || x.LastModifiedBy == oldCoordinatorUserId))
+										|| _context.Using<AgencyMaster>().Any(x => x.ProjectId == viewModel.Id && (x.CreatedBy == oldCoordinatorUserId || x.LastModifiedBy == oldCoordinatorUserId)));
+
+								if (oldCoordinatorId > 0 && oldCoordinatorId != viewModel.CoordinatorId && !IsOldCoordinatorWorked)
+								{
+									var listOldMapping = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == oldCoordinatorId && x.ProjectId == viewModel.Id && x.VendorId == Logged_In_VendorId).ToList();
+
+									foreach (var mapping in listOldMapping) _context.Using<EmployeeProjectMapping>().Delete(mapping);
+								}
+
+								if (viewModel.CoordinatorId > 0
+									&& _context.Using<Employee>().Any(x => x.Id == viewModel.CoordinatorId && x.VendorId == Logged_In_VendorId && x.UserType == "COORD")
+									&& !_context.Using<EmployeeProjectMapping>().Any(x => x.EmployeeId == viewModel.CoordinatorId && x.ProjectId == viewModel.Id && x.VendorId == Logged_In_VendorId))
+								{
+									_context.Using<EmployeeProjectMapping>().Add(new EmployeeProjectMapping()
+									{
+										VendorId = Logged_In_VendorId,
+										EmployeeId = viewModel.CoordinatorId ?? 0,
+										ProjectId = viewModel.Id
+									});
+								}
+
+								#endregion
 
 								CommonViewModel.IsConfirm = true;
 								CommonViewModel.IsSuccess = true;
@@ -192,11 +274,28 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				var objProject = _context.Using<Project>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+				var objProject = IsVendor ? _context.Using<Project>().GetByCondition(x => x.Id == Id && x.VendorId == Logged_In_VendorId).FirstOrDefault() : null;
+
+				if (objProject != null && Get_InUse_ProjectIds(new List<long>() { objProject.Id }).Contains(objProject.Id))
+				{
+					CommonViewModel.IsSuccess = false;
+					CommonViewModel.StatusCode = ResponseStatusCode.Error;
+					CommonViewModel.Message = "Project is assigned to Customer / Employee or work is already started. Can not delete. Please make Project In-Active instead.";
+
+					return Json(CommonViewModel);
+				}
 
 				if (objProject != null)
 				{
-					_context.Using<Project>().Delete(objProject);
+					using (var transaction = _context.BeginTransaction())
+					{
+						foreach (var mapping in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.ProjectId == Id).ToList()) _context.Using<CustomerProjectMapping>().Delete(mapping);
+						foreach (var mapping in _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.ProjectId == Id).ToList()) _context.Using<EmployeeProjectMapping>().Delete(mapping);
+
+						_context.Using<Project>().Delete(objProject);
+
+						transaction.Commit();
+					}
 
 					CommonViewModel.IsConfirm = true;
 					CommonViewModel.IsSuccess = true;
@@ -224,6 +323,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
             var _CommonViewModel1 = new ResponseModel<ProjectSiteDoc_History>();
+
+			if (!IsProjectAllowed(ProjectId) || (!string.IsNullOrEmpty(Type) && !ProjectAccess.HasModule(Type))) return Json(null);
+
             var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
@@ -253,16 +355,23 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				//var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.CustomerId == CustomerId && x.IsActive == true && x.Type == Type).FirstOrDefault();
 
-				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).FirstOrDefault();
-				if (obj != null) obj.UploadDate_Text = ((new[] { "F3D", "DRW", "MB" }).Contains(obj.Type) || obj.UploadDate == nullDateTime ? DateTime.Now : obj.UploadDate).ToString("yyyy-MM-dd");
+				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
 
-				return Json(obj);
+				if (obj == null || !ProjectAccess.HasModule(obj.Type)) return Json(null);
+
+				// "UploadDate" input is datetime-local
+				obj.UploadDate_Text = ((new[] { "F3D", "DRW", "MB" }).Contains(obj.Type) || obj.UploadDate == DateTime.MinValue ? DateTime.Now : obj.UploadDate).ToString("yyyy-MM-ddTHH:mm");
+
+				// File data is not required in edit form
+				return Json(new { obj.Id, obj.ProjectId, obj.CustomerId, obj.Type, obj.UploadDate_Text, obj.Remark });
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true && x.Type == Type).Distinct().ToList();
+				// Customer access is checked by Customer-Project mapping (IsProjectAllowed), so all documents of project are shown
+				// (not filtered by document CustomerId, which becomes stale when project is re-mapped to another customer)
+				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true && x.Type == Type).Distinct().ToList();
                 
-                _CommonViewModel1.ObjList = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true && x.Type == Type && x.IsLatest != true).Distinct().ToList();
+                _CommonViewModel1.ObjList = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true && x.Type == Type && x.IsLatest != true).Distinct().ToList();
 
                 if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -371,6 +480,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
+
+					// Upload : Manager, Co-ordinator, Site Engineer, Architect. Edit existing record : Manager (F3D / DRW / MB always keep latest version, so upload rights are enough)
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule(viewModel.Type) || !ProjectAccess.CanUpload
+						|| (viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)) return Json_AccessDenied();
+
+					if (viewModel.Id > 0 && !_context.Using<ProjectSiteDoc>().Any(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId)) return Json_AccessDenied();
 
 					#endregion
 
@@ -549,8 +664,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 			try
 			{
 				var objProject = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+				if (objProject == null || !ProjectAccess.CanModify || !IsProjectAllowed(objProject.ProjectId) || !ProjectAccess.HasModule(objProject.Type)) return Json_AccessDenied();
+
                 string type = objProject?.Type;
-                var objProjecthistory = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.Type == type).FirstOrDefault();
+                var objProjecthistory = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == objProject.ProjectId && x.Type == type && x.IsLatest == true).FirstOrDefault();
                 if (objProject != null)
 				{
 					_context.Using<ProjectSiteDoc>().Delete(objProject);
@@ -581,7 +699,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Partial_AddEditForm_MP(long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
 		{
-			if (IsCustomer) return Json(null);
+			if (IsCustomer || !IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("MPRO")) return Json(null);
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, UOM = "No" } };
 
@@ -678,6 +796,28 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
+					if (viewModel.Id == 0 && viewModel.Qty <= 0)
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please enter Quantity.";
+
+						return Json(CommonViewModel);
+					}
+
+					// Material Procurement : Co-ordinator → Add / Receive, Manager → Update (Order / Reject), Purchaser → View only
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("MPRO")
+						|| !(viewModel.Id > 0 ? (ProjectAccess.CanUpdateMaterial || ProjectAccess.CanReceiveMaterial) : ProjectAccess.CanAddMaterial)) return Json_AccessDenied();
+
+					if (ProjectAccess.CanUpdateMaterial && !(viewModel.Status == "O" || viewModel.Status == "R"))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Please select Status.";
+
+						return Json(CommonViewModel);
+					}
+
 					#endregion
 
 					#region Database-Transaction
@@ -697,7 +837,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							}
 
-							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+							ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId).FirstOrDefault();
+
+							if (viewModel.Id > 0 && obj == null) { transaction.Rollback(); return Json_AccessDenied(); }
 
 							if (obj != null && obj.Status != "R")
 							{
@@ -709,11 +851,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								if (obj.Status == "S") obj.Qty = viewModel.Qty;
 
-								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
-								{ obj.Qty_Order = viewModel.Qty_Order; obj.Status = viewModel.Status; }
+								if (ProjectAccess.CanUpdateMaterial && obj.Status != viewModel.Status)
+								{ obj.Status = viewModel.Status; obj.StatusDate = DateTime.Now; }
 
-								if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.IsActive == true && x.VendorId == Logged_In_VendorId))
-								{ obj.Qty_Receive = viewModel.Qty_Receive; obj.Status = "RC"; }
+								if (ProjectAccess.CanUpdateMaterial) obj.Qty_Order = viewModel.Qty_Order;
+
+								// Mark Received only when Receive Quantity is entered
+								if (ProjectAccess.CanReceiveMaterial && (viewModel.Qty_Receive ?? 0) > 0)
+								{ obj.Qty_Receive = viewModel.Qty_Receive; obj.Status = "RC"; obj.StatusDate = DateTime.Now; }
 
 								obj.UOM = viewModel.UOM;
 
@@ -765,11 +910,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && (x.UserType == "MNGR" || x.UserType == "COORD") && x.IsActive == true && x.VendorId == Logged_In_VendorId))
+				if (ProjectAccess.CanUpdateMaterial)
 				{
 					var objProject = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-					if (objProject != null)
+					if (objProject != null && IsProjectAllowed(objProject.ProjectId))
 					{
 						_context.Using<ProjectSiteMaterial>().Delete(objProject);
 
@@ -798,6 +943,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<ProjectSitePendingWork>() { Obj = new ProjectSitePendingWork() { ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("WPEND")) return Json(null);
+
 			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
 							  where z.IsActive == true
@@ -825,7 +972,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			if (ProjectSitePendingWorkId > 0)
 			{
-				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && (IsCustomer ? x.CustomerId == CustomerId : true) && x.IsActive == true).FirstOrDefault();
+				var obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == ProjectSitePendingWorkId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
 
 				if (obj != null) obj.UploadDate_Text = obj.UploadDate.ToString("yyyy-MM-dd");
 
@@ -833,7 +980,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 			else
 			{
-				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).Distinct().ToList();
+				_CommonViewModel.ObjList = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true).Distinct().ToList();
 
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
@@ -898,6 +1045,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
+					// Add : Upload rights (Vendor side only, not Customer), Edit : Manager (control level)
+					if (IsCustomer || !IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("WPEND")
+						|| !(viewModel.Id > 0 ? ProjectAccess.CanModify : ProjectAccess.CanUpload)) return Json_AccessDenied();
+
+					if (IsCustomer) viewModel.CustomerId = Logged_In_CustomerId;
+
 					#endregion
 
 					#region Database-Transaction
@@ -908,7 +1061,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 						{
 							if (!string.IsNullOrEmpty(viewModel.UploadDate_Text)) { try { viewModel.UploadDate = DateTime.ParseExact(viewModel.UploadDate_Text, "yyyy-MM-dd", CultureInfo.InvariantCulture); } catch { } }
 
-							ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+							ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId).FirstOrDefault();
+
+							if (viewModel.Id > 0 && obj == null) { transaction.Rollback(); return Json_AccessDenied(); }
 
 							if (obj != null && obj.Status != "R")
 							{
@@ -967,7 +1122,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var objProject = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-				if (objProject != null)
+				if (objProject != null && ProjectAccess.CanModify && IsProjectAllowed(objProject.ProjectId))
 				{
 					_context.Using<ProjectSitePendingWork>().Delete(objProject);
 
@@ -994,6 +1149,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 			var list = _context.Using<LOV>().GetByCondition(x => x.LOV_Column.ToUpper() == "WORKTYPE").ToList();
 
 			var _CommonViewModel = new ResponseModel<AgencyMaster>() { Obj = new AgencyMaster() { ProjectId = ProjectId } };
+
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("WCOMP")) return Json(null);
 
 			var objProject = (from z in _context.Using<Project>().GetByCondition(x => x.Id == ProjectId && x.VendorId == Logged_In_VendorId).ToList()
 							  where z.IsActive == true
@@ -1056,7 +1213,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && !_context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.VendorId == Logged_In_VendorId))
+				// Work Completion Report : Manager add / edit, Customer approve
+				if (viewModel != null && (IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER)))
 				{
 					#region Validation
 
@@ -1068,6 +1226,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						return Json(CommonViewModel);
 					}
+
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("WCOMP")) return Json_AccessDenied();
+
+					if (IsCustomer && viewModel.Id <= 0) return Json_AccessDenied();
 
 					if (string.IsNullOrEmpty(viewModel.Name))
 					{
@@ -1095,10 +1257,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						try
 						{
-							AgencyMaster obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+							AgencyMaster obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId).FirstOrDefault();
 
-							if (obj != null && obj.Status != "R"
-								&& (IsCustomer || _context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && x.UserType == "MNGR" && x.IsActive == true && x.VendorId == Logged_In_VendorId)))
+							if (viewModel.Id > 0 && obj == null) { transaction.Rollback(); return Json_AccessDenied(); }
+
+							if (obj != null && obj.Status != "R")
 							{
 								if (!IsCustomer)
 								{
@@ -1108,7 +1271,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								obj.Notes = viewModel.Notes;
 
-								obj.Status = viewModel.Status;
+								// Only Customer can Approve
+								if (IsCustomer && obj.Status == "P") obj.Status = "A";
 
 								_context.Using<AgencyMaster>().Update(obj);
 							}
@@ -1157,11 +1321,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (IsCustomer || _context.Using<Employee>().Any(x => x.Id == Logged_In_EmployeeId && (x.UserType == "MNGR") && x.IsActive == true && x.VendorId == Logged_In_VendorId))
+				if (ProjectAccess.Is(ProjectAccess.MANAGER))
 				{
 					var objProject = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-					if (objProject != null)
+					if (objProject != null && objProject.Status == "P" && IsProjectAllowed(objProject.ProjectId))
 					{
 						_context.Using<AgencyMaster>().Delete(objProject);
 
@@ -1214,38 +1378,39 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj != null)
-								{
-									obj.Status = Status;
-									obj.StatusDate = DateTime.Now;
+								if (obj == null || !(Status == "A" || Status == "R") || !ProjectAccess.CanApproveDoc
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule(obj.Type)) { transaction.Rollback(); return Json_AccessDenied(); }
 
-									_context.Using<ProjectSiteDoc>().Update(obj);
-								}
+								obj.Status = Status;
+								obj.StatusDate = DateTime.Now;
+
+								_context.Using<ProjectSiteDoc>().Update(obj);
 							}
 							else if (Type == "WP")
 							{
 								ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj != null)
-								{
-									obj.Status = Status;
-									obj.StatusDate = DateTime.Now;
+								if (obj == null || !(Status == "C" || Status == "R") || !ProjectAccess.CanModify
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("WPEND")) { transaction.Rollback(); return Json_AccessDenied(); }
 
-									_context.Using<ProjectSitePendingWork>().Update(obj);
-								}
+								obj.Status = Status;
+								obj.StatusDate = DateTime.Now;
+
+								_context.Using<ProjectSitePendingWork>().Update(obj);
 							}
 							else if (Type == "MP")
 							{
 								ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj != null)
-								{
-									obj.Status = Status;
-									obj.StatusDate = DateTime.Now;
+								if (obj == null || !(Status == "O" || Status == "R") || !ProjectAccess.CanUpdateMaterial
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("MPRO")) { transaction.Rollback(); return Json_AccessDenied(); }
 
-									_context.Using<ProjectSiteMaterial>().Update(obj);
-								}
+								obj.Status = Status;
+								obj.StatusDate = DateTime.Now;
+
+								_context.Using<ProjectSiteMaterial>().Update(obj);
 							}
+							else { transaction.Rollback(); return Json_AccessDenied(); }
 
 							CommonViewModel.IsConfirm = true;
 							CommonViewModel.IsSuccess = true;
@@ -1485,6 +1650,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					var listProjectId = _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.EmployeeId == Logged_In_EmployeeId).Select(x => x.ProjectId).Distinct().ToList();
 
+					// Employee can see only assigned projects : selected project must be assigned, else nothing
+					if (!string.IsNullOrEmpty(ProjectId) && Convert.ToInt64(ProjectId) > 0 && !listProjectId.Contains(Convert.ToInt64(ProjectId)))
+						return Json(new { param.sEcho, iTotalRecords = 0, iTotalDisplayRecords = 0, aaData = new List<ProjectDailyUpdate>() });
+
 					result = result.Where(p => listProjectId.Contains(p.ProjectId)).ToList();
 				}
 
@@ -1505,6 +1674,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 		public ActionResult Partial_AddEditForm_DailyUpdate(long Id = 0, long ProjectId = 0, bool IsShowImages = false)
 		{
 			var _CommonViewModel = new ResponseModel<ProjectDailyUpdate>() { Obj = new ProjectDailyUpdate() { ProjectId = ProjectId, Date = DateTime.Now.Date } };
+
+			if (!IsProjectAllowed(ProjectId)) return Json(null);
 
 			if (Id > 0)
 			{
@@ -1581,6 +1752,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
+					if (!IsProjectAllowed(viewModel.ProjectId)) return Json_AccessDenied();
+
 					if (string.IsNullOrEmpty(viewModel.Date_Text))
 					{
 						CommonViewModel.IsSuccess = false;
@@ -1629,7 +1802,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						try
 						{
-							ProjectDailyUpdate obj = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+							ProjectDailyUpdate obj = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId).FirstOrDefault();
 
 							if (obj != null)
 							{
@@ -1705,12 +1878,16 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public IActionResult ViewDocument(long ProjectId = 0, long ProjectSiteDocId = 0, long CustomerId = 0)
 		{
-			var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && (IsCustomer ? (x.CustomerId == CustomerId || x.CustomerId == 0) : true) && x.IsActive == true).FirstOrDefault();
-			if (obj?.FileData == null) return NotFound();
+			if (!IsProjectAllowed(ProjectId)) return NotFound();
 
-			Response.Headers.Add("Content-Disposition", "inline; filename=" + obj?.FileName);
+			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
-			return File(obj?.FileData, obj?.FileContentType ?? "application/pdf");
+			var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
+			if (obj?.FileData == null || !ProjectAccess.HasModule(obj.Type)) return NotFound();
+
+			Set_ContentDisposition_Inline(obj.FileName);
+
+			return File(obj.FileData, obj.FileContentType ?? "application/pdf");
 		}
 
 		public IActionResult ViewDocument_DailyUpdateFile(long DailyUpdateFileId)
@@ -1718,9 +1895,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 			var obj = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
 			if (obj?.FileData == null) return NotFound();
 
-			Response.Headers.Add("Content-Disposition", "inline; filename=" + obj?.FileName);
+			var objDailyUpdate = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == obj.DailyUpdateId).FirstOrDefault();
+			if (objDailyUpdate == null || !IsProjectAllowed(objDailyUpdate.ProjectId)) return NotFound();
 
-			return File(obj?.FileData, obj?.FileContentType ?? "application/pdf");
+			Set_ContentDisposition_Inline(obj.FileName);
+
+			return File(obj.FileData, obj.FileContentType ?? "application/pdf");
 		}
 
 		[HttpPost]
@@ -1729,6 +1909,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 			try
 			{
 				var file = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
+
+				var objDailyUpdate = file != null ? _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == file.DailyUpdateId).FirstOrDefault() : null;
+
+				// Only Manager or the employee who created / modified the daily update can delete its file (same as DailyUpdate view)
+				if (objDailyUpdate == null || !IsProjectAllowed(objDailyUpdate.ProjectId)
+					|| !(ProjectAccess.Is(ProjectAccess.MANAGER) || objDailyUpdate.CreatedBy == Logged_In_UserId || objDailyUpdate.LastModifiedBy == Logged_In_UserId))
+					return Json_AccessDenied();
 
 				if (file != null)
 				{
@@ -1750,6 +1937,41 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			return Json(CommonViewModel);
 		}
+
+		#region Project Access
+
+		/// <summary> Project belongs to logged-in Vendor and logged-in Customer / Employee is mapped (assigned) to it. </summary>
+		private bool IsProjectAllowed(long ProjectId)
+		{
+			if (ProjectId <= 0 || Logged_In_VendorId <= 0) return false;
+
+			if (!_context.Using<Project>().Any(x => x.Id == ProjectId && x.VendorId == Logged_In_VendorId)) return false;
+
+			if (IsCustomer) return _context.Using<CustomerProjectMapping>().Any(x => x.ProjectId == ProjectId && x.CustomerId == Logged_In_CustomerId && x.VendorId == Logged_In_VendorId);
+
+			if (IsEmployee) return _context.Using<EmployeeProjectMapping>().Any(x => x.ProjectId == ProjectId && x.EmployeeId == Logged_In_EmployeeId);
+
+			return IsVendor;
+		}
+
+		private JsonResult Json_AccessDenied()
+		{
+			CommonViewModel.IsSuccess = false;
+			CommonViewModel.StatusCode = ResponseStatusCode.Error;
+			CommonViewModel.Message = "You do not have access to perform this action.";
+
+			return Json(CommonViewModel);
+		}
+
+		private void Set_ContentDisposition_Inline(string fileName)
+		{
+			var contentDisposition = new Microsoft.Net.Http.Headers.ContentDispositionHeaderValue("inline");
+			contentDisposition.SetHttpFileName(string.IsNullOrEmpty(fileName) ? "document" : fileName);
+
+			Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = contentDisposition.ToString();
+		}
+
+		#endregion
 	}
 
 }

@@ -26,13 +26,32 @@
 			cursor: pointer;
 			background-color: #011520;
 			color: #C5935B;
-			padding: 20px;
-			border-radius: 20px;
+			padding: 1.25rem;
+			border-radius: 1rem;
 			font-weight: bold;
 			min-height: 120px;
+			height: 100%;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
+			overflow-wrap: anywhere;
+		}
+
+		#divProjectDetailOption .container {
+			max-width: 100%;
+		}
+
+		#divProjectDetail dt,
+		#divProjectDetail dd {
+			overflow-wrap: anywhere;
+		}
+
+		@@media (max-width: 575.98px) {
+			.box {
+				min-height: 100px;
+				padding: 0.875rem;
+				border-radius: 0.75rem;
+			}
 		}
 
 	</style>
@@ -53,11 +72,11 @@
 	<div class="col-12">
 		<div class="card">
 			<div class="card-header">
-				<div class="row no-gutters mb-1">
-					<div class="col-sm-4 @(IsCustomer ? "d-none" : "")">
-						<div class="form-group row d-flex align-items-center">
-							<label for="ddlCustomer" class="col-sm-3 col-form-label text-md-end"> Customer </label>
-							<div class="col-sm-9">
+				<div class="row g-2 mb-1">
+					<div class="col-12 col-lg-5 @(IsCustomer ? "d-none" : "")">
+						<div class="form-group row align-items-center mb-0">
+							<label for="ddlCustomer" class="col-12 col-md-3 col-form-label text-md-end">Customer</label>
+							<div class="col-12 col-md-9">
 								<select id="ddlCustomer" class="form-control form-control-sm select2"
 										data-selected="@Logged_In_CustomerId" onchange="fnChange_GetProjects(this)">
 									<option value="0">-- Select --</option>
@@ -79,10 +98,10 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-sm-6">
-						<div class="form-group row d-flex align-items-center">
-							<label for="ddlProject" class="col-sm-1 col-form-label text-md-end"> Project </label>
-							<div class="col-sm-10">
+					<div class="col-12 col-lg-7">
+						<div class="form-group row align-items-center mb-0">
+							<label for="ddlProject" class="col-12 col-md-2 col-form-label text-md-end">Project</label>
+							<div class="col-12 col-md-10">
 								<select id="ddlProject" class="form-control form-control-sm select2"
 										onchange="fnChange_GetProjectDetails(this)" data-event="on">
 									<option value="0">-- Select --</option>
@@ -111,43 +130,40 @@
 			<div class="card-body">
 				<div class="row no-gutters d-none" id="divProjectDetail">
 					<h4 class="header-title">Project Detail</h4>
-					<div class="col-md-6 my-1">
+					<div class="col-12 col-lg-6 my-1">
 						<dl class="row mb-0">
 
-							<dt class="col-sm-3 text-md-end">Project Name : </dt>
-							<dd class="col-sm-9" id="ProjectName"></dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Project Name:</dt>
+							<dd class="col-12 col-sm-8" id="ProjectName"></dd>
 
-							<dt class="col-sm-3 text-md-end">Description : </dt>
-							<dd class="col-sm-9" id="Description"> </dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Description:</dt>
+							<dd class="col-12 col-sm-8" id="Description"> </dd>
 
-							<dt class="col-sm-3 text-md-end">Start Date : </dt>
-							<dd class="col-sm-9" id="StartDate"></dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Start Date:</dt>
+							<dd class="col-12 col-sm-8" id="StartDate"></dd>
 
-							<dt class="col-sm-3 text-md-end">Handover Date : </dt>
-							<dd class="col-sm-9" id="HandoverDate"></dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Handover Date:</dt>
+							<dd class="col-12 col-sm-8" id="HandoverDate"></dd>
 
-							<dt class="col-sm-3 text-md-end">Address : </dt>
-							<dd class="col-sm-9" id="Address"> </dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Address:</dt>
+							<dd class="col-12 col-sm-8" id="Address"> </dd>
 
 						</dl>
 					</div>
 
-					<div class="col-md-6 my-1">
+					<div class="col-12 col-lg-6 my-1">
 						<dl class="row mb-0">
-							<dt class="col-sm-3 text-md-end">Coordinator : </dt>
-							<dd class="col-sm-9" id="Coordinator"></dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Coordinator:</dt>
+							<dd class="col-12 col-sm-8" id="Coordinator"></dd>
 
-							<dt class="col-sm-3 text-md-end">Site Detail : </dt>
-							<dd class="col-sm-9" id="SiteDetail"> </dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Site Detail:</dt>
+							<dd class="col-12 col-sm-8" id="SiteDetail"> </dd>
 
-							<dt class="col-sm-3 text-md-end">Status : </dt>
-							<dd class="col-sm-9" id="Status"></dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Status:</dt>
+							<dd class="col-12 col-sm-8" id="Status"></dd>
 
-							<dt class="col-sm-3 text-md-end">&nbsp;</dt>
-							<dd class="col-sm-9">&nbsp;</dd>
-
-							<dt class="col-sm-3 text-md-end">Location Link : </dt>
-							<dd class="col-sm-9" id="LocationLink">&nbsp;</dd>
+							<dt class="col-12 col-sm-4 text-sm-end">Location Link:</dt>
+							<dd class="col-12 col-sm-8" id="LocationLink"></dd>
 						</dl>
 					</div>
 
@@ -155,69 +171,69 @@
 				</div>
 
 				<div class="row d-flex align-items-center justify-content-center mt-4 d-none" id="divProjectDetailOption">
-					<div class="col-10">
+					<div class="col-12 col-xl-10">
 						<div class="container py-5">
 							<div class="row g-4">
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "EPM")))
+								@if (ProjectAccess.HasModule("EPM"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
 											<p class="mb-1">Estimate</p>
 											<p class="mb-0">Payment Terms</p>
 										</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "F3D")))
+								@if (ProjectAccess.HasModule("F3D"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">Final 3D</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "DRW")))
+								@if (ProjectAccess.HasModule("DRW"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">Drawings</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WCLTSC")))
+								@if (ProjectAccess.HasModule("WCLTSC"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">
 											<p class="mb-1">Client Scope of Work</p>
 											<p class="mb-0">Material Specifications</p>
 										</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "MB")))
+								@if (ProjectAccess.HasModule("MB"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">Mood Board</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "SITE")))
+								@if (ProjectAccess.HasModule("SITE"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">Site Updates</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WPEND")))
+								@if (ProjectAccess.HasModule("WPEND"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">Pending Selection & Work</div>
 									</div>
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "MPRO")))
+								@if (ProjectAccess.HasModule("MPRO") && !IsCustomer)
 								{
 									@if (true@* IsVendor || IsEmployee *@)
 									{
-										<div class="col-md-4">
+										<div class="col-6 col-md-4">
 											<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">Material Procurement</div>
 										</div>
 									}
 								}
-								@if (IsVendor || (ProjectDetailTypeAccess != null && ProjectDetailTypeAccess.Any(x => x == "ALL" || x == "WCOMP")))
+								@if (ProjectAccess.HasModule("WCOMP"))
 								{
-									<div class="col-md-4">
+									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>
 									</div>
 								}
@@ -345,7 +361,7 @@
 			$('#largeModal .modal-btn-save').css('display', 'block');
 			$('#largeModal .modal-btn-close').css('display', 'block');
 
-			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', false);
+			$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate"]').prop('readonly', false);
 
 			let change = '@(IsCustomer ? "1" : "")'
 
@@ -386,10 +402,10 @@
 								$('#formSave input[name="CustomerId"]').val(response['CustomerId']).trigger('change');
 								$('#formSave input[name="Type"]').val(response['Type']).trigger('change');
 
-								$('#formSave input[name="UploadDate_Text"]').val(response['UploadDate_Text']).trigger('change');
+								$('#formSave input[name="UploadDate"]').val(response['UploadDate_Text']).trigger('change');
 								$('#formSave input[name="Remark"]').val(response['Remark']).trigger('change');
 
-								$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate_Text"]').prop('readonly', true);
+								$('#largeModal .modal-body form #divProjectSiteDoc input[name="UploadDate"]').prop('readonly', true);
 							}
 							else {
 								ShowLoader(false); CommonAlert_Error(response.Message, null);

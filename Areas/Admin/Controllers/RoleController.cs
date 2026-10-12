@@ -42,11 +42,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
             CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
-            var listUOM = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "ProjectDetailType").ToList();
-
-            if (listUOM != null && listUOM.Count() > 0)
-                CommonViewModel.SelectListItems.AddRange(listUOM.Select(x => new SelectListItem_Custom(x.LOV_Code, x.LOV_Desc, "PD", x.DisplayOrder)).ToList());
-
             var menus = new List<SelectListItem_Custom>();
 
             if (Common.IsSuperAdmin())
@@ -142,8 +137,6 @@ namespace Leoz_25.Areas.Admin.Controllers
                                 obj.DisplayOrder = viewModel.DisplayOrder;
                                 obj.IsAdmin = Common.IsSuperAdmin() ? viewModel.IsAdmin : false;
                                 obj.IsActive = viewModel.IsActive;
-                                obj.ProjectDetailTypeAccess = viewModel.ProjectDetailTypeAccess;
-
                                 _context.Using<Role>().Update(obj);
                                 //_context.Entry(obj).State = EntityState.Modified;
                                 //_context.SaveChanges();

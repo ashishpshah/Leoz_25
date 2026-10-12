@@ -37,6 +37,9 @@ namespace Leoz_25
 		[NotMapped] public string Password { get; set; }
 		[NotMapped] public bool IsPassword_Reset { get; set; }
 
+		/// <summary> Customer is mapped to a project or project work is started for Customer : can not be deleted. </summary>
+		[NotMapped] public bool IsInUse { get; set; }
+
 		[NotMapped] public string Fullname { get { return (string.IsNullOrEmpty(FirstName) ? "" : FirstName.Trim()) + (string.IsNullOrEmpty(MiddleName) ? "" : " " + MiddleName.Trim()) + (string.IsNullOrEmpty(LastName) ? "" : " " + LastName.Trim()); } }
 	}
 

@@ -41,18 +41,45 @@ namespace Leoz_25.Infra
 		public static Int64 LoggedUser_RoleId() => Get_Session_Int(SessionKey.KEY_USER_ROLE_ID);
 
 
-		private static List<UserMenuAccess> UserMenuAccess;
-		private static List<UserMenuAccess> UserMenuPermission;
+		// Menu access is kept per user in Session (distributed cache), not in static fields shared by all users
+		private static string KEY_USER_MENU_ACCESS => "AuthenticatedUser_MenuAccess";
+		private static string KEY_USER_MENU_PERMISSION => "AuthenticatedUser_MenuPermission";
 
 		public static void Configure_UserMenuAccess(List<UserMenuAccess> userMenuAccess, List<UserMenuAccess> userMenuPermission)
 		{
-			UserMenuAccess = userMenuAccess;
-			UserMenuPermission = userMenuPermission;
+			Set_Session(KEY_USER_MENU_ACCESS, System.Text.Json.JsonSerializer.Serialize(userMenuAccess ?? new List<UserMenuAccess>()));
+			Set_Session(KEY_USER_MENU_PERMISSION, System.Text.Json.JsonSerializer.Serialize(userMenuPermission ?? new List<UserMenuAccess>()));
+
+			AppHttpContextAccessor.AppHttpContext?.Items.Remove(KEY_USER_MENU_ACCESS);
+			AppHttpContextAccessor.AppHttpContext?.Items.Remove(KEY_USER_MENU_PERMISSION);
 		}
 
+		public static List<UserMenuAccess> GetUserMenuAccesses() => Get_Session_List(KEY_USER_MENU_ACCESS);
+		public static List<UserMenuAccess> GetUserMenuPermission() => Get_Session_List(KEY_USER_MENU_PERMISSION);
 
-		public static List<UserMenuAccess> GetUserMenuAccesses() => UserMenuAccess;
-		public static List<UserMenuAccess> GetUserMenuPermission() => UserMenuPermission;
+		/// <summary> Deserialize once per request (Layout and BaseController both read the menu). </summary>
+		private static List<UserMenuAccess> Get_Session_List(string key)
+		{
+			var context = AppHttpContextAccessor.AppHttpContext;
+
+			if (context == null) return null;
+
+			if (context.Items.TryGetValue(key, out var cached)) return cached as List<UserMenuAccess>;
+
+			List<UserMenuAccess> list = null;
+
+			try
+			{
+				var json = Get_Session(key);
+
+				if (!string.IsNullOrEmpty(json)) list = System.Text.Json.JsonSerializer.Deserialize<List<UserMenuAccess>>(json);
+			}
+			catch { list = null; }
+
+			context.Items[key] = list;
+
+			return list;
+		}
 
 
 		public static bool CheckValueIsNull(object val) => !(val != DBNull.Value && val != null && !string.IsNullOrEmpty(Convert.ToString(val)));

@@ -11,7 +11,7 @@
 
 <div class="col-md-12">
 
-	@if (IsCustomer || (Model.Data5 != null && (string)Model.Data5 != "COORD"))
+	@if (IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER))
 	{
 		<form id="formSave" action="@Url.Action("Save_WCR","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -70,7 +70,7 @@
 					<button type="button" class="btn btn-success btnSubmit">Approve</button>
 					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
 				}
-				else if (IsEmployee && Model.Data5 != null && (string)Model.Data5 != "COORD")
+				else if (ProjectAccess.Is(ProjectAccess.MANAGER))
 				{
 					<input type="text" name="Status" class="form-control d-none" value="@Model.Obj.Status">
 					<button type="button" class="btn btn-success btnSubmit">Save</button>

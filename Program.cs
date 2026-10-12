@@ -59,7 +59,8 @@ internal class Program
 			options.SupportedUICultures = supportedCultures;
 		});
 
-		builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); });
+		// Session in SQL Server distributed cache : survives App Pool recycle / restart / re-publish
+		builder.Services.AddDistributedSqlServerSession(builder.Configuration);
 
 		builder.Services.AddDbContext<DataContext>(db => db.UseSqlServer(builder.Configuration.GetConnectionString("DataConnection")), ServiceLifetime.Singleton);
 
