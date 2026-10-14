@@ -1,4 +1,4 @@
-﻿using Leoz_25.Controllers;
+using Leoz_25.Controllers;
 using Leoz_25.Infra;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Evaluation;
@@ -359,6 +359,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				if (obj == null || !ProjectAccess.HasModule(obj.Type)) return Json(null);
 
+				// Approved / Rejected records can not be edited
+				if (obj.Status == "A" || obj.Status == "R") return Json(null);
+
 				// "UploadDate" input is datetime-local
 				obj.UploadDate_Text = ((new[] { "F3D", "DRW", "MB" }).Contains(obj.Type) || obj.UploadDate == DateTime.MinValue ? DateTime.Now : obj.UploadDate).ToString("yyyy-MM-ddTHH:mm");
 
@@ -377,7 +380,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				{
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "U" ? "Upload" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
+						item.Status_Text = item.Status == "U" ? "Uploaded" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
 						if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
 					}
 				}
@@ -385,7 +388,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                 {
                     foreach (var item in _CommonViewModel1.ObjList)
                     {
-                        item.Status_Text = item.Status == "U" ? "Upload" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
+                        item.Status_Text = item.Status == "U" ? "Uploaded" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
                         if (item.StatusDate != null) item.StatusDate_Text = item.StatusDate.ToString(Common.DateTimeFormat_ddMMyyyy);
                     }
                 }
@@ -486,6 +489,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 						|| (viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)) return Json_AccessDenied();
 
 					if (viewModel.Id > 0 && !_context.Using<ProjectSiteDoc>().Any(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId)) return Json_AccessDenied();
+
+					// Approved / Rejected records can not be edited
+					if (viewModel.Id > 0 && _context.Using<ProjectSiteDoc>().Any(x => x.Id == viewModel.Id && (x.Status == "A" || x.Status == "R")))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = "Approved / Rejected record can not be edited.";
+						return Json(CommonViewModel);
+					}
 
 					#endregion
 
@@ -1197,7 +1209,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 					foreach (var item in _CommonViewModel.ObjList)
 					{
-						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "A" ? "Approve" : (item.Status == "R" ? "Rejected" : ""));
+						item.Status_Text = item.Status == "P" ? "Pending" : (item.Status == "A" ? "Approved" : (item.Status == "R" ? "Rejected" : ""));
 						if (!string.IsNullOrEmpty(item.WorkType)) item.WorkType_Text = list != null ? list.Where(x => x.LOV_Code == item.WorkType).Select(x => x.LOV_Desc).FirstOrDefault() : "";
 					}
 
@@ -1385,6 +1397,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.StatusDate = DateTime.Now;
 
 								_context.Using<ProjectSiteDoc>().Update(obj);
+
+								var latestHistory = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == obj.ProjectId && x.Type == obj.Type && x.IsLatest == true).FirstOrDefault();
+								if (latestHistory != null)
+								{
+									latestHistory.Status = Status;
+									latestHistory.StatusDate = DateTime.Now;
+									_context.Using<ProjectSiteDoc_History>().Update(latestHistory);
+								}
 							}
 							else if (Type == "WP")
 							{
@@ -1409,6 +1429,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 								obj.StatusDate = DateTime.Now;
 
 								_context.Using<ProjectSiteMaterial>().Update(obj);
+							}
+							else if (Type == "WC")
+							{
+								AgencyMaster obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == Id).FirstOrDefault();
+
+								if (obj == null || !(Status == "A" || Status == "R")
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("WCOMP")) { transaction.Rollback(); return Json_AccessDenied(); }
+
+								obj.Status = Status;
+
+								_context.Using<AgencyMaster>().Update(obj);
 							}
 							else { transaction.Rollback(); return Json_AccessDenied(); }
 

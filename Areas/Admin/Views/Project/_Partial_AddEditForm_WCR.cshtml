@@ -1,4 +1,4 @@
-﻿@model ResponseModel<AgencyMaster>
+@model ResponseModel<AgencyMaster>
 
 @{
 	Layout = null;
@@ -97,11 +97,11 @@
 					<th>Agency Name</th>
 					<th>Type of Work</th>
 					<th>Notes</th>
-					<th width="5%">Status</th>
+					<th width="12%" class="text-center">Status</th>
 
 					@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
 					{
-						<th class="text-center" width="10%">Action</th>
+						<th class="text-center" width="15%">Action</th>
 					}
 				</tr>
 			</thead>
@@ -114,35 +114,58 @@
 							<td>@item.Name</td>
 							<td>@item.WorkType_Text</td>
 							<td>@item.Notes</td>
-							<td>@item.Status_Text</td>
+							<td class="text-center">
+								@if (item.Status == "A")
+								{
+									<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+								}
+								else if (item.Status == "R")
+								{
+									<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+								}
+								else if (item.Status == "U")
+								{
+									<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+								}
+								else
+								{
+									<span class="badge bg-warning text-dark py-1 px-2"><i class="ri-time-line me-1"></i>Pending</span>
+								}
+							</td>
 
 							@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
 							{
 								<td class="text-center">
-									@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-									@if (IsEmployee && item.Status == "P")
-									{
-										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
-												onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
-											<i class="ri-pencil-fill"></i>
-										</button>
-									}
-									@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-									@if (IsEmployee && item.Status == "P")
-									{
-										<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-												onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WCR","Project", new {  area = "Admin" })?Id=@item.Id');">
-											<i class="ri-delete-bin-2-line"></i>
-										</button>
-									}
+									<div class="btn-group">
+										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+										@if (IsEmployee && item.Status == "P")
+										{
+											<button type="button" class="btn btn-info btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Edit"
+													onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
+												<i class="ri-pencil-fill"></i>
+											</button>
+										}
+										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+										@if (IsEmployee && item.Status == "P")
+										{
+											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Delete"
+													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WCR","Project", new {  area = "Admin" })?Id=@item.Id');">
+												<i class="ri-delete-bin-2-line"></i>
+											</button>
+										}
 
-									@if (IsCustomer && item.Status == "P")
-									{
-										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
-												onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
-											Approve
-										</button>
-									}
+										@if (IsCustomer && (item.Status == "P" || item.Status == "U"))
+										{
+											<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Approve"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
+												<i class="ri-checkbox-circle-line me-1"></i>Approve
+											</button>
+											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+												<i class="ri-close-circle-line me-1"></i>Reject
+											</button>
+										}
+									</div>
 								</td>
 							}
 						</tr>

@@ -1,4 +1,4 @@
-﻿@model ResponseModel<ProjectSiteMaterial>
+@model ResponseModel<ProjectSiteMaterial>
 
 @{
 	Layout = null;
@@ -178,8 +178,8 @@
 					{
 						<th width="20%">Actual Order Qty </th>
 					}
-					<th width="5%">Status</th>
-					<th width="10%">Status Date</th>
+					<th width="12%" class="text-center">Status</th>
+					<th width="12%" class="text-center">Status Date</th>
 
 					@if (IsEmployee || IsVendor)
 					{
@@ -218,8 +218,33 @@
 									}
 								</td>
 							}
-							<td>@item.Status_Text</td>
-							<td>@item.StatusDate_Text</td>
+							<td class="text-center">
+								@if (item.Status == "A")
+								{
+									<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+								}
+								else if (item.Status == "O")
+								{
+									<span class="badge bg-info text-white py-1 px-2"><i class="ri-shopping-cart-2-line me-1"></i>Ordered</span>
+								}
+								else if (item.Status == "RC")
+								{
+									<span class="badge bg-primary py-1 px-2"><i class="ri-inbox-archive-line me-1"></i>Received</span>
+								}
+								else if (item.Status == "R")
+								{
+									<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+								}
+								else if (item.Status == "U")
+								{
+									<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+								}
+								else
+								{
+									<span class="badge bg-secondary py-1 px-2"><i class="ri-send-plane-line me-1"></i>Submitted</span>
+								}
+							</td>
+							<td class="text-center">@item.StatusDate_Text</td>
 
 							@if ((IsEmployee || IsVendor))
 							{

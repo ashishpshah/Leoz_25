@@ -1,4 +1,4 @@
-﻿@model Tuple<ResponseModel<ProjectSiteDoc>, ResponseModel<ProjectSiteDoc_History>>
+@model Tuple<ResponseModel<ProjectSiteDoc>, ResponseModel<ProjectSiteDoc_History>>
 
 @{
 	Layout = null;
@@ -92,9 +92,9 @@
 				<tr>
 					<th width="20%">Upload Date</th>
 					<th>Remarks</th>
-					@* <th width="10%">Status</th> *@
-					<th width="10%">View File</th>
-					<th class="text-center" width="10%">Action</th>
+					<th width="15%" class="text-center">Status</th>
+					<th width="10%" class="text-center">View File</th>
+					<th class="text-center" width="15%">Action</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -105,8 +105,21 @@
 						<tr>
 							<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy_HHmm)</td>
 							<td>@item.Remark</td>
-							@* <td>@item.Status_Text</td> *@
-							<td>
+							<td class="text-center">
+								@if (item.Status == "A")
+								{
+									<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+								}
+								else if (item.Status == "R")
+								{
+									<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+								}
+								else
+								{
+									<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+								}
+							</td>
+							<td class="text-center">
 								@if (index == 0 && item?.FileData != null)
 								{
 									//<a href="@(Url.Content("~" + item.FilePath))" target="_blank" class="btn btn-info"><i class="ri-file-download-fill me-1"></i> </a>
@@ -118,49 +131,29 @@
 								}
 							</td>
 
-							@if (ProjectAccess.CanModify)
-							{
-								<td>
-									<div class="btn-group">
-										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-										@{
-											<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
-													onclick="fnAddEdit_ProjectSiteDoc(@item.Id, '@item.Type');">
-												<i class="ri-pencil-fill"></i>
-											</button>
-										}
-										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-										@{
-											// <button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
-											// 		onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_Doc", "Project", new { area = "Admin" })?Id=@item.Id');">
-											// 	<i class="ri-delete-bin-2-line"></i>
-											// </button>
-										}
-									</div>
-								</td>
-							}
-							else if (ProjectAccess.CanApproveDoc)
-							{
-								<td>
-									<div class="btn-group">
-										@if (item.Status == "U")
-										{
-											<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Accept"
-													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
-												<i class="ri-checkbox-circle-line"></i> &nbsp; Approve
-											</button>
-											<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Reject"
-													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
-												<i class="ri-close-circle-line"></i> &nbsp; Reject
-											</button>
-										}
-									</div>
-								</td>
-							}
-							else
-							{
-								<td></td>
-							}
+							<td class="text-center">
+								<div class="btn-group">
+									@if (item.Status == "U" && (IsCustomer || ProjectAccess.CanApproveDoc))
+									{
+										<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Approve"
+												onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
+											<i class="ri-checkbox-circle-line me-1"></i>Approve
+										</button>
+										<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
+												onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+											<i class="ri-close-circle-line me-1"></i>Reject
+										</button>
+									}
+									@* Approved / Rejected records are locked : edit only for Uploaded record where file is shown *@
+									@if (!IsCustomer && ProjectAccess.CanModify && item.Status != "A" && item.Status != "R" && index == 0 && item?.FileData != null)
+									{
+										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+												onclick="fnAddEdit_ProjectSiteDoc(@item.Id, '@item.Type');">
+											<i class="ri-pencil-fill"></i>
+										</button>
+									}
+								</div>
+							</td>
 						</tr>
 					}
 				}
@@ -171,12 +164,13 @@
 	@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type))
 	{
 		<h5 class="mt-4 mb-2">Recent Uploads</h5>
-		<div class="table-responsive-sm mt-3" id="divProjectSiteDocList">
+		<div class="table-responsive-sm mt-3" id="divProjectSiteDocHistoryList">
 			<table class="table table-bordered table-centered mb-0">
 				<thead>
 					<tr>
 						<th width="20%">Upload Date</th>
 						<th>Remarks</th>
+						<th width="15%" class="text-center">Status</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -187,8 +181,20 @@
 							<tr>
 								<td>@item.UploadDate.ToString(Common.DateTimeFormat_ddMMyyyy_HHmm)</td>
 								<td>@item.Remark</td>
-
-
+								<td class="text-center">
+									@if (item.Status == "A")
+									{
+										<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+									}
+									else if (item.Status == "R")
+									{
+										<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+									}
+									else
+									{
+										<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+									}
+								</td>
 							</tr>
 						}
 					}
