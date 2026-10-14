@@ -24,9 +24,29 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var listEmployee = _context.Using<Employee>().GetByCondition(x => IsVendor == true ? x.VendorId == Logged_In_VendorId : false).Distinct().ToList();
 
+			// A Project can have multiple Co-ordinators (Project form selection + Employee assignments), shown comma separated.
+			var dictEmployee = listEmployee.GroupBy(x => x.Id).ToDictionary(x => x.Key, x => x.First().Fullname);
+
+			var dictMappedCoordinatorId = (from m in _context.Using<EmployeeProjectMapping>().GetByCondition(x => IsVendor == true ? x.VendorId == Logged_In_VendorId : false).ToList()
+										   join e in listEmployee on m.EmployeeId equals e.Id
+										   where e.UserType == "COORD"
+										   group e by m.ProjectId into g
+										   select new { ProjectId = g.Key, EmployeeIds = g.Select(x => x.Id).ToList() })
+										   .ToDictionary(x => x.ProjectId, x => x.EmployeeIds);
+
 			if (listEmployee != null && listEmployee.Count > 0 && CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
 				foreach (var item in CommonViewModel.ObjList)
-					item.CoordinatorName = listEmployee.Where(x => x.Id == item.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();
+				{
+					var listCoordinatorId = new List<long>();
+
+					if (item.CoordinatorId > 0) listCoordinatorId.Add(item.CoordinatorId.Value);
+
+					if (dictMappedCoordinatorId.TryGetValue(item.Id, out var listMappedEmployeeId)) listCoordinatorId.AddRange(listMappedEmployeeId);
+
+					item.CoordinatorName = string.Join(", ", listCoordinatorId.Distinct()
+						.Select(x => dictEmployee.TryGetValue(x, out var name) ? name : null)
+						.Where(x => !string.IsNullOrEmpty(x)));
+				}
 
 			if (CommonViewModel.ObjList != null && CommonViewModel.ObjList.Count() > 0)
 			{
@@ -111,6 +131,36 @@ namespace Leoz_25.Areas.Admin.Controllers
 					CommonViewModel.Message = "Please select valid Coordinator.";
 
 					return Json(CommonViewModel);
+				}
+
+				// A Project can have only one Coordinator. The existing Coordinator must be removed
+				// (select "-- Select --") before assigning another one.
+				if (viewModel.Id > 0 && viewModel.CoordinatorId > 0)
+				{
+					var objExistingProject = _context.Using<Project>().GetByCondition(x => x.Id == viewModel.Id && x.VendorId == Logged_In_VendorId).FirstOrDefault();
+
+					var listCoordinatorEmployee = _context.Using<Employee>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.UserType == "COORD").ToList();
+
+					var listExistingCoordinatorId = new List<long>();
+
+					if (objExistingProject != null && objExistingProject.CoordinatorId > 0) listExistingCoordinatorId.Add(objExistingProject.CoordinatorId.Value);
+
+					listExistingCoordinatorId.AddRange(from m in _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.ProjectId == viewModel.Id && x.VendorId == Logged_In_VendorId).ToList()
+													   join e in listCoordinatorEmployee on m.EmployeeId equals e.Id
+													   select e.Id);
+
+					listExistingCoordinatorId = listExistingCoordinatorId.Where(x => x != viewModel.CoordinatorId).Distinct().ToList();
+
+					if (listExistingCoordinatorId.Count > 0)
+					{
+						var coordinatorName = string.Join(", ", listExistingCoordinatorId.Select(x => listCoordinatorEmployee.Where(e => e.Id == x).Select(e => e.Fullname).FirstOrDefault()).Where(x => !string.IsNullOrEmpty(x)));
+
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = $"Project is already assigned to Coordinator : {coordinatorName}. Please remove the existing Coordinator first, then assign another.";
+
+						return Json(CommonViewModel);
+					}
 				}
 
 				if (viewModel != null && viewModel != null)
@@ -1570,8 +1620,22 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var listEmployee = _context.Using<Employee>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList();
 
-			if (listEmployee != null && listEmployee.Count > 0 && objProject != null)
-				objProject.CoordinatorName = listEmployee.Where(x => x.Id == objProject.CoordinatorId).Select(x => x.Fullname).FirstOrDefault();
+			if (objProject != null)
+			{
+				// A Project can have multiple Co-ordinators (Project form selection + Employee assignments), shown comma separated.
+				var listCoordinatorId = new List<long>();
+
+				if (objProject.CoordinatorId > 0) listCoordinatorId.Add(objProject.CoordinatorId.Value);
+
+				listCoordinatorId.AddRange((from m in _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.ProjectId == objProject.Id && x.VendorId == Logged_In_VendorId).ToList()
+											join e in listEmployee on m.EmployeeId equals e.Id
+											where e.UserType == "COORD"
+											select e.Id).ToList());
+
+				objProject.CoordinatorName = string.Join(", ", listCoordinatorId.Distinct()
+					.Select(x => listEmployee.Where(y => y.Id == x).Select(y => y.Fullname).FirstOrDefault())
+					.Where(x => !string.IsNullOrEmpty(x)));
+			}
 
 			return Json(objProject);
 		}

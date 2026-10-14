@@ -96,6 +96,51 @@ namespace Leoz_25.Areas.Admin.Controllers
 		}
 
 		/// <summary>
+		/// A Project can have only one Coordinator. A Co-ordinator Employee can not be assigned to a Project
+		/// which is already coordinated by another Employee (Project.CoordinatorId or Employee-Project mapping).
+		/// Returns error message, or null when valid.
+		/// </summary>
+		private string Get_CoordinatorAssignment_Error(Employee viewModel)
+		{
+			if (viewModel == null || !string.Equals(viewModel.UserType, "COORD", StringComparison.OrdinalIgnoreCase)) return null;
+
+			var listNewProjectId = (viewModel.ProjectIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+				.Select(x => long.TryParse(x.Trim(), out var id) ? id : 0).Where(x => x > 0).Distinct().ToList();
+
+			if (listNewProjectId.Count == 0) return null;
+
+			var dictProject = _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId && listNewProjectId.Contains(x.Id)).ToDictionary(x => x.Id, x => x);
+
+			var listCoordinatorEmployee = _context.Using<Employee>().GetByCondition(x => x.VendorId == Logged_In_VendorId && x.UserType == "COORD").ToList();
+
+			var dictMappedCoordinatorId = (from m in _context.Using<EmployeeProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId && listNewProjectId.Contains(x.ProjectId)).ToList()
+										   join e in listCoordinatorEmployee on m.EmployeeId equals e.Id
+										   select new { m.ProjectId, EmployeeId = e.Id })
+										   .GroupBy(x => x.ProjectId).ToDictionary(x => x.Key, x => x.Select(y => y.EmployeeId).ToList());
+
+			foreach (var projectId in listNewProjectId)
+			{
+				var listCoordinatorId = new List<long>();
+
+				if (dictProject.TryGetValue(projectId, out var objProject) && objProject.CoordinatorId > 0) listCoordinatorId.Add(objProject.CoordinatorId.Value);
+
+				if (dictMappedCoordinatorId.TryGetValue(projectId, out var listMappedEmployeeId)) listCoordinatorId.AddRange(listMappedEmployeeId);
+
+				listCoordinatorId = listCoordinatorId.Where(x => x != viewModel.Id).Distinct().ToList();
+
+				if (listCoordinatorId.Count > 0)
+				{
+					var projectName = dictProject.TryGetValue(projectId, out var objP) ? objP.Name : projectId.ToString();
+					var coordinatorName = string.Join(", ", listCoordinatorId.Select(x => listCoordinatorEmployee.Where(e => e.Id == x).Select(e => e.Fullname).FirstOrDefault()).Where(x => !string.IsNullOrEmpty(x)));
+
+					return $"Project : {projectName} is already assigned to Coordinator : {coordinatorName}. Please remove the existing Coordinator from the Project first, then assign this Coordinator.";
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Employees (any designation) who are assigned to a project / coordinator of a project,
 		/// or already started work on a project (Daily Update, Documents, Material, Pending Work, Work Completion).
 		/// </summary>
@@ -256,6 +301,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
+					var coordinatorError = Get_CoordinatorAssignment_Error(viewModel);
+
+					if (!string.IsNullOrEmpty(coordinatorError))
+					{
+						CommonViewModel.IsSuccess = false;
+						CommonViewModel.StatusCode = ResponseStatusCode.Error;
+						CommonViewModel.Message = coordinatorError;
+
+						return Json(CommonViewModel);
+					}
+
 					var projectError = Get_ProjectAssignment_Error(viewModel);
 
 					if (!string.IsNullOrEmpty(projectError))
@@ -285,6 +341,40 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							var (IsSuccess, response, Id) = DataContext_Command.Employee_Save(viewModel);
 							viewModel.Id = Id;
+
+							#region Coordinator-Project Mapping
+
+							// A Co-ordinator Employee assigned to Project(s) becomes a Co-ordinator of those Project(s),
+							// so the Project list shows the Co-ordinator Name(s) and the Project is treated as assigned.
+							// Multiple Co-ordinators can be assigned to a Project; the first one becomes the primary
+							// Co-ordinator (Project form) while the rest are shown from the Employee-Project mapping.
+							if (IsSuccess && Id > 0 && string.Equals(viewModel.UserType, "COORD", StringComparison.OrdinalIgnoreCase))
+							{
+								var listCoordinatorProjectId = (viewModel.ProjectIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+									.Select(x => long.TryParse(x.Trim(), out var projectId) ? projectId : 0).Where(x => x > 0).Distinct().ToList();
+
+								foreach (var objProject in _context.Using<Project>().GetByCondition(x => listCoordinatorProjectId.Contains(x.Id) && x.VendorId == Logged_In_VendorId).ToList())
+								{
+									if (!(objProject.CoordinatorId > 0))
+									{
+										objProject.CoordinatorId = Id;
+										_context.Using<Project>().Update(objProject);
+									}
+
+									// Co-ordinator sees a Project only through EmployeeProjectMapping, so keep it in sync
+									if (!_context.Using<EmployeeProjectMapping>().Any(x => x.EmployeeId == Id && x.ProjectId == objProject.Id && x.VendorId == Logged_In_VendorId))
+									{
+										_context.Using<EmployeeProjectMapping>().Add(new EmployeeProjectMapping()
+										{
+											VendorId = Logged_In_VendorId,
+											EmployeeId = Id,
+											ProjectId = objProject.Id
+										});
+									}
+								}
+							}
+
+							#endregion
 
 							CommonViewModel.IsConfirm = IsSuccess;
 							CommonViewModel.IsSuccess = IsSuccess;
