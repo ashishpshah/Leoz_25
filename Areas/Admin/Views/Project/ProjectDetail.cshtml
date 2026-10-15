@@ -222,14 +222,11 @@
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">Pending Selection & Work</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("MPRO") && !IsCustomer)
+								@if (ProjectAccess.HasModule("MPRO"))
 								{
-									@if (true@* IsVendor || IsEmployee *@)
-									{
-										<div class="col-6 col-md-4">
-											<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">Material Procurement</div>
-										</div>
-									}
+									<div class="col-6 col-md-4">
+										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">Material Procurement</div>
+									</div>
 								}
 								@if (ProjectAccess.HasModule("WCOMP"))
 								{
@@ -433,7 +430,7 @@
 
 			$('#largeModal .modal-body form #divProjectSiteDoc div.divQty_Receive').css('display', 'none');
 
-			let change = '@(IsEmployee ? "1" : "")'
+			let change = '@(IsEmployee || IsCustomer ? "1" : "")'
 
 			var CustomerId = $('#ddlCustomer option:selected').val();
 			var ProjectId = $('#ddlProject option:selected').val();

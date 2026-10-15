@@ -66,8 +66,11 @@ namespace Leoz_25.Infra
 		/// <summary> Approve / Reject uploaded documents : Manager, Co-ordinator (+ Vendor, Customer). </summary>
 		public static bool CanApproveDoc => CanModify || Is(COORDINATOR);
 
-		/// <summary> Material Procurement → Add : Co-ordinator. </summary>
-		public static bool CanAddMaterial => Is(COORDINATOR);
+		/// <summary> Client Scope of Work → Add : Vendor only. </summary>
+		public static bool CanAddClientScope => IsVendor;
+
+		/// <summary> Material Procurement → Add : Vendor, Customer, Employee (except Architect, Purchaser). </summary>
+		public static bool CanAddMaterial => IsVendor || IsCustomer || (IsEmployee && !Is(ARCHITECT) && !Is(PURCHASER));
 
 		/// <summary> Material Procurement → Update (Order / Reject / Edit / Delete) : Manager. </summary>
 		public static bool CanUpdateMaterial => Is(MANAGER);

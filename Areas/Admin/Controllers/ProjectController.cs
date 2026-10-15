@@ -536,7 +536,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 					// Upload : Manager, Co-ordinator, Site Engineer, Architect. Edit existing record : Manager (F3D / DRW / MB always keep latest version, so upload rights are enough)
 					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule(viewModel.Type) || !ProjectAccess.CanUpload
-						|| (viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)) return Json_AccessDenied();
+						|| (viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)
+						|| (viewModel.Id == 0 && viewModel.Type == "WCLTSC" && !ProjectAccess.CanAddClientScope)) return Json_AccessDenied();
 
 					if (viewModel.Id > 0 && !_context.Using<ProjectSiteDoc>().Any(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId)) return Json_AccessDenied();
 
@@ -761,7 +762,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Partial_AddEditForm_MP(long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
 		{
-			if (IsCustomer || !IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("MPRO")) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("MPRO")) return Json(null);
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, UOM = "No" } };
 
@@ -827,7 +828,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && !IsCustomer)
+				if (viewModel != null)
 				{
 					#region Validation
 
@@ -867,7 +868,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					// Material Procurement : Co-ordinator → Add / Receive, Manager → Update (Order / Reject), Purchaser → View only
+					// Material Procurement : Vendor / Customer / Employee (except Architect, Purchaser) → Add, Co-ordinator → Receive, Manager → Update (Order / Reject)
 					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("MPRO")
 						|| !(viewModel.Id > 0 ? (ProjectAccess.CanUpdateMaterial || ProjectAccess.CanReceiveMaterial) : ProjectAccess.CanAddMaterial)) return Json_AccessDenied();
 
@@ -888,9 +889,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 					{
 						try
 						{
-							if (IsCustomer) return Json(null);
-
-							if (!IsCustomer)
+							if (IsCustomer) viewModel.CustomerId = Logged_In_CustomerId;
+							else
 							{
 								viewModel.CustomerId = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => x.VendorId == Logged_In_VendorId).Distinct().ToList()
 														join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id

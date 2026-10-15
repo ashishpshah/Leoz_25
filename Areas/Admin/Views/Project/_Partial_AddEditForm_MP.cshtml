@@ -10,7 +10,7 @@
 
 <div class="col-md-12">
 
-	@if (IsEmployee || IsVendor)
+	@if (IsEmployee || IsVendor || IsCustomer)
 	{
 		<form id="formSave" action="@Url.Action("Save_MP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -146,7 +146,7 @@
 			</div>
 
 		</form>
-		@* Material Procurement → Add : Co-ordinator only (Purchaser is view only) *@
+		@* Material Procurement → Add : Vendor, Customer, Employee (Architect / Purchaser are view only) *@
 		@if (ProjectAccess.CanAddMaterial)
 		{
 			<div class="d-flex align-items-start justify-content-between">

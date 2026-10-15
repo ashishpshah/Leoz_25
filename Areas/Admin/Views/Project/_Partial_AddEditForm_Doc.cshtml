@@ -73,7 +73,9 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				@if (!(Model.Item1.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type)))
+				@* Client Scope of Work → Add : Vendor only *@
+				@if (Model.Item1.Obj?.Type == "WCLTSC" && !ProjectAccess.CanAddClientScope) { }
+				else if (!(Model.Item1.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type)))
 				{
 					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Add new record </button>
 				}
