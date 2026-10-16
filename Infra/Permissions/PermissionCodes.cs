@@ -1,6 +1,6 @@
 namespace Leoz_25.Infra
 {
-	/// <summary> Project Detail module codes (table ProjectModule). </summary>
+	/// <summary> Module codes (table ProjectModule) : the 9 Project Detail boxes and the Daily Update screen. </summary>
 	public static class PermissionModules
 	{
 		public const string EPM = "EPM";
@@ -8,13 +8,19 @@ namespace Leoz_25.Infra
 		public const string DRW = "DRW";
 		public const string WCLTSC = "WCLTSC";
 		public const string MB = "MB";
+
+		/// <summary> Project Detail box "Site Updates" : document module (ProjectSiteDoc Type SITE). </summary>
 		public const string SITE = "SITE";
+
 		public const string WPEND = "WPEND";
 		public const string MPRO = "MPRO";
 		public const string WCOMP = "WCOMP";
 
-		/// <summary> Document modules (entity ProjectSiteDoc). </summary>
-		public static readonly string[] Documents = { EPM, F3D, DRW, WCLTSC, MB };
+		/// <summary> Daily Update screen (menu Daily Update, ProjectDailyUpdate) : not a Project Detail box. </summary>
+		public const string DAILY = "DAILY";
+
+		/// <summary> Document modules (entity ProjectSiteDoc, Partial_AddEditForm_Doc / Save_Doc / Save_Doc_Status "DOC"). </summary>
+		public static readonly string[] Documents = { EPM, F3D, DRW, WCLTSC, MB, SITE };
 
 		/// <summary> Document modules which keep only the latest version (re-upload replaces the file). </summary>
 		public static readonly string[] HistoryDocuments = { F3D, DRW, MB };

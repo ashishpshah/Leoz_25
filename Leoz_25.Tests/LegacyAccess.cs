@@ -24,6 +24,10 @@ internal static class LegacyAccess
 	/// <param name="employeeView">Employee designation → module codes visible through LOV.ProjectDetailTypeAccess (legacy HasModule).</param>
 	public static bool Can(string subject, string module, string action, IReadOnlyDictionary<string, HashSet<string>> employeeView)
 	{
+		// Daily Update screen : no server check before (menu only); Save_DailyUpdate : Employee.UserType = "COORD" (COORD ⇔ COORDINATOR, report R7 of 003)
+		if (module == PermissionModules.DAILY)
+			return action == PermissionActions.VIEW || (action is PermissionActions.ADD or PermissionActions.EDIT && IsCoordinator(subject));
+
 		if (action == PermissionActions.VIEW)
 			return subject is V or C || (employeeView.TryGetValue(subject, out var modules) && modules.Contains(module));
 
@@ -45,9 +49,6 @@ internal static class LegacyAccess
 
 		return module switch
 		{
-			// Save_DailyUpdate : Employee.UserType = "COORD" (COORD ⇔ COORDINATOR, report R7 of 003)
-			PermissionModules.SITE => action is PermissionActions.ADD or PermissionActions.EDIT && IsCoordinator(subject),
-
 			// Save_WP : never Customer; Save_Doc_Status "WP" : CanModify
 			PermissionModules.WPEND => action switch
 			{

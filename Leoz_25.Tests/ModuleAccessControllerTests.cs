@@ -88,16 +88,16 @@ public class ModuleAccessControllerTests : IDisposable
 		try
 		{
 			// Site Engineer may add daily updates in this vendor only, and loses Material Procurement ADD
-			var changed = string.Join(",", original.Split(',').Where(x => x != "MPRO.ADD").Append("SITE.ADD"));
+			var changed = string.Join(",", original.Split(',').Where(x => x != "MPRO.ADD").Append("DAILY.ADD"));
 
 			Assert.True(IsSuccess(Controller_As_Vendor().Save(ProjectAccess.SITE_ENGINEER, changed)));
 
 			var vendorSet = _service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.SITE_ENGINEER, TEST_VENDOR_ID);
 			var defaultSet = _service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.SITE_ENGINEER, 0);
 
-			Assert.True(vendorSet.Can("SITE", "ADD"));
+			Assert.True(vendorSet.Can("DAILY", "ADD"));
 			Assert.False(vendorSet.Can("MPRO", "ADD"));
-			Assert.False(defaultSet.Can("SITE", "ADD"));
+			Assert.False(defaultSet.Can("DAILY", "ADD"));
 			Assert.True(defaultSet.Can("MPRO", "ADD"));
 
 			// Only differing cells are stored

@@ -50,9 +50,9 @@ public class SeedParityTests : IDisposable
 	{
 		var list = _context.Using<ProjectModuleAction>().GetAll().ToList();
 
-		// 5 document modules x 5 + SITE 3 + WPEND 5 + MPRO 6 + WCOMP 5
-		Assert.Equal(44, list.Count);
-		Assert.Equal(9, list.Select(x => x.ModuleCode).Distinct().Count());
+		// 6 document modules (incl. SITE) x 5 + WPEND 5 + MPRO 6 + WCOMP 5 + DAILY 3
+		Assert.Equal(49, list.Count);
+		Assert.Equal(10, list.Select(x => x.ModuleCode).Distinct().Count());
 	}
 
 	[Fact]

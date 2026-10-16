@@ -11,10 +11,11 @@ Who may **view** each Project Detail module and **add / edit / approve / reject 
 | DRW | Drawings | VIEW, ADD, EDIT, APPROVE, REJECT |
 | WCLTSC | Client Scope of Work & Material Specifications | VIEW, ADD, EDIT, APPROVE, REJECT |
 | MB | Mood Board | VIEW, ADD, EDIT, APPROVE, REJECT |
-| SITE | Daily Update (Site Updates) | VIEW, ADD, EDIT |
+| SITE | Site Updates (Project Detail box, document upload) | VIEW, ADD, EDIT, APPROVE, REJECT |
 | WPEND | Pending Selection & Work | VIEW, ADD, EDIT, COMPLETE, REJECT |
 | MPRO | Material Procurement | VIEW, ADD, EDIT, ORDER, REJECT, RECEIVE |
 | WCOMP | Work Completion Report | VIEW, ADD, EDIT, APPROVE, REJECT |
+| DAILY | Daily Update screen (menu "Daily Update", not a Project Detail box) | VIEW, ADD, EDIT |
 
 F3D, DRW and MB keep only the latest version, so a re-upload is an EDIT.
 
@@ -33,7 +34,7 @@ If a USER_TYPE row has no `DesignationCode`, the old description rules (`Project
 
 | Table | Purpose |
 |---|---|
-| `ProjectModule` | The 9 modules (`IsActive = 0` hides a module from everyone) |
+| `ProjectModule` | The 9 Project Detail boxes + the Daily Update screen (`IsActive = 0` hides a module from everyone) |
 | `PermissionAction` | VIEW, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE |
 | `ProjectModuleAction` | Which actions exist per module (columns of the matrix) |
 | `ProjectModulePermission` | One row per subject × module × action. `VendorId NULL` = system default, otherwise that vendor's override. `IsAllowed`, `Scope` (`ALL` / `OWN`). **Missing row = not allowed.** |
@@ -43,7 +44,7 @@ If a USER_TYPE row has no `DesignationCode`, the old description rules (`Project
 | `SchemaScriptLog` | Which numbered scripts have run |
 
 Effective right = vendor override (if active) else system default else denied.
-`Scope = OWN` is honoured for SITE EDIT (only entries the user created or last modified); the seed uses `ALL` everywhere.
+`Scope = OWN` is honoured for DAILY EDIT (only entries the user created or last modified); the seed uses `ALL` everywhere.
 
 `Role.ProjectDetailTypeAccess` and `LOV.ProjectDetailTypeAccess` are deprecated (columns kept; Legacy mode still reads the LOV one).
 
@@ -61,7 +62,7 @@ All in-scope decisions go through `ProjectAccess.Check(legacyResult, module, act
 
 ### Intentional differences in Dynamic mode
 1. `Save_Doc_Status` type WC (work completion approve / reject) requires WCOMP APPROVE / REJECT (Customer). Before, there was no role check.
-2. Daily Update page, list (`GetData`), form and image download require SITE VIEW on the server. Before, only the Project Detail box was hidden.
+2. Daily Update page, list (`GetData`), form and image download require DAILY VIEW on the server (default : every Vendor, Customer and Employee, as the menu allowed). Before, there was no server check.
 3. F3D / DRW / MB screen: everyone with EDIT sees both the edit pencil (not Customer) and "Upload new version". Before, Vendor / Manager saw only the pencil and Co-ordinator / Site Engineer / Architect only the button. The server already allowed both.
 
 Expected Shadow log entries caused by (3): `F3D|DRW|MB.EDIT` for Co-ordinator, Site Engineer, Architect, Customer, Vendor and Manager on the document screen.

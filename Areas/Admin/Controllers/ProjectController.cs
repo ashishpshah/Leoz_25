@@ -1666,8 +1666,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult DailyUpdate()
 		{
-			// Site Updates (SITE) : legacy had no server check (box hidden only)
-			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return RedirectToAction("Index", "Home", new { area = "Admin" });
+			// Daily Update screen (DAILY) : legacy had no server check (menu only)
+			if (!ProjectAccess.Check(true, PermissionModules.DAILY, PermissionActions.VIEW)) return RedirectToAction("Index", "Home", new { area = "Admin" });
 
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
@@ -1729,7 +1729,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			List<ProjectDailyUpdate> result = new List<ProjectDailyUpdate>();
 
-			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW))
+			if (!ProjectAccess.Check(true, PermissionModules.DAILY, PermissionActions.VIEW))
 				return Json(new { param.sEcho, iTotalRecords = 0, iTotalDisplayRecords = 0, aaData = result });
 
 			try
@@ -1800,10 +1800,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			var _CommonViewModel = new ResponseModel<ProjectDailyUpdate>() { Obj = new ProjectDailyUpdate() { ProjectId = ProjectId, Date = DateTime.Now.Date } };
 
-			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.Check(true, PermissionModules.DAILY, PermissionActions.VIEW)) return Json(null);
 
 			// Form : new record needs ADD, existing record EDIT (else shown read-only). Legacy : no check (Add / Edit buttons hidden in DailyUpdate view)
-			bool canSave = !IsShowImages && ProjectAccess.Check(true, PermissionModules.SITE, Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD);
+			bool canSave = !IsShowImages && ProjectAccess.Check(true, PermissionModules.DAILY, Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD);
 
 			if (!IsShowImages && Id <= 0 && !canSave) return Json(null);
 
@@ -1858,7 +1858,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			}
 
 			// Scope OWN : only the user's own entries (created / last modified) are editable
-			if (canSave && Id > 0 && ProjectAccess.Scope(PermissionModules.SITE, PermissionActions.EDIT) == PermissionScopes.OWN
+			if (canSave && Id > 0 && ProjectAccess.Scope(PermissionModules.DAILY, PermissionActions.EDIT) == PermissionScopes.OWN
 				&& !(_CommonViewModel.Obj.CreatedBy == Logged_In_UserId || _CommonViewModel.Obj.LastModifiedBy == Logged_In_UserId)) canSave = false;
 
 			_CommonViewModel.Data4 = canSave;
@@ -1880,7 +1880,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				// Legacy : Co-ordinator only (Employee.UserType = "COORD"). Database : SITE ADD (new) / EDIT (existing)
 				if (objEmployee != null && ProjectAccess.Check(string.Equals((objEmployee.UserType ?? "").TrimEnd(), "COORD", StringComparison.OrdinalIgnoreCase),
-					PermissionModules.SITE, viewModel.Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD))
+					PermissionModules.DAILY, viewModel.Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD))
 				{
 					#region Validation
 
@@ -1902,7 +1902,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 						if (objExisting == null || objExisting.ProjectId != viewModel.ProjectId) return Json_AccessDenied();
 
-						if (ProjectAccess.Scope(PermissionModules.SITE, PermissionActions.EDIT) == PermissionScopes.OWN
+						if (ProjectAccess.Scope(PermissionModules.DAILY, PermissionActions.EDIT) == PermissionScopes.OWN
 							&& !(objExisting.CreatedBy == Logged_In_UserId || objExisting.LastModifiedBy == Logged_In_UserId)) return Json_AccessDenied();
 					}
 
@@ -2044,7 +2044,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public IActionResult ViewDocument_DailyUpdateFile(long DailyUpdateFileId)
 		{
-			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return NotFound();
+			if (!ProjectAccess.Check(true, PermissionModules.DAILY, PermissionActions.VIEW)) return NotFound();
 
 			var obj = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
 			if (obj?.FileData == null) return NotFound();

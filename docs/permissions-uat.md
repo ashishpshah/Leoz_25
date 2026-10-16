@@ -17,30 +17,30 @@ Legend: ✔ visible / allowed, ✘ hidden / denied.
 
 (Employee rows come from LOV `ProjectDetailTypeAccess` of the local database; check the Module Access screen if your data differs.)
 
-## 2. Document modules (EPM, F3D, DRW, WCLTSC, MB)
+## 2. Document modules (EPM, F3D, DRW, WCLTSC, MB, SITE = Site Updates box)
 
 | Check | Expected |
 |---|---|
-| "Add new record" EPM / DRW / F3D / MB (no file yet) | Vendor, Customer, Manager, Co-ord, Site Eng, Architect |
+| "Add new record" EPM / DRW / F3D / MB / SITE (no file yet) | Vendor, Customer, Manager, Co-ord, Site Eng, Architect |
 | "Add new record" WCLTSC | Vendor only |
-| Edit pencil EPM / WCLTSC (uploaded, latest) | Vendor, Manager (not Customer: UI rule unchanged) |
+| Edit pencil EPM / WCLTSC / SITE (uploaded, latest) | Vendor, Manager (not Customer: UI rule unchanged) |
 | F3D / DRW / MB pencil and "Upload new version" ★ | everyone with EDIT: pencil (not Customer) and button |
 | Approve / Reject buttons (status Uploaded) | Vendor, Customer, Manager, Co-ord |
 | Approved / Rejected record | cannot be edited (message) |
 | Delete button | unchanged |
 
-## 3. Daily Update (Site Updates)
+## 3. Daily Update screen (module DAILY)
 
 | Check | Expected |
 |---|---|
-| Daily Update menu page | opens for everyone with SITE VIEW; others are redirected to the dashboard ★ |
+| Daily Update menu page | opens for everyone with DAILY VIEW (default : all); others are redirected to the dashboard ★ |
 | "Add new record" button | Co-ordinator only |
 | Action (pencil) column | Co-ordinator only |
 | Save new / edited entry | Co-ordinator of the vendor, active, mapped to the project |
 | Co-ordinator not mapped to the project, inactive, or of another vendor | denied |
 | Edit entry with a changed `ProjectId` (dev tools) | "You do not have access…" |
-| Images (eye) / file download | everyone with SITE VIEW and access to the project ★ |
-| Direct URL `Project/GetData`, `Partial_AddEditForm_DailyUpdate`, `ViewDocument_DailyUpdateFile` as an employee without SITE | empty / nothing / 404 ★ |
+| Images (eye) / file download | everyone with DAILY VIEW and access to the project ★ |
+| Direct URL `Project/GetData`, `Partial_AddEditForm_DailyUpdate`, `ViewDocument_DailyUpdateFile` after removing DAILY VIEW for a designation | empty / nothing / 404 ★ |
 | Delete file button | unchanged |
 
 ## 4. Pending Selection & Work (WPEND)
