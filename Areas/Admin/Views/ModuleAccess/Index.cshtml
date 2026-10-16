@@ -237,17 +237,28 @@
 			fnUpdate_Buttons();
 		}
 
+		function fnMark_Dirty(chk) {
+			$(chk).closest('td').toggleClass('ma-dirty', (chk.checked ? '1' : '0') !== $(chk).attr('data-original'));
+		}
+
 		function fnChange_Cell(chk) {
-			var $td = $(chk).closest('td');
-			$td.toggleClass('ma-dirty', (chk.checked ? '1' : '0') !== $(chk).attr('data-original'));
+			fnMark_Dirty(chk);
 			fnSync_RowAll($(chk).closest('tr'));
 			fnUpdate_Buttons();
 		}
 
+		// "All" : set every action of the row at once (value read once; row "All" synced after the loop)
 		function fnChange_Row(chkAll) {
-			$(chkAll).closest('tr').find('.ma-chk').each(function () {
-				if (this.checked !== chkAll.checked) { this.checked = chkAll.checked; fnChange_Cell(this); }
+			var isChecked = chkAll.checked;
+			var $tr = $(chkAll).closest('tr');
+
+			$tr.find('.ma-chk').each(function () {
+				this.checked = isChecked;
+				fnMark_Dirty(this);
 			});
+
+			fnSync_RowAll($tr);
+			fnUpdate_Buttons();
 		}
 
 		function fnSync_RowAll($tr) {
