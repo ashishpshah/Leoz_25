@@ -19,7 +19,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 		private bool IsAllowedEditor => Common.IsUserLogged() && !IsCustomer && !IsEmployee
 			&& ((Common.IsSuperAdmin() && !IsVendor) || (IsVendor && Logged_In_VendorId > 0));
 
-		private static string[] Subjects => PermissionSubjects.Actors.Concat(PermissionSubjects.Designations).ToArray();
+		/// <summary> Editable subjects : Super Admin all; Vendor only Customer and Employee designations (not Vendor permissions). </summary>
+		private string[] Subjects => PermissionSubjects.Actors.Concat(PermissionSubjects.Designations)
+			.Where(x => !(IsVendor && x == PermissionSubjects.VENDOR)).ToArray();
 
 		public ActionResult Index()
 		{

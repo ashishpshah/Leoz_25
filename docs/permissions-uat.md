@@ -74,7 +74,8 @@ Legend: ✔ visible / allowed, ✘ hidden / denied.
 
 | Check | Expected |
 |---|---|
-| Super Admin, Vendor | all 10 subjects; edits apply to all vendors |
+| Super Admin | all 10 subjects; edits apply to all vendors |
+| Vendor | Customer and the 8 employee designations only (no Vendor entry); edits apply to all vendors |
 | Admin | menu not shown; direct URL redirects to dashboard; save / matrix calls denied |
 | Customer / Employee | menu not shown; direct URL redirects to dashboard |
 | Change a right, then reload the affected user's Project Detail (no re-login) | new right applies within 60 s |
