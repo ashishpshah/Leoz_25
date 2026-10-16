@@ -1,0 +1,186 @@
+@model ResponseModel<AgencyMaster>
+
+@{
+	Layout = null;
+
+	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
+	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
+	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
+}
+
+<div class="col-md-12">
+
+	@if (IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER))
+	{
+		<form id="formSave" action="@Url.Action("Save_WCR","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+			<div class="card-body form-horizontal" id="divProjectSiteDoc" style="display:none">
+				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+
+				<div class="form-group row" style="padding-top:20px">
+					<label for="Name" class="col-md-2 col-form-label">Agency Name<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<input type="text" name="Name" class="form-control" value="@Model.Obj.Name" @(IsCustomer ? "readonly" : "")>
+					</div>					
+				</div>
+				<div class="form-group row" style="padding-top:20px">
+					<label for="WorkType" class="col-md-2 col-form-label">Type of Work<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						@if (IsCustomer)
+						{
+							<input type="text" name="WorkType_Text" class="form-control" value="@Model.Obj.WorkType_Text" readonly>
+							<input type="text" name="WorkType" class="form-control d-none" value="@Model.Obj.WorkType">
+						}
+						else
+						{
+							<input type="text" name="WorkType_Text" class="form-control d-none" value="@Model.Obj.WorkType">
+							<select name="WorkType" class="form-control form-control-sm select2">
+								<option value="">-- Select --</option>
+								@if (Model.SelectListItems != null)
+								{
+									@foreach (var item in Model.SelectListItems)
+									{
+										if (Model.Obj.WorkType == item.Value)
+										{
+											<option value="@item.Value" selected>@item.Text</option>
+										}
+										else
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									}
+								}
+							</select>
+						}
+					</div>
+				</div>
+				<div class="form-group row" style="padding-top:20px">
+					<label for="Notes" class="col-md-2 col-form-label">Notes</label>
+					<div class="col-md-8">
+						<input type="text" name="Notes" class="form-control" value="@Model.Obj.Notes">
+					</div>
+				</div>			
+			</div>
+			<div class="card-footer text-center" style="padding-top:20px;display:none" id="divProjectSiteDoc">
+				@if (IsCustomer)
+				{
+					<input type="text" name="Status" class="form-control d-none" value="A">
+					<button type="button" class="btn btn-success btnSubmit">Approve</button>
+					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+				}
+				else if (ProjectAccess.Is(ProjectAccess.MANAGER))
+				{
+					<input type="text" name="Status" class="form-control d-none" value="@Model.Obj.Status">
+					<button type="button" class="btn btn-success btnSubmit">Save</button>
+					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+				}
+			</div>
+		</form>
+
+		@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+		{
+			<div class="d-flex align-items-start justify-content-between">
+				<div class="d-flex justify-content-end"> &nbsp; </div>
+				<div class="d-flex justify-content-end">
+					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteWCR(0)"> Add new record </button>
+				</div>
+			</div>
+		}
+	}
+
+	<div class="table-responsive-sm mt-3" id="divProjectSiteWCRList">
+		<table class="table table-bordered table-centered mb-0">
+			<thead>
+				<tr>
+					<th>Agency Name</th>
+					<th>Type of Work</th>
+					<th>Notes</th>
+					<th width="12%" class="text-center">Status</th>
+
+					@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+					{
+						<th class="text-center" width="15%">Action</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model.ObjList != null)
+				{
+					foreach (var item in Model.ObjList.OrderByDescending(x => x.LastModifiedDate?.Ticks))
+					{
+						<tr>
+							<td>@item.Name</td>
+							<td>@item.WorkType_Text</td>
+							<td>@item.Notes</td>
+							<td class="text-center">
+								@if (item.Status == "A")
+								{
+									<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+								}
+								else if (item.Status == "R")
+								{
+									<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+								}
+								else if (item.Status == "U")
+								{
+									<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+								}
+								else
+								{
+									<span class="badge bg-warning text-dark py-1 px-2"><i class="ri-time-line me-1"></i>Pending</span>
+								}
+							</td>
+
+							@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+							{
+								<td class="text-center">
+									<div class="btn-group">
+										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+										@if (IsEmployee && item.Status == "P")
+										{
+											<button type="button" class="btn btn-info btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Edit"
+													onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
+												<i class="ri-pencil-fill"></i>
+											</button>
+										}
+										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+										@if (IsEmployee && item.Status == "P")
+										{
+											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Delete"
+													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WCR","Project", new {  area = "Admin" })?Id=@item.Id');">
+												<i class="ri-delete-bin-2-line"></i>
+											</button>
+										}
+
+										@if (IsCustomer && (item.Status == "P" || item.Status == "U"))
+										{
+											<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Approve"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
+												<i class="ri-checkbox-circle-line me-1"></i>Approve
+											</button>
+											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
+													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+												<i class="ri-close-circle-line me-1"></i>Reject
+											</button>
+										}
+									</div>
+								</td>
+							}
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+					$(document).ready(function () {
+
+		});
+	</script>
+}

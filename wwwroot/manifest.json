@@ -1,0 +1,25 @@
+{
+  "name": "Leoz - Art of Ambience",
+  "short_name": "Leoz",
+  "description": "Leoz ERP Management App",
+  "start_url": "/Admin/Home/Index",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111e38",
+  "theme_color": "#111e38",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/images/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/images/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

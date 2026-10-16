@@ -1,0 +1,183 @@
+﻿@model ResponseModel<Employee>
+
+@{
+	Layout = null;
+}
+
+<div class="col-md-12" style="margin-bottom: -21px;">
+	<div class="card card-info">
+
+		<div class="card-header">
+			<h3 class="card-title">@(Model.Obj != null && Model.Obj.Id > 0 ? "Edit" : "Create") Employee</h3>
+			<input type="text" class="form-control d-none" id="Id" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+			<input type="text" class="form-control d-none" id="UserId" name="UserId" value="@(Model.Obj != null && Model.Obj.UserId > 0 ? Model.Obj.UserId.ToString() : "")">
+		</div>
+
+		<div class="card-body form-horizontal">
+			<!-- Credential Details -->
+			<div class="panel-divider mb-3">
+				<span>Credential Details</span>
+
+				<div class="row g-3">
+
+					<!-- Username -->
+					<div class="col-12 col-md-6 col-lg-4">
+						<div class="form-group row align-items-center">
+							<label class="col-12 col-sm-4 col-form-label">User Name<span style="color:red">*</span></label>
+							<div class="col-12 col-sm-8">
+								<input type="text" class="form-control form-control-sm"
+									   id="UserName" name="UserName"
+									   value="@Model.Obj.UserName">
+							</div>
+						</div>
+					</div>
+
+					<!-- Password / Reset -->
+					<div class="col-12 col-md-6 col-lg-4">
+						<div class="form-group row align-items-center">
+
+							@if (Model.Obj != null && Model.Obj.Id > 0)
+							{
+								<label class="col-12 col-sm-4 col-form-label">Password Reset</label>
+								<div class="col-12 col-sm-8">
+									<div class="form-check form-switch">
+										<input type="checkbox" class="form-check-input"
+											   id="switch_Password_Reset"
+											   name="IsPassword_Reset"
+											   onchange="fnChange_Switch(this, 'label_Switch_Password_Reset')">
+										<label class="form-check-label"
+											   id="label_Switch_Password_Reset"
+											   data-true="Yes" data-false="No">No</label>
+									</div>
+								</div>
+							}
+							else
+							{
+								<label class="col-12 col-sm-4 col-form-label">Password<span style="color:red">*</span></label>
+								<div class="col-12 col-sm-8">
+									<div class="input-group input-group-sm">
+										<input type="password" id="Password" name="Password"
+											   class="form-control" placeholder="********">
+										<span class="input-group-text" data-password="true">
+											<span class="password-eye"></span>
+										</span>
+									</div>
+								</div>
+							}
+
+						</div>
+					</div>
+
+					<!-- Status -->
+					<div class="col-12 col-md-6 col-lg-4">
+						<div class="form-group row align-items-center">
+							<label class="col-12 col-sm-4 col-form-label">Status</label>
+							<div class="col-12 col-sm-8">
+								<div class="form-check form-check-inline form-control border-0 my-0 py-0">
+									<input type="checkbox" class="form-check-input" id="switch_Status"
+										   name="IsActive" @((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "checked" : "")
+										   onchange="fnChange_Switch(this, 'label_Switch_Status')">
+									<label class="form-check-label" for="switch_Status" id="label_Switch_Status" data-true="Active" data-false="Inactive">
+										@((Model.Obj != null && Model.Obj.IsActive == true) || Model.Obj.Id == 0 ? "Active" : "Inactive")
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<div class="panel-divider mb-3">
+				<span>Personal Details</span>
+				<div class="row no-gutters">
+					<div class="col-12 col-md-6 col-lg-4" style="margin: 0rem !important;">
+						<div class="form-group row align-items-center">
+							<label for="FirstName" class="col-12 col-sm-4 col-form-label">First Name<span style="color:red">*</span></label>
+							<div class="col-12 col-sm-8">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="FirstName" name="FirstName" value="@Model.Obj.FirstName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4" style="margin: 0rem !important;">
+						<div class="form-group row align-items-center">
+							<label for="MiddleName" class="col-12 col-sm-4 col-form-label">Middle Name</label>
+							<div class="col-12 col-sm-8">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="MiddleName" name="MiddleName" value="@Model.Obj.MiddleName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4" style="margin: 0rem !important;">
+						<div class="form-group row align-items-center">
+							<label for="LastName" class="col-12 col-sm-4 col-form-label">Last Name<span style="color:red">*</span></label>
+							<div class="col-12 col-sm-8">
+								<input type="text" data-altType="text" class="form-control form-control-sm" id="LastName" name="LastName" value="@Model.Obj.LastName" autocomplete="off">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row no-gutters">
+					<div class="col-12 col-md-6 col-lg-4" style="margin: 0rem !important;">
+						<div class="form-group row align-items-center">
+							<label for="ddlUserType" class="col-12 col-sm-4 col-form-label">Designation <span style="color:red">*</span></label>
+							<div class="col-12 col-sm-8">
+								<select id="ddlUserType" name="UserType" class="form-control form-control-sm select2">
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "UT"))
+										{
+											if (Convert.ToString(Model.Obj.UserType) == item.Value)
+											{
+												<option value="@item.Value" selected>@item.Text</option>
+											}
+											else
+											{
+												<option value="@item.Value">@item.Text</option>
+											}
+										}
+									}
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-8" style="margin: 0rem !important;">
+						<div class="form-group row align-items-center" style="margin-bottom:20px">
+							<label for="ddlProjectIds" class="col-12 col-sm-2 col-form-label">Projects</label>
+							<div class="col-12 col-sm-8">
+								<select id="ddlProjectIds" name="ProjectIds" class="form-control form-control-sm select2_multiple" data-selected="@Model.Obj.ProjectIds">
+
+									@if (Model.SelectListItems != null)
+									{
+										foreach (var item in Model.SelectListItems.Where(x => x.Group == "P"))
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									}
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+
+	<div class="card-footer">
+		<div class="row">
+			<div class="col-md-12 text-center">
+				<button type="submit" class="btn btn-success btnSubmit">Save</button>
+				@*<button type="button" class="btn btn-danger">Cancel</button>*@
+				<a href="@Url.Action("Index", "Employee", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+	</script>
+}

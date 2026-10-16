@@ -1,0 +1,78 @@
+﻿@model ResponseModel<LoginViewModel>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>AdminLTE 3 | Log in</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="~/Content/Admin/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="~/Content/Admin/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <link rel="stylesheet" href="~/Content/Admin/dist/css/adminlte.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <link href="~/Content/Admin/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+    <style>
+        body.swal2-height-auto {
+            height: 100vh !important;
+        }
+    </style>
+</head>
+<body class="hold-transition login-page">
+
+    <div class="login-box">
+        <div class="login-logo">
+            <a href="#"><b>Admin</b>LTE</a>
+        </div>
+        <div class="card">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg">Sign in to start your session</p>
+
+                @using (Html.BeginForm("Login", "Home", new { area = "Admin" }, FormMethod.Post, null,new { id = "formLogin", @class = "", enctype = "multipart/form-data", @data_form_isvalidate = "" }))
+                {
+                    <div class="input-group mb-3">
+                        <input type="text" id="UserName" name="UserName" value="Admin" class="form-control" placeholder="User name" data-required data-msg="The Username field is required." autocomplete="off">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-envelope"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="password" id="Password" name="Password" value="admin" class="form-control" data-required data-msg="The Password field is required." autocomplete="off">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 d-flex justify-content-center">
+                            <button type="button" class="btn btn-primary btn-block" onclick="fnSubmitForm('formLogin')">Sign In</button>
+                        </div>
+                    </div>
+                }
+
+                <p class="my-2">
+                    <a href="forgot-password.html">I forgot my password</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="~/Content/Admin/plugins/jquery/jquery.min.js"></script>
+    <script src="~/Content/Admin/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/Content/Admin/dist/js/adminlte.min.js"></script>
+    <script src="~/Content/Admin/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script src="~/Content/common.js"></script>
+
+</body>
+</html>

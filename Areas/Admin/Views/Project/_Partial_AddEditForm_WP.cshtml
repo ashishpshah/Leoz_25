@@ -1,0 +1,207 @@
+@model ResponseModel<ProjectSitePendingWork>
+
+@{
+	Layout = null;
+
+	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
+	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
+	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
+}
+
+<div class="col-md-12">
+
+	@* Pending Selection & Work : Add new record only from Vendor side (Customer can only Complete / Reject) *@
+	@if (ProjectAccess.CanUpload && !IsCustomer)
+	{
+		<form id="formSave" action="@Url.Action("Save_WP","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
+
+			<div class="card-body form-horizontal" id="divProjectSiteDoc" style="display:none">
+				<input type="text" class="form-control d-none" name="Id" value="@(Model.Obj != null && Model.Obj.Id > 0 ? Model.Obj.Id.ToString() : "")">
+				<input type="text" class="form-control d-none" name="ProjectId" value="@(Model.Obj != null && Model.Obj.ProjectId > 0 ? Model.Obj.ProjectId.ToString() : "")">
+				<input type="text" class="form-control d-none" name="CustomerId" value="@(Model.Obj != null && Model.Obj.CustomerId > 0 ? Model.Obj.CustomerId.ToString() : "")">
+
+				<div class="form-group row" style="padding-top:20px">
+					<label for="UploadDate_Text" class="col-2 col-form-label">Upload Date<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<input type="date" name="UploadDate_Text" class="form-control" value="@(Model.Obj.UploadDate.ToString("yyyy-MM-dd"))">
+					</div>				
+				</div>
+				<div class="form-group row" style="padding-top:20px">
+					
+					<label for="PendingFrom" class="col-2 col-form-label">Pending From<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<select name="PendingFrom" class="form-control form-control-sm select2">
+							<option value="">-- Select --</option>
+							@if (Model.SelectListItems != null)
+							{
+								@foreach (var item in Model.SelectListItems)
+								{
+									<option value="@item.Value">@item.Text</option>
+								}
+							}
+						</select>
+					</div>
+				</div>
+				<div class="form-group row" style="padding-top:20px">
+					<label for="Remarks" class="col-2 col-form-label">Remarks<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" name="Remarks">
+					</div>			
+				</div>
+				<div class="form-group row" style="padding-top:20px">					
+					<label for="PendingPoint" class="col-2 col-form-label">Pending Point<span style="color:red">*</span></label>
+					<div class="col-md-8">
+						<textarea rows="5" class="form-control" name="PendingPoint"></textarea>
+					</div>
+				</div>
+				</div>
+			<div class="card-footer text-center" style="padding-top:20px;display:none" id="divProjectSiteDoc">
+				<button type="button" class="btn btn-success btnSubmit">Save</button>
+				<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
+			</div>
+		</form>
+
+	}
+	@if (ProjectAccess.CanUpload && !IsCustomer)
+	{
+		<div class="d-flex align-items-start justify-content-between">
+			<div class="d-flex justify-content-end"> &nbsp; </div>
+			<div class="d-flex justify-content-end">
+				<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteWP(0)"> Add new record </button>
+			</div>
+		</div>
+	}
+
+	@{
+		var grouped = Model.ObjList.OrderByDescending(x => x.LastModifiedDate?.Ticks).GroupBy(i => i.PendingFrom).Select(g => g.Key);
+
+		<div class="row mb-1">
+			@foreach (string group in grouped.Where(x => IsCustomer ? x == "C" : true))
+			{
+				<div class="col-sm-12 col-md-@(grouped.Where(x => IsCustomer ? x == "C" : true).Count() > 1 ? "6" : "12")">
+					<div class="x_panel">
+						<div class="x_title">
+							<h2>@(Model.SelectListItems.FirstOrDefault(x => x.Value == group)?.Text) <small>&nbsp; pending point</small></h2>
+							<div class="clearfix"></div>
+						</div>
+						<div class="x_content">
+
+							<div class="table-responsive-sm mt-3">
+								<table class="table table-bordered table-centered mb-0">
+									<thead>
+										<tr>
+											<th>Pending Point</th>
+											<th width="12%" class="text-center">Status</th>
+											<th width="15%" class="text-center">Confirmation Date</th>
+											<th class="text-center" width="15%">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										@if (Model.ObjList != null)
+										{
+											foreach (var item in Model.ObjList.Where(x => x.PendingFrom == group).OrderByDescending(x => x.UploadDate.Ticks).ThenByDescending(x => x.LastModifiedDate?.Ticks))
+											{
+												<tr>
+													<td>@item.PendingPoint</td>
+													<td class="text-center">
+														@if (item.Status == "C" || item.Status == "A")
+														{
+															<span class="badge bg-success py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i>Completed</span>
+														}
+														else if (item.Status == "R")
+														{
+															<span class="badge bg-danger py-1 px-2"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+														}
+														else if (item.Status == "U")
+														{
+															<span class="badge bg-info text-white py-1 px-2"><i class="ri-upload-cloud-line me-1"></i>Uploaded</span>
+														}
+														else
+														{
+															<span class="badge bg-warning text-dark py-1 px-2"><i class="ri-time-line me-1"></i>Pending</span>
+														}
+													</td>
+													<td class="text-center">@(item.Status == "C" || item.Status == "A" ? item.StatusDate_Text : "")</td>
+
+													@if (IsEmployee && ProjectAccess.CanModify)
+													{
+														<td>
+															@if (item.Status == "P" && item.PendingFrom == "A")
+															{
+																<div class="btn-group mb-1">
+																	<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Complete"
+																			onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'C');">
+																		<i class="ri-checkbox-circle-line me-1"></i>Complete
+																	</button>
+																	<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
+																			onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+																		<i class="ri-close-circle-line me-1"></i>Reject
+																	</button>
+																</div>
+															}
+
+															<div class="btn-group">
+																@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
+																@{
+																	<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
+																			onclick="fnAddEdit_ProjectSiteWP(@item.Id);">
+																		<i class="ri-pencil-fill"></i>
+																	</button>
+																}
+																@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
+																@{
+																	<button type="button" class="btn btn-danger btn-sm btn-flat ml-2" data-toggle="tooltip" data-placement="top" title="Delete"
+																			onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WP", "Project", new { area = "Admin" })?Id=@item.Id');">
+																		<i class="ri-delete-bin-2-line"></i>
+																	</button>
+																}
+															</div>
+														</td>
+													}
+													else if (IsEmployee)
+													{
+														@* View only designation *@
+														<td></td>
+													}
+													else
+													{
+														<td>
+															<div class="btn-group">
+																@if (item.Status == "P")
+																{
+																	<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Complete"
+																			onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'C');">
+																		<i class="ri-checkbox-circle-line me-1"></i>Complete
+																	</button>
+																	<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
+																			onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
+																		<i class="ri-close-circle-line me-1"></i>Reject
+																	</button>
+																}
+															</div>
+														</td>
+													}
+												</tr>
+											}
+										}
+									</tbody>
+								</table>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	}
+
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		$(document).ready(function () {
+
+		});
+	</script>
+}
