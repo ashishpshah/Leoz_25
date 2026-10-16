@@ -1,6 +1,6 @@
 # Project Detail module permissions
 
-Who may **view** each Project Detail module and **add / edit / approve / reject / complete / order / receive** in it is stored in the database and edited on the **Module Access** screen (Configuration → Module Access), available to **Super Admin only** (Admin, Vendor, Customer and Employee neither see the menu nor can open the URL; the menu is flagged Super Admin so it cannot be granted on the User Access / Role screens). Delete rights are **not** part of this system: every delete endpoint and delete button keeps its original hard-coded check.
+Who may **view** each Project Detail module and **add / edit / approve / reject / complete / order / receive** in it is stored in the database and edited on the **Module Access** screen (Configuration → Module Access), available to **Super Admin and Vendor** with the same rights; changes apply to all vendors (Admin, Customer and Employee neither see the menu nor can open the URL). Delete rights are **not** part of this system: every delete endpoint and delete button keeps its original hard-coded check.
 
 ## Modules and actions
 

@@ -6,7 +6,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 {
 	/// <summary>
 	/// Project Detail module permissions matrix (ProjectModulePermission, system defaults : VendorId NULL).
-	/// Super Admin only : every other role (Admin, Vendor, Customer, Employee) is redirected / denied.
+	/// Super Admin and Vendor (same rights; changes apply to all vendors). Admin, Customer and Employee are redirected / denied.
 	/// </summary>
 	[Area("Admin")]
 	public class ModuleAccessController : BaseController<ResponseModel<ProjectModulePermission>>
@@ -15,8 +15,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ModuleAccessController(IRepositoryWrapper repository, IPermissionService permissionService) : base(repository) { _permissionService = permissionService; }
 
-		/// <summary> Super Admin (role 1) only. </summary>
-		private bool IsAllowedEditor => Common.IsUserLogged() && Common.IsSuperAdmin() && !IsVendor && !IsCustomer && !IsEmployee;
+		/// <summary> Super Admin (role 1) or Vendor login. </summary>
+		private bool IsAllowedEditor => Common.IsUserLogged() && !IsCustomer && !IsEmployee
+			&& ((Common.IsSuperAdmin() && !IsVendor) || (IsVendor && Logged_In_VendorId > 0));
 
 		private static string[] Subjects => PermissionSubjects.Actors.Concat(PermissionSubjects.Designations).ToArray();
 

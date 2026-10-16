@@ -74,8 +74,8 @@ Legend: ✔ visible / allowed, ✘ hidden / denied.
 
 | Check | Expected |
 |---|---|
-| Super Admin | all 10 subjects; edits apply to all vendors |
-| Admin, Vendor | menu not shown; direct URL redirects to dashboard; save / matrix calls denied |
+| Super Admin, Vendor | all 10 subjects; edits apply to all vendors |
+| Admin | menu not shown; direct URL redirects to dashboard; save / matrix calls denied |
 | Customer / Employee | menu not shown; direct URL redirects to dashboard |
 | Change a right, then reload the affected user's Project Detail (no re-login) | new right applies within 60 s |
 | Phone width (< 768 px) | one card per module, toggles per action, no horizontal page scroll |
