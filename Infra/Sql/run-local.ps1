@@ -64,7 +64,8 @@ if ($BuildDeployAll) {
 
 if ($CreateTestDb) {
 	if ($Database -ne "LeozApp_Test") { $Database = "LeozApp_Test" }
-	if (-not $FromBackup -or -not (Test-Path $FromBackup)) { throw "-CreateTestDb needs -FromBackup <path of a LeozApp .bak>." }
+	# Path is read by the SQL Server service (the folder may not be readable by the current Windows user)
+	if (-not $FromBackup) { throw "-CreateTestDb needs -FromBackup <path of a LeozApp .bak, readable by the SQL Server service>." }
 
 	# Logical file names of the backup, moved next to the instance's default data / log folders
 	$files = & sqlcmd -S $Server -d master -E -b -h -1 -W -s "|" -Q "SET NOCOUNT ON; RESTORE FILELISTONLY FROM DISK = N'$FromBackup';" |

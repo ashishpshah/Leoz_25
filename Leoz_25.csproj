@@ -19,6 +19,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Leoz_25.Tests\**" />
+	  <Content Remove="Leoz_25.Tests\**" />
+	  <EmbeddedResource Remove="Leoz_25.Tests\**" />
+	  <None Remove="Leoz_25.Tests\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Content Update="appsettings.Development.example.json" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 

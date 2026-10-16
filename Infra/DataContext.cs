@@ -231,6 +231,7 @@ namespace Leoz_25.Infra
 		{
 			var entities = (from entry in ChangeTracker.Entries()
 							where (entry.State == EntityState.Modified || entry.State == EntityState.Added)
+							&& entry.Entity is EntitiesBase // audit columns only (PermissionVersion / PermissionAudit have none)
 							//&& (entry.Entity.ToString() != (typeof(Doctor_Department_Mapping)).FullName)
 							select entry).ToList();
 
