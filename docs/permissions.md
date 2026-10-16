@@ -11,7 +11,7 @@ Who may **view** each Project Detail module and **add / edit / approve / reject 
 | DRW | Drawings | VIEW, ADD, EDIT, APPROVE, REJECT |
 | WCLTSC | Client Scope of Work & Material Specifications | VIEW, ADD, EDIT, APPROVE, REJECT |
 | MB | Mood Board | VIEW, ADD, EDIT, APPROVE, REJECT |
-| SITE | Site Updates (Daily Update) | VIEW, ADD, EDIT |
+| SITE | Daily Update (Site Updates) | VIEW, ADD, EDIT |
 | WPEND | Pending Selection & Work | VIEW, ADD, EDIT, COMPLETE, REJECT |
 | MPRO | Material Procurement | VIEW, ADD, EDIT, ORDER, REJECT, RECEIVE |
 | WCOMP | Work Completion Report | VIEW, ADD, EDIT, APPROVE, REJECT |

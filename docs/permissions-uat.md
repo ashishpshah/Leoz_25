@@ -29,7 +29,7 @@ Legend: ✔ visible / allowed, ✘ hidden / denied.
 | Approved / Rejected record | cannot be edited (message) |
 | Delete button | unchanged |
 
-## 3. Site Updates (Daily Update)
+## 3. Daily Update (Site Updates)
 
 | Check | Expected |
 |---|---|
