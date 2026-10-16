@@ -12,7 +12,7 @@ public partial class ProjectModule
 	public bool IsActive { get; set; }
 }
 
-/// <summary> VIEW, ADD, EDIT, DELETE, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE, DELETE_FILE. </summary>
+/// <summary> VIEW, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE (delete is not a permission : delete endpoints keep their legacy checks). </summary>
 public partial class PermissionAction
 {
 	public string Code { get; set; } = null!;
@@ -54,4 +54,28 @@ public partial class PermissionVersion
 	public int Id { get; set; }
 
 	public long Version { get; set; }
+}
+
+/// <summary> One row per changed permission cell (admin matrix, reset to default). </summary>
+public partial class PermissionAudit
+{
+	public long Id { get; set; }
+
+	public DateTime ChangedOn { get; set; }
+
+	public long ChangedBy { get; set; }
+
+	public long? VendorId { get; set; }
+
+	public string SubjectType { get; set; } = null!;
+
+	public string SubjectCode { get; set; } = null!;
+
+	public string ModuleCode { get; set; } = null!;
+
+	public string ActionCode { get; set; } = null!;
+
+	public string? OldValue { get; set; }
+
+	public string? NewValue { get; set; }
 }

@@ -9,7 +9,7 @@ internal class Program
 	{
 		var builder = WebApplication.CreateBuilder(args);
 
-		// Connection string is not kept in appsettings.json : user-secrets (Development) or environment variable ConnectionStrings__DataConnection
+		// appsettings.json holds the LOCAL Windows-authentication connection only; production overrides it with the environment variable ConnectionStrings__DataConnection
 		if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DataConnection")))
 			throw new InvalidOperationException("ConnectionStrings:DataConnection is not configured. Set it with 'dotnet user-secrets' (Development) or the environment variable 'ConnectionStrings__DataConnection'.");
         // Set max request size (10 MB)

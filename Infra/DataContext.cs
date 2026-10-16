@@ -51,6 +51,7 @@ namespace Leoz_25.Infra
 		public virtual DbSet<ProjectModuleAction> ProjectModuleActions { get; set; }
 		public virtual DbSet<ProjectModulePermission> ProjectModulePermissions { get; set; }
 		public virtual DbSet<PermissionVersion> PermissionVersions { get; set; }
+		public virtual DbSet<PermissionAudit> PermissionAudits { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -85,6 +86,12 @@ namespace Leoz_25.Infra
 				entity.ToTable("PermissionVersion", "dbo");
 				entity.HasKey(e => e.Id);
 				entity.Property(e => e.Id).ValueGeneratedNever();
+			});
+
+			modelBuilder.Entity<PermissionAudit>(entity =>
+			{
+				entity.ToTable("PermissionAudit", "dbo");
+				entity.HasKey(e => e.Id);
 			});
 
 			modelBuilder.Entity<ProjectDailyUpdateFiles>(entity =>
