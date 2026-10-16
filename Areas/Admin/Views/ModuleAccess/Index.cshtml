@@ -208,8 +208,19 @@
 		}
 
 		function fnChange_Cell(chk) {
+			var $tr = $(chk).closest('tr');
+
 			fnMark_Dirty(chk);
-			fnSync_RowAll($(chk).closest('tr'));
+
+			// No VIEW = no other action on the module : untick the rest of the row
+			if (!chk.checked && $(chk).attr('data-key') === $tr.attr('data-module') + '.VIEW') {
+				$tr.find('.ma-chk:checked').each(function () {
+					this.checked = false;
+					fnMark_Dirty(this);
+				});
+			}
+
+			fnSync_RowAll($tr);
 			fnUpdate_Buttons();
 		}
 
