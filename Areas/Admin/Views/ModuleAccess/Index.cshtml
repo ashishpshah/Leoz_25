@@ -3,8 +3,6 @@
 @{
 	ViewBag.Title = "Module Access";
 	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
-
-	string Mode = Model.Data2 != null ? (string)Model.Data2 : PermissionModes.Legacy;
 }
 
 @section Styles {
@@ -65,18 +63,6 @@
 	<div class="container-fluid px-0">
 		<div class="card">
 			<div class="card-body">
-
-				<div class="alert @(Mode == PermissionModes.Dynamic ? "alert-success" : "alert-warning") py-2 mb-3" role="status">
-					<span>Changes apply to <strong>all vendors</strong> (Super Admin only).</span>
-					<br />
-					<small>
-						Permission mode : <strong>@Mode</strong>.
-						@if (Mode != PermissionModes.Dynamic)
-						{
-							<span>Changes are saved but the Project Detail screens follow these permissions only when the mode is <strong>Dynamic</strong>@(Mode == PermissionModes.Shadow ? " (Shadow mode logs every difference)" : "").</span>
-						}
-					</small>
-				</div>
 
 				<div class="ma-toolbar mb-3">
 					<div class="ma-subject">

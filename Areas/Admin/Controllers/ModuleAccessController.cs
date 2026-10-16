@@ -26,8 +26,6 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			CommonViewModel.SelectListItems = Subjects.Select(x => new SelectListItem_Custom(x, PermissionSubjects.DisplayName(x), PermissionSubjects.TypeOf(x))).ToList();
 
-			CommonViewModel.Data2 = ProjectAccess.Mode;
-
 			return View(CommonViewModel);
 		}
 
