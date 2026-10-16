@@ -71,12 +71,11 @@ Expected Shadow log entries caused by (3): `F3D|DRW|MB.EDIT` for Co-ordinator, S
 
 ```powershell
 .\Infra\Sql\run-local.ps1                         # apply new scripts to LeozApp (skips applied ones)
-.\Infra\Sql\run-local.ps1 -CreateTestDb -FromBackup "<path to LeozApp .bak>"   # (re)create LeozApp_Test
 .\Infra\Sql\run-local.ps1 -BuildDeployAll         # regenerate deploy_all.sql after adding a script
-dotnet test Leoz_25.Tests                          # needs LeozApp_Test
+dotnet test Leoz_25.Tests                          # permission merge rules (no database needed)
 ```
 
-Scripts refuse any database other than `LeozApp` / `LeozApp_Test`, and skip themselves when already logged in `SchemaScriptLog`.
+Scripts refuse any database other than `LeozApp` (or the production `@Target` of `deploy_all.sql`), and skip themselves when already logged in `SchemaScriptLog`.
 
 ## Production deployment
 1. Back up the production database.

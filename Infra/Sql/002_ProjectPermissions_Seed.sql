@@ -16,11 +16,11 @@ SET XACT_ABORT ON;
 SET NOCOUNT ON;
 GO
 
--- Safety : only LeozApp / LeozApp_Test (or the database named in deploy_all.sql through SESSION_CONTEXT 'Leoz.TargetDb')
+-- Safety : only LeozApp (or the database named in deploy_all.sql through SESSION_CONTEXT 'Leoz.TargetDb')
 DECLARE @Db SYSNAME = DB_NAME(), @Script NVARCHAR(128) = N'002_ProjectPermissions_Seed';
-IF @Db NOT IN (N'LeozApp', N'LeozApp_Test') AND @Db <> ISNULL(CAST(SESSION_CONTEXT(N'Leoz.TargetDb') AS SYSNAME), N'')
+IF @Db <> N'LeozApp' AND @Db <> ISNULL(CAST(SESSION_CONTEXT(N'Leoz.TargetDb') AS SYSNAME), N'')
 BEGIN
-	RAISERROR(N'%s : database "%s" is not LeozApp / LeozApp_Test. Aborted.', 16, 1, @Script, @Db);
+	RAISERROR(N'%s : database "%s" is not LeozApp. Aborted.', 16, 1, @Script, @Db);
 	SET NOEXEC ON;
 END
 ELSE IF OBJECT_ID(N'[dbo].[SchemaScriptLog]', N'U') IS NULL OR OBJECT_ID(N'[dbo].[ProjectModulePermission]', N'U') IS NULL
