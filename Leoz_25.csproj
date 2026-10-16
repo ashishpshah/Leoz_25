@@ -4,7 +4,8 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+	  <UserSecretsId>c4f562a5-0b25-4090-b848-a9221eaec1b4</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 	  <Compile Remove="Models_Temp\**" />
@@ -15,6 +16,10 @@
 
 	<ItemGroup>
 	  <Compile Remove="Areas\Admin\Controllers\WarehousesController.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="appsettings.Development.example.json" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 
 	
