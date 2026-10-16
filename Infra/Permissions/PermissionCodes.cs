@@ -30,10 +30,6 @@ namespace Leoz_25.Infra
 	public static class PermissionActions
 	{
 		public const string VIEW = "VIEW";
-
-		/// <summary> "Recent Uploads" (previous versions) table of F3D / DRW / MB. </summary>
-		public const string HISTORY = "HISTORY";
-
 		public const string ADD = "ADD";
 		public const string EDIT = "EDIT";
 		public const string APPROVE = "APPROVE";
@@ -42,8 +38,7 @@ namespace Leoz_25.Infra
 		public const string ORDER = "ORDER";
 		public const string RECEIVE = "RECEIVE";
 
-		/// <summary> Column order of the Module Access matrix. </summary>
-		public static readonly string[] All = { VIEW, HISTORY, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE };
+		public static readonly string[] All = { VIEW, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE };
 	}
 
 	/// <summary> Permission subjects : ACTOR (Vendor / Customer login) or DESIGNATION (Employee login). </summary>

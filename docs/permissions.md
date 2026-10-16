@@ -7,17 +7,17 @@ Who may **view** each Project Detail module and **add / edit / approve / reject 
 | Code | Module | Actions |
 |---|---|---|
 | EPM | Estimate & Payment Terms | VIEW, ADD, EDIT, APPROVE, REJECT |
-| F3D | Final 3D | VIEW, HISTORY, ADD, EDIT, APPROVE, REJECT |
-| DRW | Drawings | VIEW, HISTORY, ADD, EDIT, APPROVE, REJECT |
+| F3D | Final 3D | VIEW, ADD, EDIT, APPROVE, REJECT |
+| DRW | Drawings | VIEW, ADD, EDIT, APPROVE, REJECT |
 | WCLTSC | Client Scope of Work & Material Specifications | VIEW, ADD, EDIT, APPROVE, REJECT |
-| MB | Mood Board | VIEW, HISTORY, ADD, EDIT, APPROVE, REJECT |
+| MB | Mood Board | VIEW, ADD, EDIT, APPROVE, REJECT |
 | SITE | Site Updates (Project Detail box, document upload) | VIEW, ADD, EDIT, APPROVE, REJECT |
 | WPEND | Pending Selection & Work | VIEW, ADD, EDIT, COMPLETE, REJECT |
 | MPRO | Material Procurement | VIEW, ADD, EDIT, ORDER, REJECT, RECEIVE |
 | WCOMP | Work Completion Report | VIEW, ADD, EDIT, APPROVE, REJECT |
 | DAILY | Daily Update screen (menu "Daily Update", not a Project Detail box) | VIEW, ADD, EDIT |
 
-F3D, DRW and MB keep only the latest version, so a re-upload is an EDIT. Their previous versions are listed in the "Recent Uploads" table below the main table : action HISTORY (default = same as VIEW; without it the table is neither loaded nor shown).
+F3D, DRW and MB keep only the latest version, so a re-upload is an EDIT.
 
 ## Subjects
 
@@ -35,7 +35,7 @@ If a USER_TYPE row has no `DesignationCode`, the old description rules (`Project
 | Table | Purpose |
 |---|---|
 | `ProjectModule` | The 9 Project Detail boxes + the Daily Update screen (`IsActive = 0` hides a module from everyone) |
-| `PermissionAction` | VIEW, HISTORY (Recent Uploads), ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE |
+| `PermissionAction` | VIEW, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE |
 | `ProjectModuleAction` | Which actions exist per module (columns of the matrix) |
 | `ProjectModulePermission` | One row per subject × module × action. `VendorId NULL` = system default, otherwise that vendor's override. `IsAllowed`, `Scope` (`ALL` / `OWN`). **Missing row = not allowed.** |
 | `PermissionVersion` | Single row, bumped on every change; logged-in users rebuild their rights on the next request (cached 60 s per server) |
