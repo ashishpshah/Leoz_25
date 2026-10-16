@@ -21,6 +21,7 @@
 		public static string KEY_USER_LOGO => "AuthenticatedUserLogo";
 		public static string CURRENT_MENU_ID => "CurrentMenu";
 		public static string ProjectDetailTypeAccess => "ProjectDetailTypeAccess";
+		public static string ProjectPermissions => "ProjectPermissions";
 	}
 
 	public static class ResponseStatusCode

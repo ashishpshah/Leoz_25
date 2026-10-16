@@ -70,6 +70,10 @@ internal class Program
 
 		builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
+		// Project Detail module permissions (Permissions:Mode = Legacy | Shadow | Dynamic)
+		builder.Services.AddMemoryCache();
+		builder.Services.AddScoped<IPermissionService, PermissionService>();
+
 		var app = builder.Build();
 
 		AppHttpContextAccessor.Configure(((IApplicationBuilder)app).ApplicationServices.GetRequiredService<IHttpContextAccessor>(), ((IApplicationBuilder)app).ApplicationServices.GetRequiredService<IHostEnvironment>(), builder.Environment, ((IApplicationBuilder)app).ApplicationServices.GetRequiredService<IDataProtectionProvider>(), ((IApplicationBuilder)app).ApplicationServices.GetRequiredService<IConfiguration>(), ((IApplicationBuilder)app).ApplicationServices.GetRequiredService<IHttpClientFactory>());

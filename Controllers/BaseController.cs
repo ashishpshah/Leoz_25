@@ -100,6 +100,10 @@ namespace Leoz_25.Controllers
 					return;
 				}
 
+				// Project Detail module permissions : rebuild when PermissionVersion changed (admin edit applies without re-login)
+				if (Common.IsUserLogged() && ProjectAccess.Mode != PermissionModes.Legacy)
+					context.HttpContext.RequestServices.GetService<IPermissionService>()?.RefreshSession();
+
 			}
 			catch (Exception ex) { LogService.LogInsert(GetCurrentAction(), "", ex); }
 		}

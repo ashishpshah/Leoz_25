@@ -137,12 +137,15 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								Common.Set_Session(SessionKey.ProjectDetailTypeAccess, objUserType?.ProjectDetailTypeAccess ?? "");
 								Common.Set_Session("Employee_UserType", employee.UserType);
-								Common.Set_Session(ProjectAccess.KEY_DESIGNATION, ProjectAccess.ResolveDesignation(employee.UserType, objUserType?.LOV_Desc));
+								Common.Set_Session(ProjectAccess.KEY_DESIGNATION, ProjectAccess.ResolveDesignation(objUserType, employee.UserType));
 								Common.Set_Session(ProjectAccess.KEY_DESIGNATION_NAME, objUserType?.LOV_Desc ?? employee.UserType ?? "");
 							}
 						}
 
 						Common.Set_Session_Int(SessionKey.KEY_VENDOR_ID, VendorId);
+
+						// Project Detail module permissions (database-driven) of this subject / tenant
+						HttpContext.RequestServices.GetRequiredService<IPermissionService>().RefreshSession(force: true);
 
 						CommonViewModel.IsSuccess = true;
 						CommonViewModel.StatusCode = ResponseStatusCode.Success;
