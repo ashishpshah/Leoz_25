@@ -5,12 +5,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Leoz_25.Tests;
 
-/// <summary> Module Access screen save / reset against LeozApp_Test. Every test restores the state it changed. </summary>
+/// <summary> Module Access screen (Super Admin only) against LeozApp_Test. Every test restores the state it changed. </summary>
 [Collection(DatabaseCollection.Name)]
 public class ModuleAccessControllerTests : IDisposable
 {
-	private const long TEST_VENDOR_ID = 990001;
-
 	private readonly DataContext _db = TestDatabase.CreateContext();
 	private readonly IRepositoryWrapper _context;
 	private readonly PermissionService _service;
@@ -23,48 +21,48 @@ public class ModuleAccessControllerTests : IDisposable
 
 	public void Dispose() => _db.Dispose();
 
-	private ModuleAccessController Controller_As_SuperAdmin()
+	/// <summary> Session of a logged-in user of the given role (1 Super Admin, 2 Admin, 3 Vendor, 4 Customer, 5 Employee). </summary>
+	private ModuleAccessController Controller_As(int roleId)
 	{
 		TestDatabase.UseSession(new Dictionary<string, string>
 		{
-			[SessionKey.KEY_USER_ID] = "1", [SessionKey.KEY_USER_ROLE_ID] = "1", [SessionKey.KEY_IS_ADMIN] = "1",
-			[SessionKey.KEY_IS_VENDOR] = "0", [SessionKey.KEY_IS_CUSTOMER] = "0", [SessionKey.KEY_IS_EMPLOYEE] = "0"
+			[SessionKey.KEY_USER_ID] = (100 + roleId).ToString(),
+			[SessionKey.KEY_USER_ROLE_ID] = roleId.ToString(),
+			[SessionKey.KEY_IS_ADMIN] = roleId is 1 or 2 or 3 ? "1" : "0",   // Vendor role is flagged admin too
+			[SessionKey.KEY_IS_VENDOR] = roleId == 3 ? "1" : "0",
+			[SessionKey.KEY_IS_CUSTOMER] = roleId == 4 ? "1" : "0",
+			[SessionKey.KEY_IS_EMPLOYEE] = roleId == 5 ? "1" : "0",
+			[SessionKey.KEY_VENDOR_ID] = roleId is 3 or 4 or 5 ? "990001" : "0"
 		});
 
 		return new ModuleAccessController(_context, _service);
 	}
 
-	private ModuleAccessController Controller_As_Vendor()
+	/// <summary> IsSuccess of ResponseModel or of an anonymous JSON object (internal to the app assembly, so read by reflection). </summary>
+	private static bool IsSuccess(ActionResult result)
 	{
-		TestDatabase.UseSession(new Dictionary<string, string>
-		{
-			[SessionKey.KEY_USER_ID] = "2", [SessionKey.KEY_USER_ROLE_ID] = "3", [SessionKey.KEY_IS_ADMIN] = "1",
-			[SessionKey.KEY_IS_VENDOR] = "1", [SessionKey.KEY_IS_CUSTOMER] = "0", [SessionKey.KEY_IS_EMPLOYEE] = "0",
-			[SessionKey.KEY_VENDOR_ID] = TEST_VENDOR_ID.ToString()
-		});
+		var value = ((JsonResult)result).Value!;
 
-		return new ModuleAccessController(_context, _service);
+		return value.GetType().GetProperty("IsSuccess")?.GetValue(value) is true;
 	}
 
-	private static bool IsSuccess(ActionResult result) => ((dynamic)((JsonResult)result).Value!).IsSuccess == true;
-
-	private string Allowed_Csv(string subjectCode, long vendorId)
+	private string Allowed_Csv(string subjectCode)
 		=> string.Join(",", _context.Using<ProjectModuleAction>().GetAll()
-			.Where(x => _service.Build(PermissionSubjects.TypeOf(subjectCode), subjectCode, vendorId).Can(x.ModuleCode, x.ActionCode))
+			.Where(x => _service.Build(PermissionSubjects.TypeOf(subjectCode), subjectCode, 0).Can(x.ModuleCode, x.ActionCode))
 			.Select(x => x.ModuleCode + "." + x.ActionCode));
 
 	private long Version() { _service.InvalidateVersionCache(); return _service.GetCurrentVersion(); }
 
 	[Fact]
-	public void SuperAdmin_changes_system_default_with_audit_and_version()
+	public void SuperAdmin_changes_permission_with_audit_and_version()
 	{
-		var original = Allowed_Csv(ProjectAccess.COORDINATOR, 0);
+		var original = Allowed_Csv(ProjectAccess.COORDINATOR);
 		var versionBefore = Version();
 		var auditBefore = _context.Using<PermissionAudit>().GetAll().Count();
 
 		try
 		{
-			Assert.True(IsSuccess(Controller_As_SuperAdmin().Save(ProjectAccess.COORDINATOR, original + ",WCOMP.ADD")));
+			Assert.True(IsSuccess(Controller_As(1).Save(ProjectAccess.COORDINATOR, original + ",WCOMP.ADD")));
 
 			Assert.True(_service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.COORDINATOR, 0).Can("WCOMP", "ADD"));
 			Assert.Equal(versionBefore + 1, Version());
@@ -73,56 +71,39 @@ public class ModuleAccessControllerTests : IDisposable
 		}
 		finally
 		{
-			Assert.True(IsSuccess(Controller_As_SuperAdmin().Save(ProjectAccess.COORDINATOR, original)));
+			Assert.True(IsSuccess(Controller_As(1).Save(ProjectAccess.COORDINATOR, original)));
 		}
 
 		Assert.False(_service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.COORDINATOR, 0).Can("WCOMP", "ADD"));
-		Assert.Equal(original, Allowed_Csv(ProjectAccess.COORDINATOR, 0));
+		Assert.Equal(original, Allowed_Csv(ProjectAccess.COORDINATOR));
 	}
 
 	[Fact]
-	public void Vendor_override_applies_to_own_tenant_only_and_reset_removes_it()
+	public void SuperAdmin_can_open_the_screen_and_matrix()
 	{
-		var original = Allowed_Csv(ProjectAccess.SITE_ENGINEER, TEST_VENDOR_ID);
-
-		try
-		{
-			// Site Engineer may add daily updates in this vendor only, and loses Material Procurement ADD
-			var changed = string.Join(",", original.Split(',').Where(x => x != "MPRO.ADD").Append("DAILY.ADD"));
-
-			Assert.True(IsSuccess(Controller_As_Vendor().Save(ProjectAccess.SITE_ENGINEER, changed)));
-
-			var vendorSet = _service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.SITE_ENGINEER, TEST_VENDOR_ID);
-			var defaultSet = _service.Build(PermissionSubjects.DESIGNATION, ProjectAccess.SITE_ENGINEER, 0);
-
-			Assert.True(vendorSet.Can("DAILY", "ADD"));
-			Assert.False(vendorSet.Can("MPRO", "ADD"));
-			Assert.False(defaultSet.Can("DAILY", "ADD"));
-			Assert.True(defaultSet.Can("MPRO", "ADD"));
-
-			// Only differing cells are stored
-			Assert.Equal(2, _context.Using<ProjectModulePermission>().GetByCondition(x => x.VendorId == TEST_VENDOR_ID).Count());
-		}
-		finally
-		{
-			Assert.True(IsSuccess(Controller_As_Vendor().ResetToDefault(ProjectAccess.SITE_ENGINEER)));
-		}
-
-		Assert.Empty(_context.Using<ProjectModulePermission>().GetByCondition(x => x.VendorId == TEST_VENDOR_ID));
-		Assert.Equal(original, Allowed_Csv(ProjectAccess.SITE_ENGINEER, TEST_VENDOR_ID));
+		Assert.IsType<ViewResult>(Controller_As(1).Index());
+		Assert.True(IsSuccess(Controller_As(1).GetMatrix(PermissionSubjects.VENDOR)));
 	}
 
-	[Fact]
-	public void Vendor_cannot_change_vendor_or_customer_rights()
+	[Theory]
+	[InlineData(2)] // Admin
+	[InlineData(3)] // Vendor
+	[InlineData(4)] // Customer
+	[InlineData(5)] // Employee
+	public void Other_roles_are_denied(int roleId)
 	{
-		Assert.False(IsSuccess(Controller_As_Vendor().Save(PermissionSubjects.VENDOR, "EPM.VIEW")));
-		Assert.False(IsSuccess(Controller_As_Vendor().Save(PermissionSubjects.CUSTOMER, "EPM.VIEW")));
-		Assert.Empty(_context.Using<ProjectModulePermission>().GetByCondition(x => x.VendorId == TEST_VENDOR_ID));
+		var original = Allowed_Csv(ProjectAccess.SITE_ENGINEER);
+
+		Assert.IsType<RedirectToActionResult>(Controller_As(roleId).Index());
+		Assert.False(IsSuccess(Controller_As(roleId).GetMatrix(ProjectAccess.SITE_ENGINEER)));
+		Assert.False(IsSuccess(Controller_As(roleId).Save(ProjectAccess.SITE_ENGINEER, original + ",DAILY.ADD")));
+
+		Assert.Equal(original, Allowed_Csv(ProjectAccess.SITE_ENGINEER));
 	}
 
 	[Fact]
 	public void Unknown_subject_is_rejected()
-		=> Assert.False(IsSuccess(Controller_As_SuperAdmin().Save("ADMIN", "EPM.VIEW")));
+		=> Assert.False(IsSuccess(Controller_As(1).Save("ADMIN", "EPM.VIEW")));
 }
 
 [CollectionDefinition(Name, DisableParallelization = true)]

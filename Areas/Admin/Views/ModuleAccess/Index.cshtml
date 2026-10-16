@@ -4,7 +4,6 @@
 	ViewBag.Title = "Module Access";
 	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
 
-	bool IsVendorScope = Model.Data1 != null && (bool)Model.Data1;
 	string Mode = Model.Data2 != null ? (string)Model.Data2 : PermissionModes.Legacy;
 }
 
@@ -16,7 +15,6 @@
 		.ma-legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .8125rem; color: #6c757d; }
 		.ma-legend span { display: inline-flex; align-items: center; gap: .35rem; }
 		.ma-dot { width: .6rem; height: .6rem; border-radius: 50%; display: inline-block; }
-		.ma-dot-custom { background: #f59e0b; }
 		.ma-dot-dirty { background: #0d6efd; }
 
 		.ma-table { margin-bottom: 0; }
@@ -27,7 +25,6 @@
 		.ma-table td.ma-cell { text-align: center; position: relative; }
 		.ma-table td.ma-cell .form-switch { display: inline-flex; justify-content: center; padding-left: 0; margin: 0; min-height: auto; }
 		.ma-table td.ma-cell .form-switch .form-check-input { margin-left: 0; float: none; width: 2.25em; height: 1.2em; cursor: pointer; }
-		.ma-table td.ma-cell.ma-custom::after { content: ""; position: absolute; top: .4rem; right: .4rem; width: .45rem; height: .45rem; border-radius: 50%; background: #f59e0b; }
 		.ma-table td.ma-cell.ma-dirty { background: rgba(13, 110, 253, .08); }
 		.ma-table td.ma-na { text-align: center; color: #adb5bd; }
 		.ma-table .ma-label-mobile { display: none; }
@@ -44,7 +41,6 @@
 			.ma-table td { border: 0 !important; padding: .5rem .85rem; }
 			.ma-table td.ma-module { background: #f8f9fa; border-bottom: 1px solid #dee2e6 !important; min-width: 0; }
 			.ma-table td.ma-cell, .ma-table td.ma-all { display: flex; align-items: center; justify-content: space-between; text-align: left; }
-			.ma-table td.ma-cell.ma-custom::after { position: static; margin-left: .5rem; order: 2; }
 			.ma-table td.ma-cell .form-switch { order: 3; margin-left: auto; }
 			.ma-table td.ma-na { display: none; }
 			.ma-table .ma-label-mobile { display: inline; font-weight: 500; order: 1; }
@@ -71,14 +67,7 @@
 			<div class="card-body">
 
 				<div class="alert @(Mode == PermissionModes.Dynamic ? "alert-success" : "alert-warning") py-2 mb-3" role="status">
-					@if (IsVendorScope)
-					{
-						<span>Changes apply to <strong>your company's employees</strong> only. Cells you do not change follow the system default.</span>
-					}
-					else
-					{
-						<span>You are editing the <strong>system default</strong> for all vendors. A vendor can override employee designations for its own company.</span>
-					}
+					<span>Changes apply to <strong>all vendors</strong> (Super Admin only).</span>
 					<br />
 					<small>
 						Permission mode : <strong>@Mode</strong>.
@@ -91,7 +80,7 @@
 
 				<div class="ma-toolbar mb-3">
 					<div class="ma-subject">
-						<label for="ddlSubject" class="form-label mb-1">@(IsVendorScope ? "Employee designation" : "User type / designation")</label>
+						<label for="ddlSubject" class="form-label mb-1">User type / designation</label>
 						<select id="ddlSubject" class="form-control form-control-sm select2" onchange="fnChange_Subject()">
 							<option value="">-- Select --</option>
 							@if (Model.SelectListItems != null)
@@ -118,25 +107,17 @@
 					<div class="ma-buttons">
 						<button type="button" class="btn btn-success btn-sm px-4" id="btnSaveMatrix" onclick="fnSave_Matrix()" disabled><i class="ri-save-3-line me-1"></i>Save</button>
 						<button type="button" class="btn btn-secondary btn-sm" id="btnDiscardMatrix" onclick="fnLoad_Matrix()" disabled><i class="ri-arrow-go-back-line me-1"></i>Discard</button>
-						@if (IsVendorScope)
-						{
-							<button type="button" class="btn btn-outline-danger btn-sm" id="btnResetMatrix" onclick="fnReset_Matrix()" disabled><i class="ri-restart-line me-1"></i>Reset to default</button>
-						}
 					</div>
 				</div>
 
 				<div class="ma-legend mb-2">
 					<span><i class="ri-toggle-fill text-primary"></i> Allowed</span>
 					<span><span class="text-muted">—</span> Not applicable to module</span>
-					@if (IsVendorScope)
-					{
-						<span><span class="ma-dot ma-dot-custom"></span> Customised for your company</span>
-					}
 					<span><span class="ma-dot ma-dot-dirty"></span> Unsaved change</span>
 				</div>
 
 				<div id="divMatrix">
-					<div class="text-center text-muted py-5">Select a @(IsVendorScope ? "designation" : "user type or designation") to view its module permissions.</div>
+					<div class="text-center text-muted py-5">Select a user type or designation to view its module permissions.</div>
 				</div>
 
 			</div>
@@ -211,9 +192,8 @@
 					if (!a.Exists) { html += '<td class="ma-na" title="Not applicable">—</td>'; return; }
 
 					var id = 'chk_' + m.Code + '_' + a.Code;
-					var title = (a.Default ? 'Default : allowed' : 'Default : not allowed') + (a.IsOverride ? ' (customised)' : '');
 
-					html += '<td class="ma-cell' + (a.IsOverride ? ' ma-custom' : '') + '" title="' + fnEscape(title) + '">'
+					html += '<td class="ma-cell">'
 						+ '<label class="ma-label-mobile" for="' + id + '">' + fnEscape(data.Actions[j].Name) + '</label>'
 						+ '<div class="form-check form-switch"><input class="form-check-input ma-chk" type="checkbox" role="switch" id="' + id + '"'
 						+ ' data-key="' + fnEscape(m.Code + '.' + a.Code) + '" data-original="' + (a.Allowed ? '1' : '0') + '"'
@@ -272,7 +252,6 @@
 			var dirty = fnIs_Dirty();
 			$('#btnSaveMatrix').prop('disabled', !ma_Loaded || !dirty);
 			$('#btnDiscardMatrix').prop('disabled', !ma_Loaded || !dirty);
-			$('#btnResetMatrix').prop('disabled', !ma_Loaded || !ma_Loaded.HasOverrides);
 		}
 
 		function fnSave_Matrix() {
@@ -287,26 +266,7 @@
 			ajaxPost('@Url.Action("Save", "ModuleAccess", new { area = "Admin" })', formData);
 		}
 
-		function fnReset_Matrix() {
-			if (!ma_Loaded) return;
-
-			Swal.fire({
-				icon: 'warning',
-				title: 'Reset ' + ma_Loaded.SubjectName + ' to the system default ?',
-				text: 'All customised permissions of this designation for your company will be removed.',
-				showCancelButton: true,
-				confirmButtonText: 'Reset'
-			}).then(function (result) {
-				if (!result.isConfirmed) return;
-
-				var formData = new FormData();
-				formData.append('SubjectCode', ma_Loaded.SubjectCode);
-
-				ajaxPost('@Url.Action("ResetToDefault", "ModuleAccess", new { area = "Admin" })', formData);
-			});
-		}
-
-		// Called by ajaxPost (common.js) after a successful save / reset
+		// Called by ajaxPost (common.js) after a successful save
 		function fnSubmitForm_Success(response) {
 			$('#tableMatrix td.ma-dirty').removeClass('ma-dirty');
 			fnLoad_Matrix();

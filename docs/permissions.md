@@ -1,6 +1,6 @@
 # Project Detail module permissions
 
-Who may **view** each Project Detail module and **add / edit / approve / reject / complete / order / receive** in it is stored in the database and edited on the **Module Access** screen (Configuration → Module Access). Delete rights are **not** part of this system: every delete endpoint and delete button keeps its original hard-coded check.
+Who may **view** each Project Detail module and **add / edit / approve / reject / complete / order / receive** in it is stored in the database and edited on the **Module Access** screen (Configuration → Module Access), available to **Super Admin only** (Admin, Vendor, Customer and Employee neither see the menu nor can open the URL; the menu is flagged Super Admin so it cannot be granted on the User Access / Role screens). Delete rights are **not** part of this system: every delete endpoint and delete button keeps its original hard-coded check.
 
 ## Modules and actions
 
@@ -37,7 +37,7 @@ If a USER_TYPE row has no `DesignationCode`, the old description rules (`Project
 | `ProjectModule` | The 9 Project Detail boxes + the Daily Update screen (`IsActive = 0` hides a module from everyone) |
 | `PermissionAction` | VIEW, ADD, EDIT, APPROVE, REJECT, COMPLETE, ORDER, RECEIVE |
 | `ProjectModuleAction` | Which actions exist per module (columns of the matrix) |
-| `ProjectModulePermission` | One row per subject × module × action. `VendorId NULL` = system default, otherwise that vendor's override. `IsAllowed`, `Scope` (`ALL` / `OWN`). **Missing row = not allowed.** |
+| `ProjectModulePermission` | One row per subject × module × action. `VendorId NULL` = system default (the only rows the screen edits); a `VendorId` row would override it for that vendor (supported by the resolver, not editable on the screen). `IsAllowed`, `Scope` (`ALL` / `OWN`). **Missing row = not allowed.** |
 | `PermissionVersion` | Single row, bumped on every change; logged-in users rebuild their rights on the next request (cached 60 s per server) |
 | `PermissionAudit` | Old / new value of every changed cell, who and when |
 | `LOV.DesignationCode` | Canonical designation of each USER_TYPE row |
