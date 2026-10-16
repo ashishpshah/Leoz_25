@@ -136,7 +136,7 @@
 			</div>
 			<div class="card-body">
 
-				@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD")
+				@if (IsEmployee && ProjectAccess.Check(Model.Data5 != null && (string)Model.Data5 == "COORD", PermissionModules.SITE, PermissionActions.ADD))
 				{
 					<div class="d-flex align-items-start justify-content-between">
 						<div class="d-flex justify-content-end"> &nbsp; </div>
@@ -287,7 +287,7 @@
 						// }
 					},
 					{
-						"title": "Action", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center @(IsEmployee && Model.Data5 != null && (string)Model.Data5 == "COORD" ? "" : "d-none")",
+						"title": "Action", "data": null, "autoWidth": false, "searchable": false, "width": "5%", "class": "text-center @(IsEmployee && ProjectAccess.Check(Model.Data5 != null && (string)Model.Data5 == "COORD", PermissionModules.SITE, PermissionActions.EDIT) ? "" : "d-none")",
 						"render": function (data, type, row, meta) {
 							return '<div class="btn-group"><a class="btn btn-info btn-sm btn-flat" href="javascript:void(0);" onclick="fnShow_Modal(\'@Url.Action("Partial_AddEditForm_DailyUpdate", "Project", new { area = "Admin" })?Id='+data["Id"]+'&ProjectId='+data["ProjectId"]+'\', \''+data["Project_Name"]+' - Update Daily Update\', false, \'html\', false);"><i class="ri-pencil-fill"></i></a></div>';
 						}

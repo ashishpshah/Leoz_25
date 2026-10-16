@@ -8,11 +8,20 @@
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
 	string UserType = Common.Get_Session("Employee_UserType");
+
+	// Module permissions (legacy rules in Legacy / Shadow mode, ProjectModulePermission in Dynamic mode)
+	string DocType = Model.Item1.Obj?.Type ?? "";
+	bool IsHistoryType = PermissionModules.HistoryDocuments.Contains(DocType);
+	bool CanAddDoc = ProjectAccess.Check(ProjectAccess.CanUpload && (DocType != "WCLTSC" || ProjectAccess.CanAddClientScope), DocType, PermissionActions.ADD);
+	bool CanEditDoc = ProjectAccess.Check(ProjectAccess.CanModify, DocType, PermissionActions.EDIT);
+	bool CanUploadNewVersion = ProjectAccess.Check(ProjectAccess.CanUpload && !ProjectAccess.CanModify, DocType, PermissionActions.EDIT);
+	bool CanApprove = ProjectAccess.Check(IsCustomer || ProjectAccess.CanApproveDoc, DocType, PermissionActions.APPROVE);
+	bool CanReject = ProjectAccess.Check(IsCustomer || ProjectAccess.CanApproveDoc, DocType, PermissionActions.REJECT);
 }
 
 <div class="col-md-12">
 
-	@if (ProjectAccess.CanUpload)
+	@if (ProjectAccess.Check(ProjectAccess.CanUpload, () => ProjectAccess.Can(DocType, PermissionActions.ADD) || ProjectAccess.Can(DocType, PermissionActions.EDIT), DocType + ".ADD|EDIT"))
 	{
 		<form id="formSave" action="@Url.Action("Save_Doc","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -73,13 +82,15 @@
 		<div class="d-flex align-items-start justify-content-between">
 			<div class="d-flex justify-content-end"> &nbsp; </div>
 			<div class="d-flex justify-content-end">
-				@* Client Scope of Work → Add : Vendor only *@
-				@if (Model.Item1.Obj?.Type == "WCLTSC" && !ProjectAccess.CanAddClientScope) { }
-				else if (!(Model.Item1.ObjList?.Any() == true && (new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type)))
+				@* Add (Client Scope of Work → Add : Vendor only) *@
+				@if (!(Model.Item1.ObjList?.Any() == true && IsHistoryType))
 				{
-					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Add new record </button>
+					if (CanAddDoc)
+					{
+						<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Add new record </button>
+					}
 				}
-				else if (!ProjectAccess.CanModify)
+				else if (CanUploadNewVersion)
 				{
 					@* F3D / DRW / MB keep only latest version : uploader without edit rights uploads new version *@
 					<button type="button" class="btn btn-primary btn-sm btn-add" onclick="fnAddEdit_ProjectSiteDoc(0,'@(Model.Item1.Obj != null ? Model.Item1.Obj.Type : "")')"> Upload new version </button>
@@ -135,19 +146,22 @@
 
 							<td class="text-center">
 								<div class="btn-group">
-									@if (item.Status == "U" && (IsCustomer || ProjectAccess.CanApproveDoc))
+									@if (item.Status == "U" && CanApprove)
 									{
 										<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Approve"
 												onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
 											<i class="ri-checkbox-circle-line me-1"></i>Approve
 										</button>
+									}
+									@if (item.Status == "U" && CanReject)
+									{
 										<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
 												onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
 											<i class="ri-close-circle-line me-1"></i>Reject
 										</button>
 									}
 									@* Approved / Rejected records are locked : edit only for Uploaded record where file is shown *@
-									@if (!IsCustomer && ProjectAccess.CanModify && item.Status != "A" && item.Status != "R" && index == 0 && item?.FileData != null)
+									@if (!IsCustomer && CanEditDoc && item.Status != "A" && item.Status != "R" && index == 0 && item?.FileData != null)
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 												onclick="fnAddEdit_ProjectSiteDoc(@item.Id, '@item.Type');">

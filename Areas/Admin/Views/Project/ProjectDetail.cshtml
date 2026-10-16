@@ -174,7 +174,7 @@
 					<div class="col-12 col-xl-10">
 						<div class="container py-5">
 							<div class="row g-4">
-								@if (ProjectAccess.HasModule("EPM"))
+								@if (ProjectAccess.CanView("EPM"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="EPM" data-active="false">
@@ -183,19 +183,19 @@
 										</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("F3D"))
+								@if (ProjectAccess.CanView("F3D"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="F3D" data-active="false">Final 3D</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("DRW"))
+								@if (ProjectAccess.CanView("DRW"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="DRW" data-active="false">Drawings</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("WCLTSC"))
+								@if (ProjectAccess.CanView("WCLTSC"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCLTSC" data-active="false">
@@ -204,31 +204,31 @@
 										</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("MB"))
+								@if (ProjectAccess.CanView("MB"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MB" data-active="false">Mood Board</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("SITE"))
+								@if (ProjectAccess.CanView("SITE"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="SITE" data-active="false">Site Updates</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("WPEND"))
+								@if (ProjectAccess.CanView("WPEND"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WPEND" data-active="false">Pending Selection & Work</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("MPRO"))
+								@if (ProjectAccess.CanView("MPRO"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="MPRO" data-active="false">Material Procurement</div>
 									</div>
 								}
-								@if (ProjectAccess.HasModule("WCOMP"))
+								@if (ProjectAccess.CanView("WCOMP"))
 								{
 									<div class="col-6 col-md-4">
 										<div class="box text-center d-flex align-items-center justify-content-center" data-type="WCOMP" data-active="false">Work Completion Report</div>

@@ -2,6 +2,9 @@
 
 @{
 	Layout = null;
+
+	// SITE ADD (new) / EDIT (existing) : else the entry is shown read-only (set by controller)
+	bool CanSave = Model.Data4 != null && (bool)Model.Data4;
 }
 
 <div class="col-md-12">
@@ -17,14 +20,16 @@
 					<div class="form-group row">
 						<label class="col-sm-2 col-form-label">Select Date<span style="color:red">*</span></label>
 						<div class="col-sm-4">
-							<input type="date" name="Date_Text" class="form-control form-control-sm" value="@(Model.Obj.Date?.ToString("yyyy-MM-dd"))">
+							<input type="date" name="Date_Text" class="form-control form-control-sm" value="@(Model.Obj.Date?.ToString("yyyy-MM-dd"))" @(CanSave ? "" : "disabled")>
 						</div>
 						<label for="Name" class="col-sm-2 col-form-label">Note(s)<span style="color:red">*</span></label>
 						<div class="col-sm-4">
-							<textarea rows="4" class="form-control" id="Notes" name="Notes" autocomplete="off">@Model.Obj.Notes</textarea>
+							<textarea rows="4" class="form-control" id="Notes" name="Notes" autocomplete="off" @(CanSave ? "" : "readonly")>@Model.Obj.Notes</textarea>
 						</div>
 					</div>
 
+					@if (CanSave)
+					{
 					<div class="form-group row mt-1">
 						<div class="col-sm-12">
 							<div class="form-group row d-flex align-items-center">
@@ -50,6 +55,7 @@
 						</div>
 
 					</div>
+					}
 
 				}
 				else if (Model.Data5 != null && (bool)Model.Data5)
@@ -107,8 +113,11 @@
 			<div class="card-footer text-center">
 				@if (Model.Data5 != null && !(bool)Model.Data5)
 				{
-					<button type="submit" class="btn btn-success btnSubmit">Save</button>
-					<a href="@Url.Action("DailyUpdate","Project", new { area = "Admin" })" class="btn btn-danger">Cancel</a>
+					if (CanSave)
+					{
+						<button type="submit" class="btn btn-success btnSubmit">Save</button>
+					}
+					<a href="@Url.Action("DailyUpdate","Project", new { area = "Admin" })" class="btn btn-danger">@(CanSave ? "Cancel" : "Close")</a>
 				}
 			</div>
 

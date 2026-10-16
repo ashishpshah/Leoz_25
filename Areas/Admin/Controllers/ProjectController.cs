@@ -374,7 +374,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			var _CommonViewModel = new ResponseModel<ProjectSiteDoc>() { Obj = new ProjectSiteDoc() { Type = Type, ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
             var _CommonViewModel1 = new ResponseModel<ProjectSiteDoc_History>();
 
-			if (!IsProjectAllowed(ProjectId) || (!string.IsNullOrEmpty(Type) && !ProjectAccess.HasModule(Type))) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || (!string.IsNullOrEmpty(Type) && !ProjectAccess.CanView(Type))) return Json(null);
 
             var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && x.VendorId == Logged_In_VendorId).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
@@ -407,7 +407,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 				var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
 
-				if (obj == null || !ProjectAccess.HasModule(obj.Type)) return Json(null);
+				if (obj == null || !ProjectAccess.CanView(obj.Type)) return Json(null);
 
 				// Approved / Rejected records can not be edited
 				if (obj.Status == "A" || obj.Status == "R") return Json(null);
@@ -534,10 +534,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					// Upload : Manager, Co-ordinator, Site Engineer, Architect. Edit existing record : Manager (F3D / DRW / MB always keep latest version, so upload rights are enough)
-					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule(viewModel.Type) || !ProjectAccess.CanUpload
-						|| (viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)
-						|| (viewModel.Id == 0 && viewModel.Type == "WCLTSC" && !ProjectAccess.CanAddClientScope)) return Json_AccessDenied();
+					// Legacy : Upload : Manager, Co-ordinator, Site Engineer, Architect. Edit existing record : Manager (F3D / DRW / MB always keep latest version, so upload rights are enough)
+					bool legacyCanSave = ProjectAccess.CanUpload
+						&& !(viewModel.Id > 0 && !isHistoryType && !ProjectAccess.CanModify)
+						&& !(viewModel.Id == 0 && viewModel.Type == "WCLTSC" && !ProjectAccess.CanAddClientScope);
+
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.CanView(viewModel.Type)
+						|| !ProjectAccess.Check(legacyCanSave, viewModel.Type, viewModel.Id == 0 ? PermissionActions.ADD : PermissionActions.EDIT)) return Json_AccessDenied();
 
 					if (viewModel.Id > 0 && !_context.Using<ProjectSiteDoc>().Any(x => x.Id == viewModel.Id && x.ProjectId == viewModel.ProjectId)) return Json_AccessDenied();
 
@@ -762,7 +765,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult Partial_AddEditForm_MP(long ProjectId = 0, string Type = null, long ProjectSiteMatId = 0)
 		{
-			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("MPRO")) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.CanView(PermissionModules.MPRO)) return Json(null);
 
 			var _CommonViewModel = new ResponseModel<ProjectSiteMaterial>() { Obj = new ProjectSiteMaterial() { ProjectId = ProjectId, UOM = "No" } };
 
@@ -869,10 +872,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 
 					// Material Procurement : Vendor / Customer / Employee (except Architect, Purchaser) → Add, Co-ordinator → Receive, Manager → Update (Order / Reject)
-					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("MPRO")
-						|| !(viewModel.Id > 0 ? (ProjectAccess.CanUpdateMaterial || ProjectAccess.CanReceiveMaterial) : ProjectAccess.CanAddMaterial)) return Json_AccessDenied();
+					bool canEditMaterial = ProjectAccess.Check(ProjectAccess.CanUpdateMaterial, PermissionModules.MPRO, PermissionActions.EDIT);
+					bool canReceiveMaterial = ProjectAccess.Check(ProjectAccess.CanReceiveMaterial, PermissionModules.MPRO, PermissionActions.RECEIVE);
 
-					if (ProjectAccess.CanUpdateMaterial && !(viewModel.Status == "O" || viewModel.Status == "R"))
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.CanView(PermissionModules.MPRO)
+						|| !(viewModel.Id > 0 ? (canEditMaterial || canReceiveMaterial) : ProjectAccess.Check(ProjectAccess.CanAddMaterial, PermissionModules.MPRO, PermissionActions.ADD))) return Json_AccessDenied();
+
+					if (canEditMaterial && !(viewModel.Status == "O" || viewModel.Status == "R"))
 					{
 						CommonViewModel.IsSuccess = false;
 						CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -913,13 +919,19 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								if (obj.Status == "S") obj.Qty = viewModel.Qty;
 
-								if (ProjectAccess.CanUpdateMaterial && obj.Status != viewModel.Status)
-								{ obj.Status = viewModel.Status; obj.StatusDate = DateTime.Now; }
+								if (canEditMaterial && obj.Status != viewModel.Status)
+								{
+									// Status O = Order, R = Reject
+									if (!ProjectAccess.Check(ProjectAccess.CanUpdateMaterial, PermissionModules.MPRO, viewModel.Status == "O" ? PermissionActions.ORDER : PermissionActions.REJECT))
+									{ transaction.Rollback(); return Json_AccessDenied(); }
 
-								if (ProjectAccess.CanUpdateMaterial) obj.Qty_Order = viewModel.Qty_Order;
+									obj.Status = viewModel.Status; obj.StatusDate = DateTime.Now;
+								}
+
+								if (canEditMaterial) obj.Qty_Order = viewModel.Qty_Order;
 
 								// Mark Received only when Receive Quantity is entered
-								if (ProjectAccess.CanReceiveMaterial && (viewModel.Qty_Receive ?? 0) > 0)
+								if (canReceiveMaterial && (viewModel.Qty_Receive ?? 0) > 0)
 								{ obj.Qty_Receive = viewModel.Qty_Receive; obj.Status = "RC"; obj.StatusDate = DateTime.Now; }
 
 								obj.UOM = viewModel.UOM;
@@ -1005,7 +1017,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<ProjectSitePendingWork>() { Obj = new ProjectSitePendingWork() { ProjectId = ProjectId, CustomerId = CustomerId, UploadDate = DateTime.Now.Date } };
 
-			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("WPEND")) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.CanView(PermissionModules.WPEND)) return Json(null);
 
 			var objProject = (from x in _context.Using<CustomerProjectMapping>().GetByCondition(x => (IsCustomer ? x.CustomerId == CustomerId : true) && x.ProjectId == ProjectId && (x.VendorId == Logged_In_VendorId)).Distinct().ToList()
 							  join z in _context.Using<Project>().GetByCondition(x => x.VendorId == Logged_In_VendorId).ToList() on x.ProjectId equals z.Id
@@ -1107,9 +1119,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					// Add : Upload rights (Vendor side only, not Customer), Edit : Manager (control level)
-					if (IsCustomer || !IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("WPEND")
-						|| !(viewModel.Id > 0 ? ProjectAccess.CanModify : ProjectAccess.CanUpload)) return Json_AccessDenied();
+					// Legacy : Add : Upload rights (Vendor side only, not Customer), Edit : Manager (control level)
+					bool legacyCanSave = !IsCustomer && (viewModel.Id > 0 ? ProjectAccess.CanModify : ProjectAccess.CanUpload);
+
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.CanView(PermissionModules.WPEND)
+						|| !ProjectAccess.Check(legacyCanSave, PermissionModules.WPEND, viewModel.Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD)) return Json_AccessDenied();
 
 					if (IsCustomer) viewModel.CustomerId = Logged_In_CustomerId;
 
@@ -1212,7 +1226,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var _CommonViewModel = new ResponseModel<AgencyMaster>() { Obj = new AgencyMaster() { ProjectId = ProjectId } };
 
-			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.HasModule("WCOMP")) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.CanView(PermissionModules.WCOMP)) return Json(null);
 
 			var objProject = (from z in _context.Using<Project>().GetByCondition(x => x.Id == ProjectId && x.VendorId == Logged_In_VendorId).ToList()
 							  where z.IsActive == true
@@ -1242,7 +1256,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			{
 				var obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == AgencyMasterId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
 
-				if (obj != null) obj.Status = obj.Status == "P" && IsCustomer ? "A" : obj.Status;
+				if (obj != null) obj.Status = obj.Status == "P" && ProjectAccess.Check(IsCustomer, PermissionModules.WCOMP, PermissionActions.APPROVE) ? "A" : obj.Status;
 
 				if (obj != null && !string.IsNullOrEmpty(obj.WorkType)) obj.WorkType_Text = list != null ? list.Where(x => x.LOV_Code == obj.WorkType).Select(x => x.LOV_Desc).FirstOrDefault() : "";
 
@@ -1276,7 +1290,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 			try
 			{
 				// Work Completion Report : Manager add / edit, Customer approve
-				if (viewModel != null && (IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER)))
+				bool canAddWCR = ProjectAccess.Check(ProjectAccess.Is(ProjectAccess.MANAGER), PermissionModules.WCOMP, PermissionActions.ADD);
+				bool canEditWCR = ProjectAccess.Check(ProjectAccess.Is(ProjectAccess.MANAGER), PermissionModules.WCOMP, PermissionActions.EDIT);
+				bool canApproveWCR = ProjectAccess.Check(IsCustomer, PermissionModules.WCOMP, PermissionActions.APPROVE);
+
+				if (viewModel != null && (canAddWCR || canEditWCR || canApproveWCR))
 				{
 					#region Validation
 
@@ -1289,9 +1307,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 						return Json(CommonViewModel);
 					}
 
-					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.HasModule("WCOMP")) return Json_AccessDenied();
+					if (!IsProjectAllowed(viewModel.ProjectId) || !ProjectAccess.CanView(PermissionModules.WCOMP)) return Json_AccessDenied();
 
-					if (IsCustomer && viewModel.Id <= 0) return Json_AccessDenied();
+					// New record : Add. Existing record : Edit (Manager) or Approve (Customer)
+					if (viewModel.Id <= 0 ? !canAddWCR : !(canEditWCR || canApproveWCR)) return Json_AccessDenied();
 
 					if (string.IsNullOrEmpty(viewModel.Name))
 					{
@@ -1325,7 +1344,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							if (obj != null && obj.Status != "R")
 							{
-								if (!IsCustomer)
+								if (canEditWCR)
 								{
 									obj.Name = viewModel.Name;
 									obj.WorkType = viewModel.WorkType;
@@ -1333,8 +1352,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 								obj.Notes = viewModel.Notes;
 
-								// Only Customer can Approve
-								if (IsCustomer && obj.Status == "P") obj.Status = "A";
+								// Approve : Customer (WCOMP APPROVE)
+								if (canApproveWCR && obj.Status == "P") obj.Status = "A";
 
 								_context.Using<AgencyMaster>().Update(obj);
 							}
@@ -1440,8 +1459,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								ProjectSiteDoc obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj == null || !(Status == "A" || Status == "R") || !ProjectAccess.CanApproveDoc
-									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule(obj.Type)) { transaction.Rollback(); return Json_AccessDenied(); }
+								if (obj == null || !(Status == "A" || Status == "R")
+									|| !ProjectAccess.Check(ProjectAccess.CanApproveDoc, obj.Type, Status == "A" ? PermissionActions.APPROVE : PermissionActions.REJECT)
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.CanView(obj.Type)) { transaction.Rollback(); return Json_AccessDenied(); }
 
 								obj.Status = Status;
 								obj.StatusDate = DateTime.Now;
@@ -1460,8 +1480,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								ProjectSitePendingWork obj = _context.Using<ProjectSitePendingWork>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj == null || !(Status == "C" || Status == "R") || !ProjectAccess.CanModify
-									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("WPEND")) { transaction.Rollback(); return Json_AccessDenied(); }
+								if (obj == null || !(Status == "C" || Status == "R")
+									|| !ProjectAccess.Check(ProjectAccess.CanModify, PermissionModules.WPEND, Status == "C" ? PermissionActions.COMPLETE : PermissionActions.REJECT)
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.CanView(PermissionModules.WPEND)) { transaction.Rollback(); return Json_AccessDenied(); }
 
 								obj.Status = Status;
 								obj.StatusDate = DateTime.Now;
@@ -1472,8 +1493,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								ProjectSiteMaterial obj = _context.Using<ProjectSiteMaterial>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
-								if (obj == null || !(Status == "O" || Status == "R") || !ProjectAccess.CanUpdateMaterial
-									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("MPRO")) { transaction.Rollback(); return Json_AccessDenied(); }
+								if (obj == null || !(Status == "O" || Status == "R")
+									|| !ProjectAccess.Check(ProjectAccess.CanUpdateMaterial, PermissionModules.MPRO, Status == "O" ? PermissionActions.ORDER : PermissionActions.REJECT)
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.CanView(PermissionModules.MPRO)) { transaction.Rollback(); return Json_AccessDenied(); }
 
 								obj.Status = Status;
 								obj.StatusDate = DateTime.Now;
@@ -1484,8 +1506,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 							{
 								AgencyMaster obj = _context.Using<AgencyMaster>().GetByCondition(x => x.Id == Id).FirstOrDefault();
 
+								// Legacy : no role check. Database : WCOMP APPROVE / REJECT (Customer by default) - intentional tightening
 								if (obj == null || !(Status == "A" || Status == "R")
-									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.HasModule("WCOMP")) { transaction.Rollback(); return Json_AccessDenied(); }
+									|| !ProjectAccess.Check(true, PermissionModules.WCOMP, Status == "A" ? PermissionActions.APPROVE : PermissionActions.REJECT)
+									|| !IsProjectAllowed(obj.ProjectId) || !ProjectAccess.CanView(PermissionModules.WCOMP)) { transaction.Rollback(); return Json_AccessDenied(); }
 
 								obj.Status = Status;
 
@@ -1642,6 +1666,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public ActionResult DailyUpdate()
 		{
+			// Site Updates (SITE) : legacy had no server check (box hidden only)
+			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return RedirectToAction("Index", "Home", new { area = "Admin" });
+
 			CommonViewModel.SelectListItems = new List<SelectListItem_Custom>();
 
 			List<Customer> listCustomer = _context.Using<Customer>().GetByCondition(x => (IsCustomer ? x.Id == Logged_In_CustomerId : true)
@@ -1701,6 +1728,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 			DataTable dt = new DataTable();
 
 			List<ProjectDailyUpdate> result = new List<ProjectDailyUpdate>();
+
+			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW))
+				return Json(new { param.sEcho, iTotalRecords = 0, iTotalDisplayRecords = 0, aaData = result });
 
 			try
 			{
@@ -1770,7 +1800,12 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			var _CommonViewModel = new ResponseModel<ProjectDailyUpdate>() { Obj = new ProjectDailyUpdate() { ProjectId = ProjectId, Date = DateTime.Now.Date } };
 
-			if (!IsProjectAllowed(ProjectId)) return Json(null);
+			if (!IsProjectAllowed(ProjectId) || !ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return Json(null);
+
+			// Form : new record needs ADD, existing record EDIT (else shown read-only). Legacy : no check (Add / Edit buttons hidden in DailyUpdate view)
+			bool canSave = !IsShowImages && ProjectAccess.Check(true, PermissionModules.SITE, Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD);
+
+			if (!IsShowImages && Id <= 0 && !canSave) return Json(null);
 
 			if (Id > 0)
 			{
@@ -1822,6 +1857,11 @@ namespace Leoz_25.Areas.Admin.Controllers
 				catch { }
 			}
 
+			// Scope OWN : only the user's own entries (created / last modified) are editable
+			if (canSave && Id > 0 && ProjectAccess.Scope(PermissionModules.SITE, PermissionActions.EDIT) == PermissionScopes.OWN
+				&& !(_CommonViewModel.Obj.CreatedBy == Logged_In_UserId || _CommonViewModel.Obj.LastModifiedBy == Logged_In_UserId)) canSave = false;
+
+			_CommonViewModel.Data4 = canSave;
 			_CommonViewModel.Data5 = IsShowImages;
 
 			return PartialView("Partial_AddEditForm_DailyUpdate", _CommonViewModel);
@@ -1833,8 +1873,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 		{
 			try
 			{
-				if (viewModel != null && IsEmployee && Logged_In_EmployeeId > 0
-					&& _context.Using<Employee>().Any(x => x.IsActive == true && x.Id == Logged_In_EmployeeId && x.UserType == "COORD" && x.VendorId == Logged_In_VendorId))
+				// Active Employee of the logged-in vendor (identity check, kept in code)
+				var objEmployee = viewModel != null && IsEmployee && Logged_In_EmployeeId > 0
+					? _context.Using<Employee>().GetByCondition(x => x.IsActive == true && x.Id == Logged_In_EmployeeId && x.VendorId == Logged_In_VendorId).FirstOrDefault()
+					: null;
+
+				// Legacy : Co-ordinator only (Employee.UserType = "COORD"). Database : SITE ADD (new) / EDIT (existing)
+				if (objEmployee != null && ProjectAccess.Check(string.Equals((objEmployee.UserType ?? "").TrimEnd(), "COORD", StringComparison.OrdinalIgnoreCase),
+					PermissionModules.SITE, viewModel.Id > 0 ? PermissionActions.EDIT : PermissionActions.ADD))
 				{
 					#region Validation
 
@@ -1848,6 +1894,17 @@ namespace Leoz_25.Areas.Admin.Controllers
 					}
 
 					if (!IsProjectAllowed(viewModel.ProjectId)) return Json_AccessDenied();
+
+					// Existing entry must belong to the posted (allowed) project : no cross-project overwrite. Scope OWN : own entries only
+					if (viewModel.Id > 0)
+					{
+						var objExisting = _context.Using<ProjectDailyUpdate>().GetByCondition(x => x.Id == viewModel.Id).FirstOrDefault();
+
+						if (objExisting == null || objExisting.ProjectId != viewModel.ProjectId) return Json_AccessDenied();
+
+						if (ProjectAccess.Scope(PermissionModules.SITE, PermissionActions.EDIT) == PermissionScopes.OWN
+							&& !(objExisting.CreatedBy == Logged_In_UserId || objExisting.LastModifiedBy == Logged_In_UserId)) return Json_AccessDenied();
+					}
 
 					if (string.IsNullOrEmpty(viewModel.Date_Text))
 					{
@@ -1978,7 +2035,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 			CustomerId = (IsCustomer ? Logged_In_CustomerId : CustomerId);
 
 			var obj = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.Id == ProjectSiteDocId && x.ProjectId == ProjectId && x.IsActive == true).FirstOrDefault();
-			if (obj?.FileData == null || !ProjectAccess.HasModule(obj.Type)) return NotFound();
+			if (obj?.FileData == null || !ProjectAccess.CanView(obj.Type)) return NotFound();
 
 			Set_ContentDisposition_Inline(obj.FileName);
 
@@ -1987,6 +2044,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		public IActionResult ViewDocument_DailyUpdateFile(long DailyUpdateFileId)
 		{
+			if (!ProjectAccess.Check(true, PermissionModules.SITE, PermissionActions.VIEW)) return NotFound();
+
 			var obj = _context.Using<ProjectDailyUpdateFiles>().GetByCondition(x => x.Id == DailyUpdateFileId).FirstOrDefault();
 			if (obj?.FileData == null) return NotFound();
 

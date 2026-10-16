@@ -6,6 +6,14 @@
 	bool IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
 	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
+
+	// Module permissions (legacy : Manager = Update / Order / Reject, Co-ordinator = Receive, by Employee UserType)
+	bool IsManagerUI = (IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR";
+	bool IsCoordinatorUI = (IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD";
+	bool CanEditMaterial = ProjectAccess.Check(IsManagerUI, PermissionModules.MPRO, PermissionActions.EDIT);
+	bool CanOrderMaterial = ProjectAccess.Check(IsManagerUI, PermissionModules.MPRO, PermissionActions.ORDER);
+	bool CanRejectMaterial = ProjectAccess.Check(IsManagerUI, PermissionModules.MPRO, PermissionActions.REJECT);
+	bool CanReceiveMaterial = ProjectAccess.Check(IsCoordinatorUI, PermissionModules.MPRO, PermissionActions.RECEIVE);
 }
 
 <div class="col-md-12">
@@ -44,7 +52,7 @@
 					</div>
 				</div>
 
-				@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+				@if (CanEditMaterial)
 				{
 					<div class="form=group row" style="padding-top:20px">
 						<label class="col-md-2 col-form-label text-md-end">Required Quantity</label>
@@ -67,7 +75,7 @@
 							<input type="text" name="Qty" class="form-control isNumberKey_Decimal" value="@Model.Obj.Qty.ToString()">
 						</div>
 					</div>
-					if (Model.Data5 != null && (string)Model.Data5 == "COORD")
+					if (CanReceiveMaterial)
 					{
 						<div class="form=group row" style="padding-top:20px">
 
@@ -115,25 +123,31 @@
 					</div>
 				</div>
 				
-					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+					@if (CanEditMaterial)
 					{
 						<div class="form=group row">
 							<label class="col-md-2 col-form-label">Status</label>
 					
 							<div class="col-md-8 col-form-label">
 
+								@if (CanOrderMaterial)
+								{
 								<div class="form-check form-check-inline">
 									<input type="radio" id="Ordered" name="Status" class="form-check-input" value="O" @(Model.Obj != null && (Model.Obj.Status == "S" || Model.Obj.Status == "O") ? "checked" : "")>
 									<label class="form-check-label" for="Ordered">
 										Ordered
 									</label>
 								</div>
+								}
+								@if (CanRejectMaterial)
+								{
 								<div class="form-check form-check-inline">
 									<input type="radio" id="Rejected" name="Status" class="form-check-input" value="R" @(Model.Obj != null && Model.Obj.Status == "R" ? "checked" : "")>
 									<label class="form-check-label" for="Rejected">
 										Rejected
 									</label>
 								</div>
+								}
 							</div>
 						</div>
 					}
@@ -147,7 +161,7 @@
 
 		</form>
 		@* Material Procurement → Add : Vendor, Customer, Employee (Architect / Purchaser are view only) *@
-		@if (ProjectAccess.CanAddMaterial)
+		@if (ProjectAccess.Check(ProjectAccess.CanAddMaterial, PermissionModules.MPRO, PermissionActions.ADD))
 		{
 			<div class="d-flex align-items-start justify-content-between">
 				<div class="d-flex justify-content-end"> &nbsp; </div>
@@ -166,7 +180,7 @@
 					<th>Material Code</th>
 					<th>Material Name</th>
 					<th>Material Brand</th>
-					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD")
+					@if (CanReceiveMaterial)
 					{
 						<th width="10%">Qty / Received</th>
 					}
@@ -174,7 +188,7 @@
 					{
 						<th width="10%">Qty</th>
 					}
-					@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+					@if (CanEditMaterial)
 					{
 						<th width="20%">Actual Order Qty </th>
 					}
@@ -197,11 +211,11 @@
 							<td>@item.MaterialCode</td>
 							<td>@item.MaterialName</td>
 							<td>@item.MaterialBrand</td>
-							@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD" && (item.Qty_Receive ?? -1) > -1)
+							@if (CanReceiveMaterial && (item.Qty_Receive ?? -1) > -1)
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp; / &nbsp; @item.Qty_Receive.ToString() &nbsp; @item.UOM_Text</td>
 							}
-							else if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "COORD")
+							else if (CanReceiveMaterial)
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text &nbsp;</td>
 							}
@@ -209,7 +223,7 @@
 							{
 								<td>@item.Qty.ToString() &nbsp; @item.UOM_Text</td>
 							}
-							@if ((IsEmployee || IsVendor) && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+							@if (CanEditMaterial)
 							{
 								<td>
 									@if (item.Status == "O")
@@ -249,7 +263,7 @@
 							@if ((IsEmployee || IsVendor))
 							{
 								<td class="text-center">
-									@if ((item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+									@if ((item.Status == "S" || item.Status == "O") && CanEditMaterial)
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" data-toggle="tooltip" data-placement="top" title="Edit"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">
@@ -264,7 +278,7 @@
 										</button>
 									}
 
-									@if ((IsEmployee || IsVendor) && (item.Status == "S" || item.Status == "O") && Model.Data5 != null && (string)Model.Data5 == "COORD")
+									@if ((item.Status == "S" || item.Status == "O") && CanReceiveMaterial)
 									{
 										<button type="button" class="btn btn-info btn-sm btn-flat" style="background-color: #f15a07 !important;color: white !important;"
 												onclick="fnAddEdit_ProjectSiteMP(@item.Id);">

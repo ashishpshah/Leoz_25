@@ -176,7 +176,7 @@ namespace Leoz_25.Infra
 		}
 
 		/// <summary> Module (box) visible : Check(HasModule(code), code, VIEW). </summary>
-		public static bool CanView(string module) => !string.IsNullOrEmpty(module) && Check(HasModule(module), module, PermissionActions.VIEW);
+		public static bool CanView(string module) => Check(HasModule(module), module, PermissionActions.VIEW);
 
 		private static void LogShadowMismatch(string label, bool legacyResult, bool result)
 		{

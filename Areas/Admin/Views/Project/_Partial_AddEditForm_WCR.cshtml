@@ -7,11 +7,22 @@
 	bool IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;
 	bool IsEmployee = Common.Get_Session_Int(SessionKey.KEY_IS_EMPLOYEE) == 1;
 
+	// Module permissions (legacy : Manager add / edit, Customer approve / reject)
+	bool IsManagerUI = IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR";
+	bool CanAddWCR = ProjectAccess.Check(IsManagerUI, PermissionModules.WCOMP, PermissionActions.ADD);
+	bool CanEditWCR = ProjectAccess.Check(ProjectAccess.Is(ProjectAccess.MANAGER), PermissionModules.WCOMP, PermissionActions.EDIT);
+	bool CanEditWCRRow = ProjectAccess.Check(IsManagerUI, PermissionModules.WCOMP, PermissionActions.EDIT);
+	bool CanApproveWCR = ProjectAccess.Check(IsCustomer, PermissionModules.WCOMP, PermissionActions.APPROVE);
+	bool CanRejectWCR = ProjectAccess.Check(IsCustomer, PermissionModules.WCOMP, PermissionActions.REJECT);
+	bool CanChangeWCRFields = CanEditWCR || CanAddWCR;
+
+	// Delete button : unchanged legacy rule (delete is not part of module permissions)
+	bool LegacyCanDeleteWCR = IsManagerUI;
 }
 
 <div class="col-md-12">
 
-	@if (IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER))
+	@if (ProjectAccess.Check(IsCustomer || ProjectAccess.Is(ProjectAccess.MANAGER), () => CanChangeWCRFields || CanApproveWCR, "WCOMP.ADD|EDIT|APPROVE"))
 	{
 		<form id="formSave" action="@Url.Action("Save_WCR","Project", new {  area = "Admin"})" method="post" enctype="multipart/form-data">
 
@@ -22,13 +33,13 @@
 				<div class="form-group row" style="padding-top:20px">
 					<label for="Name" class="col-md-2 col-form-label">Agency Name<span style="color:red">*</span></label>
 					<div class="col-md-8">
-						<input type="text" name="Name" class="form-control" value="@Model.Obj.Name" @(IsCustomer ? "readonly" : "")>
+						<input type="text" name="Name" class="form-control" value="@Model.Obj.Name" @(CanChangeWCRFields ? "" : "readonly")>
 					</div>					
 				</div>
 				<div class="form-group row" style="padding-top:20px">
 					<label for="WorkType" class="col-md-2 col-form-label">Type of Work<span style="color:red">*</span></label>
 					<div class="col-md-8">
-						@if (IsCustomer)
+						@if (!CanChangeWCRFields)
 						{
 							<input type="text" name="WorkType_Text" class="form-control" value="@Model.Obj.WorkType_Text" readonly>
 							<input type="text" name="WorkType" class="form-control d-none" value="@Model.Obj.WorkType">
@@ -64,13 +75,13 @@
 				</div>			
 			</div>
 			<div class="card-footer text-center" style="padding-top:20px;display:none" id="divProjectSiteDoc">
-				@if (IsCustomer)
+				@if (!CanChangeWCRFields && CanApproveWCR)
 				{
 					<input type="text" name="Status" class="form-control d-none" value="A">
 					<button type="button" class="btn btn-success btnSubmit">Approve</button>
 					<button type="button" class="btn btn-secondary" onclick="fnClose_ProjectSiteDoc()">Close</button>
 				}
-				else if (ProjectAccess.Is(ProjectAccess.MANAGER))
+				else if (CanChangeWCRFields)
 				{
 					<input type="text" name="Status" class="form-control d-none" value="@Model.Obj.Status">
 					<button type="button" class="btn btn-success btnSubmit">Save</button>
@@ -79,7 +90,7 @@
 			</div>
 		</form>
 
-		@if (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR")
+		@if (CanAddWCR)
 		{
 			<div class="d-flex align-items-start justify-content-between">
 				<div class="d-flex justify-content-end"> &nbsp; </div>
@@ -99,7 +110,7 @@
 					<th>Notes</th>
 					<th width="12%" class="text-center">Status</th>
 
-					@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+					@if (CanEditWCRRow || CanApproveWCR || CanRejectWCR || LegacyCanDeleteWCR)
 					{
 						<th class="text-center" width="15%">Action</th>
 					}
@@ -133,12 +144,12 @@
 								}
 							</td>
 
-							@if (IsCustomer || (IsEmployee && Model.Data5 != null && (string)Model.Data5 == "MNGR"))
+							@if (CanEditWCRRow || CanApproveWCR || CanRejectWCR || LegacyCanDeleteWCR)
 							{
 								<td class="text-center">
 									<div class="btn-group">
 										@* @if (Common.IsAdmin() && Model.IsUpdate == true) *@
-										@if (IsEmployee && item.Status == "P")
+										@if (CanEditWCRRow && item.Status == "P")
 										{
 											<button type="button" class="btn btn-info btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Edit"
 													onclick="fnAddEdit_ProjectSiteWCR(@item.Id);">
@@ -146,7 +157,7 @@
 											</button>
 										}
 										@* @if (Common.IsAdmin() && item.IsDeleted == false && Model.IsDelete == true) *@
-										@if (IsEmployee && item.Status == "P")
+										@if (LegacyCanDeleteWCR && item.Status == "P")
 										{
 											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Delete"
 													onclick="fnDelete_Confirm('@Url.Action("DeleteConfirmed_WCR","Project", new {  area = "Admin" })?Id=@item.Id');">
@@ -154,12 +165,15 @@
 											</button>
 										}
 
-										@if (IsCustomer && (item.Status == "P" || item.Status == "U"))
+										@if (CanApproveWCR && (item.Status == "P" || item.Status == "U"))
 										{
 											<button type="button" class="btn btn-success btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Approve"
 													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'A');">
 												<i class="ri-checkbox-circle-line me-1"></i>Approve
 											</button>
+										}
+										@if (CanRejectWCR && (item.Status == "P" || item.Status == "U"))
+										{
 											<button type="button" class="btn btn-danger btn-sm btn-flat me-1" data-toggle="tooltip" data-placement="top" title="Reject"
 													onclick="fnChangeStatus_ProjectSiteDoc(@item.Id, 'R');">
 												<i class="ri-close-circle-line me-1"></i>Reject
