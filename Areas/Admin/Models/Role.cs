@@ -9,6 +9,7 @@ namespace Leoz_25
 		public string Name { get; set; }
 		public int? DisplayOrder { get; set; }
 		public bool IsAdmin { get; set; }
+        /// <summary> Deprecated : Project Detail module permissions are in ProjectModulePermission (Module Access screen). Column kept. </summary>
         public string? ProjectDetailTypeAccess { get; set; }
 
         [NotMapped] public long SelectedRoleId { get; set; } = 0;

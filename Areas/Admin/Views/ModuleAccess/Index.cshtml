@@ -1,0 +1,305 @@
+@model ResponseModel<ProjectModulePermission>
+
+@{
+	ViewBag.Title = "Module Access";
+	Layout = "~/Areas/Admin/Views/Shared/_Layout_Admin.cshtml";
+
+	bool IsVendorScope = Model.Data1 != null && (bool)Model.Data1;
+	string Mode = Model.Data2 != null ? (string)Model.Data2 : PermissionModes.Legacy;
+}
+
+@section Styles {
+	<style>
+		.ma-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end; justify-content: space-between; }
+		.ma-toolbar .ma-subject { flex: 1 1 280px; max-width: 420px; }
+		.ma-toolbar .ma-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+		.ma-legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .8125rem; color: #6c757d; }
+		.ma-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+		.ma-dot { width: .6rem; height: .6rem; border-radius: 50%; display: inline-block; }
+		.ma-dot-custom { background: #f59e0b; }
+		.ma-dot-dirty { background: #0d6efd; }
+
+		.ma-table { margin-bottom: 0; }
+		.ma-table th, .ma-table td { vertical-align: middle; }
+		.ma-table thead th { white-space: nowrap; font-size: .8125rem; text-transform: uppercase; letter-spacing: .02em; }
+		.ma-table td.ma-module { min-width: 220px; }
+		.ma-table td.ma-module .ma-code { font-size: .75rem; color: #6c757d; }
+		.ma-table td.ma-cell { text-align: center; position: relative; }
+		.ma-table td.ma-cell .form-switch { display: inline-flex; justify-content: center; padding-left: 0; margin: 0; min-height: auto; }
+		.ma-table td.ma-cell .form-switch .form-check-input { margin-left: 0; float: none; width: 2.25em; height: 1.2em; cursor: pointer; }
+		.ma-table td.ma-cell.ma-custom::after { content: ""; position: absolute; top: .4rem; right: .4rem; width: .45rem; height: .45rem; border-radius: 50%; background: #f59e0b; }
+		.ma-table td.ma-cell.ma-dirty { background: rgba(13, 110, 253, .08); }
+		.ma-table td.ma-na { text-align: center; color: #adb5bd; }
+		.ma-table .ma-label-mobile { display: none; }
+		.ma-sticky { position: sticky; left: 0; z-index: 1; background: #fff; }
+
+		/* Phone / small tablet : one card per module, one row per action */
+		@@media (max-width: 767.98px) {
+			.ma-toolbar .ma-subject { max-width: none; }
+			.ma-toolbar .ma-buttons { width: 100%; }
+			.ma-toolbar .ma-buttons .btn { flex: 1 1 auto; }
+			.ma-table thead { display: none; }
+			.ma-table, .ma-table tbody, .ma-table tr, .ma-table td { display: block; width: 100%; }
+			.ma-table tr { border: 1px solid #dee2e6; border-radius: .5rem; margin-bottom: .75rem; overflow: hidden; }
+			.ma-table td { border: 0 !important; padding: .5rem .85rem; }
+			.ma-table td.ma-module { background: #f8f9fa; border-bottom: 1px solid #dee2e6 !important; min-width: 0; }
+			.ma-table td.ma-cell, .ma-table td.ma-all { display: flex; align-items: center; justify-content: space-between; text-align: left; }
+			.ma-table td.ma-cell.ma-custom::after { position: static; margin-left: .5rem; order: 2; }
+			.ma-table td.ma-cell .form-switch { order: 3; margin-left: auto; }
+			.ma-table td.ma-na { display: none; }
+			.ma-table .ma-label-mobile { display: inline; font-weight: 500; order: 1; }
+			.ma-sticky { position: static; }
+			.table-responsive.ma-wrap { overflow: visible; }
+		}
+	</style>
+}
+
+<!-- start page title -->
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box">
+			<div class="page-title-right"></div>
+			<h4 class="page-title">Module Access</h4>
+		</div>
+	</div>
+</div>
+<!-- end page title -->
+
+<section class="content">
+	<div class="container-fluid px-0">
+		<div class="card">
+			<div class="card-body">
+
+				<div class="alert @(Mode == PermissionModes.Dynamic ? "alert-success" : "alert-warning") py-2 mb-3" role="status">
+					@if (IsVendorScope)
+					{
+						<span>Changes apply to <strong>your company's employees</strong> only. Cells you do not change follow the system default.</span>
+					}
+					else
+					{
+						<span>You are editing the <strong>system default</strong> for all vendors. A vendor can override employee designations for its own company.</span>
+					}
+					<br />
+					<small>
+						Permission mode : <strong>@Mode</strong>.
+						@if (Mode != PermissionModes.Dynamic)
+						{
+							<span>Changes are saved but the Project Detail screens follow these permissions only when the mode is <strong>Dynamic</strong>@(Mode == PermissionModes.Shadow ? " (Shadow mode logs every difference)" : "").</span>
+						}
+					</small>
+				</div>
+
+				<div class="ma-toolbar mb-3">
+					<div class="ma-subject">
+						<label for="ddlSubject" class="form-label mb-1">@(IsVendorScope ? "Employee designation" : "User type / designation")</label>
+						<select id="ddlSubject" class="form-control form-control-sm select2" onchange="fnChange_Subject()">
+							<option value="">-- Select --</option>
+							@if (Model.SelectListItems != null)
+							{
+								var actors = Model.SelectListItems.Where(x => x.Group == PermissionSubjects.ACTOR).ToList();
+								if (actors.Any())
+								{
+									<optgroup label="User type">
+										@foreach (var item in actors)
+										{
+											<option value="@item.Value">@item.Text</option>
+										}
+									</optgroup>
+								}
+								<optgroup label="Employee designation">
+									@foreach (var item in Model.SelectListItems.Where(x => x.Group == PermissionSubjects.DESIGNATION))
+									{
+										<option value="@item.Value">@item.Text</option>
+									}
+								</optgroup>
+							}
+						</select>
+					</div>
+					<div class="ma-buttons">
+						<button type="button" class="btn btn-success btn-sm px-4" id="btnSaveMatrix" onclick="fnSave_Matrix()" disabled><i class="ri-save-3-line me-1"></i>Save</button>
+						<button type="button" class="btn btn-secondary btn-sm" id="btnDiscardMatrix" onclick="fnLoad_Matrix()" disabled><i class="ri-arrow-go-back-line me-1"></i>Discard</button>
+						@if (IsVendorScope)
+						{
+							<button type="button" class="btn btn-outline-danger btn-sm" id="btnResetMatrix" onclick="fnReset_Matrix()" disabled><i class="ri-restart-line me-1"></i>Reset to default</button>
+						}
+					</div>
+				</div>
+
+				<div class="ma-legend mb-2">
+					<span><i class="ri-toggle-fill text-primary"></i> Allowed</span>
+					<span><span class="text-muted">—</span> Not applicable to module</span>
+					@if (IsVendorScope)
+					{
+						<span><span class="ma-dot ma-dot-custom"></span> Customised for your company</span>
+					}
+					<span><span class="ma-dot ma-dot-dirty"></span> Unsaved change</span>
+				</div>
+
+				<div id="divMatrix">
+					<div class="text-center text-muted py-5">Select a @(IsVendorScope ? "designation" : "user type or designation") to view its module permissions.</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</section>
+
+@section Scripts {
+	<script type="text/javascript">
+
+		var ma_Loaded = null;		// last loaded matrix (for dirty tracking)
+		var ma_SubjectCode = '';
+
+		$(document).ready(function () {
+			$('#ddlSubject').select2();
+
+			$(window).on('beforeunload', function () { if (fnIs_Dirty()) return 'You have unsaved changes.'; });
+		});
+
+		function fnChange_Subject() {
+			var code = $('#ddlSubject').val();
+
+			if (fnIs_Dirty() && !confirm('Discard unsaved changes of ' + ma_Loaded.SubjectName + ' ?')) {
+				$('#ddlSubject').val(ma_SubjectCode).trigger('change.select2');
+				return;
+			}
+
+			ma_SubjectCode = code;
+			fnLoad_Matrix();
+		}
+
+		function fnLoad_Matrix() {
+			ma_Loaded = null;
+			fnUpdate_Buttons();
+
+			if (!ma_SubjectCode) {
+				$('#divMatrix').html('<div class="text-center text-muted py-5">Select a subject to view its module permissions.</div>');
+				return;
+			}
+
+			ShowLoader(true);
+
+			$.ajax({
+				type: 'POST',
+				url: '@Url.Action("GetMatrix", "ModuleAccess", new { area = "Admin" })',
+				data: { SubjectCode: ma_SubjectCode },
+				dataType: 'json',
+				success: function (response) {
+					ShowLoader(false);
+					if (response == null || response.StatusCode !== 1) { CommonAlert_Error(response != null ? response.Message : null); return; }
+					ma_Loaded = response;
+					fnRender_Matrix(response);
+				},
+				error: function () { ShowLoader(false); CommonAlert_Error(null); }
+			});
+		}
+
+		function fnEscape(text) { return $('<div>').text(text == null ? '' : text).html(); }
+
+		function fnRender_Matrix(data) {
+			var html = '<div class="table-responsive ma-wrap"><table class="table table-bordered table-hover ma-table" id="tableMatrix">';
+
+			html += '<thead class="table-light"><tr><th class="ma-sticky">Module</th>';
+			$.each(data.Actions, function (i, a) { html += '<th class="text-center">' + fnEscape(a.Name) + '</th>'; });
+			html += '<th class="text-center">All</th></tr></thead><tbody>';
+
+			$.each(data.Modules, function (i, m) {
+				html += '<tr data-module="' + fnEscape(m.Code) + '">';
+				html += '<td class="ma-module ma-sticky"><div class="fw-semibold">' + fnEscape(m.Name) + '</div><div class="ma-code">' + fnEscape(m.Code) + '</div></td>';
+
+				$.each(m.Actions, function (j, a) {
+					if (!a.Exists) { html += '<td class="ma-na" title="Not applicable">—</td>'; return; }
+
+					var id = 'chk_' + m.Code + '_' + a.Code;
+					var title = (a.Default ? 'Default : allowed' : 'Default : not allowed') + (a.IsOverride ? ' (customised)' : '');
+
+					html += '<td class="ma-cell' + (a.IsOverride ? ' ma-custom' : '') + '" title="' + fnEscape(title) + '">'
+						+ '<label class="ma-label-mobile" for="' + id + '">' + fnEscape(data.Actions[j].Name) + '</label>'
+						+ '<div class="form-check form-switch"><input class="form-check-input ma-chk" type="checkbox" role="switch" id="' + id + '"'
+						+ ' data-key="' + fnEscape(m.Code + '.' + a.Code) + '" data-original="' + (a.Allowed ? '1' : '0') + '"'
+						+ ' aria-label="' + fnEscape(m.Name + ' - ' + data.Actions[j].Name) + '"' + (a.Allowed ? ' checked' : '') + ' onchange="fnChange_Cell(this)"></div></td>';
+				});
+
+				var idAll = 'chkAll_' + m.Code;
+				html += '<td class="ma-all text-center"><label class="ma-label-mobile" for="' + idAll + '">All actions</label>'
+					+ '<div class="form-check form-switch d-inline-flex justify-content-center ps-0 m-0"><input class="form-check-input ms-0 ma-chk-all" type="checkbox" role="switch" id="' + idAll + '"'
+					+ ' aria-label="' + fnEscape(m.Name + ' - all actions') + '" onchange="fnChange_Row(this)"></div></td>';
+
+				html += '</tr>';
+			});
+
+			html += '</tbody></table></div>';
+
+			$('#divMatrix').html(html);
+
+			$('#tableMatrix tbody tr').each(function () { fnSync_RowAll($(this)); });
+
+			fnUpdate_Buttons();
+		}
+
+		function fnChange_Cell(chk) {
+			var $td = $(chk).closest('td');
+			$td.toggleClass('ma-dirty', (chk.checked ? '1' : '0') !== $(chk).attr('data-original'));
+			fnSync_RowAll($(chk).closest('tr'));
+			fnUpdate_Buttons();
+		}
+
+		function fnChange_Row(chkAll) {
+			$(chkAll).closest('tr').find('.ma-chk').each(function () {
+				if (this.checked !== chkAll.checked) { this.checked = chkAll.checked; fnChange_Cell(this); }
+			});
+		}
+
+		function fnSync_RowAll($tr) {
+			var $chk = $tr.find('.ma-chk');
+			$tr.find('.ma-chk-all').prop('checked', $chk.length > 0 && $chk.filter(':checked').length === $chk.length);
+		}
+
+		function fnIs_Dirty() { return $('#tableMatrix td.ma-dirty').length > 0; }
+
+		function fnUpdate_Buttons() {
+			var dirty = fnIs_Dirty();
+			$('#btnSaveMatrix').prop('disabled', !ma_Loaded || !dirty);
+			$('#btnDiscardMatrix').prop('disabled', !ma_Loaded || !dirty);
+			$('#btnResetMatrix').prop('disabled', !ma_Loaded || !ma_Loaded.HasOverrides);
+		}
+
+		function fnSave_Matrix() {
+			if (!ma_Loaded || !fnIs_Dirty()) return;
+
+			var allowed = $('#tableMatrix .ma-chk:checked').map(function () { return $(this).attr('data-key'); }).get().join(',');
+
+			var formData = new FormData();
+			formData.append('SubjectCode', ma_Loaded.SubjectCode);
+			formData.append('Allowed', allowed);
+
+			ajaxPost('@Url.Action("Save", "ModuleAccess", new { area = "Admin" })', formData);
+		}
+
+		function fnReset_Matrix() {
+			if (!ma_Loaded) return;
+
+			Swal.fire({
+				icon: 'warning',
+				title: 'Reset ' + ma_Loaded.SubjectName + ' to the system default ?',
+				text: 'All customised permissions of this designation for your company will be removed.',
+				showCancelButton: true,
+				confirmButtonText: 'Reset'
+			}).then(function (result) {
+				if (!result.isConfirmed) return;
+
+				var formData = new FormData();
+				formData.append('SubjectCode', ma_Loaded.SubjectCode);
+
+				ajaxPost('@Url.Action("ResetToDefault", "ModuleAccess", new { area = "Admin" })', formData);
+			});
+		}
+
+		// Called by ajaxPost (common.js) after a successful save / reset
+		function fnSubmitForm_Success(response) {
+			$('#tableMatrix td.ma-dirty').removeClass('ma-dirty');
+			fnLoad_Matrix();
+		}
+
+	</script>
+}

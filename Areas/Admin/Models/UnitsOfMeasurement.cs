@@ -19,6 +19,7 @@ public partial class LOV
 	public string LOV_Code { get; set; } = null!;
 
 	public string LOV_Desc { get; set; } = null!;
+	/// <summary> Deprecated : read only by Legacy mode (HasModule); employee VIEW rights were migrated to ProjectModulePermission. Column kept. </summary>
 	public string? ProjectDetailTypeAccess { get; set; } = null!;
 	public int DisplayOrder { get; set; }
 
