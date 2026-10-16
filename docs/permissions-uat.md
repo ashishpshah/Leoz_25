@@ -27,6 +27,7 @@ Legend: ✔ visible / allowed, ✘ hidden / denied.
 | F3D / DRW / MB pencil and "Upload new version" ★ | everyone with EDIT: pencil (not Customer) and button |
 | Approve / Reject buttons (status Uploaded) | Vendor, Customer, Manager, Co-ord |
 | Approved / Rejected record | cannot be edited (message) |
+| "Recent Uploads" table (F3D / DRW / MB only) | everyone who can open the module; hidden after unticking HISTORY for that subject |
 | Delete button | unchanged |
 
 ## 3. Daily Update screen (module DAILY)

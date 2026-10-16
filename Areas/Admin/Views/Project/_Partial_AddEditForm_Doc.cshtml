@@ -177,7 +177,8 @@
 		</table>
 	</div>
 
-	@if ((new[] { "F3D", "DRW", "MB" }).Contains(Model.Item1.Obj?.Type))
+	@* Recent Uploads (F3D / DRW / MB) : HISTORY permission, decided and loaded by the controller *@
+	@if (IsHistoryType && Model.Item2.Data1 != null && (bool)Model.Item2.Data1)
 	{
 		<h5 class="mt-4 mb-2">Recent Uploads</h5>
 		<div class="table-responsive-sm mt-3" id="divProjectSiteDocHistoryList">

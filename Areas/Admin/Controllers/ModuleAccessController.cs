@@ -48,6 +48,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 			var listModule = _context.Using<ProjectModule>().GetByCondition(x => x.IsActive).OrderBy(x => x.DisplayOrder).ToList();
 			var listModuleAction = _context.Using<ProjectModuleAction>().GetAll().ToList();
+			var listActionName = _context.Using<PermissionAction>().GetAll().ToList();
 			var (defaults, overrides) = Get_Rows(subjectType, SubjectCode);
 
 			var listAction = PermissionActions.All.Where(a => listModuleAction.Any(x => x.ActionCode == a)).ToList();
@@ -81,7 +82,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 				SubjectName = PermissionSubjects.DisplayName(SubjectCode),
 				IsVendorScope = IsVendorEditor,
 				HasOverrides = overrides.Any(x => x.IsActive && !x.IsDeleted),
-				Actions = listAction.Select(a => new { Code = a, Name = a.Substring(0, 1) + a.Substring(1).ToLower() }).ToList(),
+				Actions = listAction.Select(a => new { Code = a, Name = listActionName.Where(x => x.Code == a).Select(x => x.Name).FirstOrDefault() ?? a }).ToList(),
 				Modules = modules
 			});
 		}

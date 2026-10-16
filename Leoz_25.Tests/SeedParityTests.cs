@@ -50,8 +50,9 @@ public class SeedParityTests : IDisposable
 	{
 		var list = _context.Using<ProjectModuleAction>().GetAll().ToList();
 
-		// 6 document modules (incl. SITE) x 5 + WPEND 5 + MPRO 6 + WCOMP 5 + DAILY 3
-		Assert.Equal(49, list.Count);
+		// 6 document modules (incl. SITE) x 5 + HISTORY on F3D / DRW / MB + WPEND 5 + MPRO 6 + WCOMP 5 + DAILY 3
+		Assert.Equal(52, list.Count);
+		Assert.Equal(PermissionModules.HistoryDocuments.OrderBy(x => x), list.Where(x => x.ActionCode == PermissionActions.HISTORY).Select(x => x.ModuleCode).OrderBy(x => x));
 		Assert.Equal(10, list.Select(x => x.ModuleCode).Distinct().Count());
 	}
 

@@ -28,7 +28,8 @@ internal static class LegacyAccess
 		if (module == PermissionModules.DAILY)
 			return action == PermissionActions.VIEW || (action is PermissionActions.ADD or PermissionActions.EDIT && IsCoordinator(subject));
 
-		if (action == PermissionActions.VIEW)
+		// "Recent Uploads" of F3D / DRW / MB : shown to everyone who could open the module
+		if (action == PermissionActions.VIEW || (action == PermissionActions.HISTORY && PermissionModules.HistoryDocuments.Contains(module)))
 			return subject is V or C || (employeeView.TryGetValue(subject, out var modules) && modules.Contains(module));
 
 		if (PermissionModules.Documents.Contains(module))

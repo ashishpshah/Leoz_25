@@ -424,7 +424,13 @@ namespace Leoz_25.Areas.Admin.Controllers
 				// (not filtered by document CustomerId, which becomes stale when project is re-mapped to another customer)
 				_CommonViewModel.ObjList = _context.Using<ProjectSiteDoc>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true && x.Type == Type).Distinct().ToList();
                 
-                _CommonViewModel1.ObjList = _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true && x.Type == Type && x.IsLatest != true).Distinct().ToList();
+				// "Recent Uploads" (F3D / DRW / MB) : legacy shown to everyone who can view the module, database : HISTORY
+				bool canViewHistory = PermissionModules.HistoryDocuments.Contains(Type) && ProjectAccess.Check(true, Type, PermissionActions.HISTORY);
+
+				_CommonViewModel1.Data1 = canViewHistory;
+				_CommonViewModel1.ObjList = canViewHistory
+					? _context.Using<ProjectSiteDoc_History>().GetByCondition(x => x.ProjectId == ProjectId && x.IsActive == true && x.Type == Type && x.IsLatest != true).Distinct().ToList()
+					: new List<ProjectSiteDoc_History>();
 
                 if (_CommonViewModel.ObjList != null || _CommonViewModel.ObjList.Count() > 0)
 				{
