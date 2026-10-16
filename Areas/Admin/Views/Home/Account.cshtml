@@ -23,6 +23,9 @@
 
 	<!-- Icons css -->
 	<link href="~/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+
+	<!-- PWA Settings (Android & Apple iOS) -->
+	<partial name="~/Areas/Admin/Views/Shared/_Pwa_Head.cshtml" />
 </head>
 
 <body class="authentication-bg position-relative">
@@ -124,6 +127,9 @@
 			});
 		});
 	</script>
+
+	<!-- PWA : install banner, iOS instructions, service worker -->
+	<partial name="~/Areas/Admin/Views/Shared/_Pwa_Install.cshtml" />
 </body>
 
 </html>
