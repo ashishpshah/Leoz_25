@@ -21,4 +21,7 @@ public partial class LOV
 	public string LOV_Desc { get; set; } = null!;
 	public string? ProjectDetailTypeAccess { get; set; } = null!;
 	public int DisplayOrder { get; set; }
+
+	/// <summary> Canonical designation of USER_TYPE rows (MANAGER, COORDINATOR, ...), used by Project Detail permissions. </summary>
+	public string? DesignationCode { get; set; }
 }

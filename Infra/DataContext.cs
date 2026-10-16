@@ -46,9 +46,46 @@ namespace Leoz_25.Infra
 
 		public virtual DbSet<AgencyMaster> AgencyMasters { get; set; }
 
+		public virtual DbSet<ProjectModule> ProjectModules { get; set; }
+		public virtual DbSet<PermissionAction> PermissionActions { get; set; }
+		public virtual DbSet<ProjectModuleAction> ProjectModuleActions { get; set; }
+		public virtual DbSet<ProjectModulePermission> ProjectModulePermissions { get; set; }
+		public virtual DbSet<PermissionVersion> PermissionVersions { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			//modelBuilder.HasDefaultSchema("padhyaso_Leoz");
+
+			modelBuilder.Entity<ProjectModule>(entity =>
+			{
+				entity.ToTable("ProjectModule", "dbo");
+				entity.HasKey(e => e.Code);
+			});
+
+			modelBuilder.Entity<PermissionAction>(entity =>
+			{
+				entity.ToTable("PermissionAction", "dbo");
+				entity.HasKey(e => e.Code);
+			});
+
+			modelBuilder.Entity<ProjectModuleAction>(entity =>
+			{
+				entity.ToTable("ProjectModuleAction", "dbo");
+				entity.HasKey(e => new { e.ModuleCode, e.ActionCode });
+			});
+
+			modelBuilder.Entity<ProjectModulePermission>(entity =>
+			{
+				entity.ToTable("ProjectModulePermission", "dbo");
+				entity.HasKey(e => e.Id);
+			});
+
+			modelBuilder.Entity<PermissionVersion>(entity =>
+			{
+				entity.ToTable("PermissionVersion", "dbo");
+				entity.HasKey(e => e.Id);
+				entity.Property(e => e.Id).ValueGeneratedNever();
+			});
 
 			modelBuilder.Entity<ProjectDailyUpdateFiles>(entity =>
 			{
