@@ -19,10 +19,7 @@ internal class Program
             serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
         });
         // Add services to the container.
-        // PWA offline sync : a replayed offline change (header X-Leoz-Operation-Id) is saved only once (Infra/OfflineOperations.cs, table from Infra/Sql/009)
-        builder.Services.AddSingleton<IOfflineOperationStore>(new SqlOfflineOperationStore(builder.Configuration.GetConnectionString("DataConnection")!));
-
-        builder.Services.AddControllersWithViews(options => options.Filters.Add<OfflineOperationFilter>()).AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+        builder.Services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 		builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 		{

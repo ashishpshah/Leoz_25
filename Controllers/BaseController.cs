@@ -99,7 +99,7 @@ namespace Leoz_25.Controllers
 					Restore_User_Session(context.HttpContext);
 
 				// Password changed / user deactivated (from the web, another device or by an admin) : end this login now,
-				// on every device, also the "Remember Me" cookie. The PWA sees ?r= and forgets the offline password too.
+				// on every device, also the "Remember Me" cookie; the login page shows the reason (?r=).
 				if (Common.IsUserLogged() && !string.Equals(ActionName, "Logout", StringComparison.OrdinalIgnoreCase))
 				{
 					string reason = Get_Session_End_Reason();
@@ -166,7 +166,6 @@ namespace Leoz_25.Controllers
 			=> subscription == null ? 0 : _context.Using<Project>().GetByCondition(x => x.VendorId == subscription.VendorId && x.CreatedDate >= subscription.CreatedDate).Count();
 
 		private const string CLAIM_SECURITY_STAMP = "leoz:stamp";
-		private const string CLAIM_REMEMBER_ME = "leoz:remember";
 
 		/// <summary>
 		/// Issues the auth cookie. It holds NO credentials : only the user id, user name and a one-way security stamp
@@ -179,12 +178,8 @@ namespace Leoz_25.Controllers
 			{
 				new Claim(ClaimTypes.NameIdentifier, obj.Id.ToString()),
 				new Claim(ClaimTypes.Name, obj.UserName ?? ""),
-				new Claim(CLAIM_SECURITY_STAMP, Get_Security_Stamp(obj)),
-				new Claim(CLAIM_REMEMBER_ME, rememberMe ? "1" : "0")
+				new Claim(CLAIM_SECURITY_STAMP, Get_Security_Stamp(obj))
 			}, CookieAuthenticationDefaults.AuthenticationScheme);
-
-			// read by the PWA (meta leoz-remember) : offline the app keeps the same "Remember Me" behaviour
-			Common.Set_Session_Int(SessionKey.KEY_REMEMBER_ME, rememberMe ? 1 : 0);
 
 			var idleMinutes = HttpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue<int?>("DistributedSession:IdleTimeoutMinutes") ?? 30;
 
@@ -241,8 +236,6 @@ namespace Leoz_25.Controllers
 
 			if (isValid && Load_User_Session(obj!))
 			{
-				Common.Set_Session_Int(SessionKey.KEY_REMEMBER_ME, principal.FindFirstValue(CLAIM_REMEMBER_ME) == "1" ? 1 : 0);
-
 				// the constructor read the (empty) session before this ran
 				IsVendor = Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1;
 				IsCustomer = Common.Get_Session_Int(SessionKey.KEY_IS_CUSTOMER) == 1;

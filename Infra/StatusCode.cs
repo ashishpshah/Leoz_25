@@ -3,7 +3,6 @@
 	public static class SessionKey
 	{
 		public static string KEY_USER_ID => "AuthenticatedUser";
-		public static string KEY_REMEMBER_ME => "AuthenticatedRememberMe";
 		public static string KEY_SECURITY_STAMP => "AuthenticatedSecurityStamp";
 		public static string KEY_IS_SUPER_USER => "AuthenticatedSuperUser";
 		public static string KEY_IS_ADMIN => "AuthenticatedAdminUser";

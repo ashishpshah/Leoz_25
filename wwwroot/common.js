@@ -1624,10 +1624,6 @@ function fnDelete_Confirm_with_file(url) {
 
 function CommonAlert_Error(msg, redirectUrl) {
 
-    // offline (PWA) : this screen / data was not downloaded on this device yet
-    if ((msg == null || msg == "") && navigator.onLine === false)
-        msg = "You are offline. This screen is not saved on this device yet, please open it once with internet.";
-
     if (msg == null || msg == "")
         msg = "Oops...! Something went wrong!";
 

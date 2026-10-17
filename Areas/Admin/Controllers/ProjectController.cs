@@ -84,7 +84,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 		//[CustomAuthorizeAttribute(AccessType_Enum.Read)]
 		public ActionResult Partial_AddEditForm(long Id = 0)
 		{
-			// same rule as Save : only a Vendor creates / edits a Project (the form is not given to other roles, online or offline)
+			// same rule as Save : only a Vendor creates / edits a Project (the form is not given to other roles)
 			if (!IsVendor || Logged_In_VendorId <= 0)
 				return Content("<div class=\"alert alert-warning\">Only a Vendor can create or edit a Project.</div>", "text/html");
 
