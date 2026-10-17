@@ -56,6 +56,16 @@
 											Enter your username and password to access account.
 										</p>
 
+										@* login ended by the server (BaseController) : password changed / user deactivated *@
+										@if (Context.Request.Query["r"] == "pc")
+										{
+											<div class="alert alert-warning py-2 small">Your password was changed. Please login with the new password.</div>
+										}
+										else if (Context.Request.Query["r"] == "na")
+										{
+											<div class="alert alert-warning py-2 small">Your account is not active. Please contact the administrator.</div>
+										}
+
 										@using (Html.BeginForm("Login", "Home", new { area = "Admin" }, FormMethod.Post, null, new { id = "formLogin", @class = "", enctype = "multipart/form-data", @data_form_isvalidate = "" }))
 										{
 											<div class="mb-3">

@@ -88,6 +88,11 @@ namespace Leoz_25.Areas.Admin.Controllers
                         user.LastModifiedBy = userId;
 
                         _context.Using<User>().Update(user);
+
+                        // this device logs out itself (RedirectURL = Logout) : keep its session valid until then,
+                        // every other device / browser of this user is sent to the login page on its next request
+                        Common.Set_Session(SessionKey.KEY_SECURITY_STAMP, Get_Security_Stamp(user));
+
                         CommonViewModel.IsConfirm = true;
                         CommonViewModel.IsSuccess = true;
                         CommonViewModel.Message = "Password changed successfully!";

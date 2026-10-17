@@ -14,7 +14,7 @@
  *  - Login page : a copy is kept (downloaded without cookies, it holds no user data) so the app always opens offline.
  */
 
-const VERSION = 'v6';
+const VERSION = 'v8';
 const SHELL_CACHE = 'leoz-shell-' + VERSION;
 const STATIC_CACHE = 'leoz-static-' + VERSION;
 const PAGE_CACHE = 'leoz-pages-2';
@@ -93,6 +93,8 @@ const LOGIN_PATHS = ['/admin/home/account', '/home/login'];
 const LOGOUT_PATHS = ['/admin/home/logout'];
 // Login POST : never queued, checked against the offline account when there is no internet
 const LOGIN_POST_PATHS = ['/admin/home/login', '/home/login'];
+// Change password : needs the server (never queued); afterwards the user must login again with the new password
+const CHANGE_PASSWORD_PATHS = ['/admin/changepassword/save'];
 const HOME_ALIASES = ['', '/admin', '/admin/home', '/admin/home/index'];
 
 /* ------------------------------------------------------------------ install / activate */
@@ -212,6 +214,9 @@ async function handleNavigate(request, url) {
   }
 
   if (isPath(url, LOGIN_PATHS)) {
+    // the server ended the login (?r=pc password changed, ?r=na user inactive) : the offline login must not work either
+    if (url.searchParams.get('r')) await forgetOfflineLogin(url.searchParams.get('r'));
+
     try {
       const response = await fetch(request);
       // navigations get the redirect itself (opaqueredirect) : still logged in ("Remember Me"), sent on to the dashboard
@@ -295,7 +300,7 @@ async function staleWhileRevalidate(request, cacheName) {
 
 async function networkFirst(request, cacheName, limit, key) {
   try {
-    const response = await fetch(request);
+    const response = await checkServerLogout(await fetch(request));
     const tooBig = request.headers.get('X-Leoz-Warm') && Number(response.headers.get('Content-Length') || 0) > WARM_MAX_BYTES;
     if (response.ok && !response.redirected && !tooBig) await putLimited(cacheName, key, response.clone(), limit);
     return response;
@@ -320,7 +325,7 @@ async function withCurrentEcho(response, url) {
 
 /* Background download of a whole page (pwa-offline-warm.js) : stored like a visited page */
 async function warmPage(request, url) {
-  const response = await fetch(request);
+  const response = await checkServerLogout(await fetch(request));
   const html = (response.headers.get('Content-Type') || '').indexOf('text/html') > -1;
 
   if (response.ok && !response.redirected && html)
@@ -373,6 +378,7 @@ function jsonResponse(obj, status) {
 
 async function handleNonGet(request, url) {
   if (request.method === 'POST' && isPath(url, LOGIN_POST_PATHS)) return handleLogin(request);
+  if (request.method === 'POST' && isPath(url, CHANGE_PASSWORD_PATHS)) return handleChangePassword(request);
 
   const copy = request.clone();
   const lastSegment = (url.pathname.split('/').filter(Boolean).pop() || '').toLowerCase();
@@ -385,7 +391,7 @@ async function handleNonGet(request, url) {
   }
 
   try {
-    return await fetch(request);
+    return await checkServerLogout(await fetch(request));
   } catch (e) {
     // offline
     const userId = await metaGet('userId');
@@ -462,6 +468,7 @@ async function doReplay() {
     }
 
     // session expired : the server redirected to the login page, keep the item for after login
+    await checkServerLogout(response);
     if (response.redirected && /\/home\/(account|login)/i.test(response.url)) {
       result.loginRequired = true;
       break;
@@ -528,6 +535,39 @@ async function handleLogin(request) {
 }
 
 /* Successful online login : keep only a salted PBKDF2 hash of the password (never the password itself) */
+/*
+ * Change password :
+ *  - offline : refused (the old password must be checked by the server; a queued change could be rejected later)
+ *  - online, accepted : the offline login now needs the NEW password, and the offline session ("Remember Me") ends,
+ *    so the user has to login again (the server does the same : it redirects to Logout, the auth cookie is removed)
+ */
+async function handleChangePassword(request) {
+  let newPassword = '';
+  try { newPassword = String((await request.clone().formData()).get('Obj.NewPassword') || ''); } catch (e) { }
+
+  let response;
+  try {
+    response = await fetch(request);
+  } catch (e) {
+    return jsonResponse({ IsSuccess: false, StatusCode: 0, Message: 'You are offline. The password can only be changed with an internet connection.' });
+  }
+
+  try {
+    const data = await response.clone().json();
+    if (data && data.StatusCode === 1) {
+      const account = await metaGet('account');
+      if (account && newPassword) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        await metaSet('account', { userName: account.userName, salt: toHex(salt), hash: await pbkdf2(newPassword, salt, PBKDF2_ITERATIONS), iterations: PBKDF2_ITERATIONS, fails: 0 });
+      } else {
+        await metaSet('account', null); // unknown account on this device : no offline login until the next online login
+      }
+      await endOfflineSession();
+    }
+  } catch (e) { }
+  return response;
+}
+
 async function saveOfflineAccount(userName, password, remember) {
   const name = userName.trim().toLowerCase();
   const previous = await metaGet('account');
@@ -552,6 +592,12 @@ async function offlineLogin(userName, password, remember) {
 
   if (!account || account.userName !== userName.trim().toLowerCase())
     return fail('You are offline. This user has not logged in on this device before, please connect to the internet to login.');
+
+  // the server ended the login (BaseController : r=pc / r=na) : only an online login is possible now
+  if (account.reset === 'pc')
+    return fail('Your password was changed. Please connect to the internet and login with the new password.');
+  if (account.reset)
+    return fail('Your account is not active. Please connect to the internet or contact the administrator.');
 
   if (account.fails >= MAX_OFFLINE_LOGIN_FAILS)
     return fail('Too many wrong attempts. Please connect to the internet to login.');
@@ -612,6 +658,28 @@ function touchOfflineSession() {
     const s = await metaGet('offlineSession');
     if (s && s.expiresAt > Date.now()) await metaSet('offlineSession', { remember: s.remember, expiresAt: Date.now() + sessionLength(s.remember) });
   });
+}
+
+/*
+ * Login ended by the server because the password was changed (r=pc, e.g. from the web or another device)
+ * or the user was deactivated (r=na) : the old password must not work offline any more, the next login must be online.
+ * An inactive user's saved pages are removed too.
+ */
+async function forgetOfflineLogin(reason) {
+  // keep only the user name and the reason (no password hash) : the offline login can tell the user what happened
+  const account = await metaGet('account');
+  await metaSet('account', account ? { userName: account.userName, reset: reason } : null);
+  if (reason === 'na') await clearPageCaches();
+  await endOfflineSession();
+}
+
+/* AJAX / background requests follow the server redirect themselves : look where they ended */
+async function checkServerLogout(response) {
+  if (response && response.redirected) {
+    const match = /\/home\/account\?(?:.*&)?r=([a-z]+)/i.exec(response.url);
+    if (match) await forgetOfflineLogin(match[1].toLowerCase());
+  }
+  return response;
 }
 
 async function endOfflineSession() {
@@ -675,7 +743,7 @@ async function notifyClients(result) {
     type: 'OUTBOX_STATUS',
     pending: (await outboxAll()).length,
     // login page offline : can the last user login with the copies on this device?
-    canLoginOffline: !!(account && account.fails < MAX_OFFLINE_LOGIN_FAILS),
+    canLoginOffline: !!(account && account.hash && !account.reset && account.fails < MAX_OFFLINE_LOGIN_FAILS),
     failed: (await failedAll()).map((f) => ({ url: f.url, error: f.error, createdAt: f.createdAt })),
     result: result || null
   };

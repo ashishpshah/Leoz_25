@@ -98,6 +98,21 @@ namespace Leoz_25.Controllers
 				if (!Common.IsUserLogged() && context.HttpContext.User?.Identity?.IsAuthenticated == true && !string.Equals(ActionName, "Logout", StringComparison.OrdinalIgnoreCase))
 					Restore_User_Session(context.HttpContext);
 
+				// Password changed / user deactivated (from the web, another device or by an admin) : end this login now,
+				// on every device, also the "Remember Me" cookie. The PWA sees ?r= and forgets the offline password too.
+				if (Common.IsUserLogged() && !string.Equals(ActionName, "Logout", StringComparison.OrdinalIgnoreCase))
+				{
+					string reason = Get_Session_End_Reason();
+
+					if (reason != null)
+					{
+						Common.Clear_Session();
+						context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).GetAwaiter().GetResult();
+						context.Result = new RedirectResult(Url.Content("~/") + "Admin/Home/Account?r=" + reason);
+						return;
+					}
+				}
+
 				if (!Common.IsUserLogged() && !string.IsNullOrEmpty(AreaName) && !(Convert.ToString(ControllerName).ToLower() == "home" && (new string[] { "account", "login" }).Any(x => x == Convert.ToString(ActionName).ToLower())))
 				{
 					context.Result = new RedirectResult(Url.Content("~/") + (string.IsNullOrEmpty(AreaName) ? "" : AreaName + "/") + "Home/Account");
@@ -186,7 +201,27 @@ namespace Leoz_25.Controllers
 
 		protected Task SignOut_User() => HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-		private static string Get_Security_Stamp(User obj) =>
+		/// <summary>
+		/// null = login still valid. "pc" = password changed, "na" = user inactive / deleted since this login.
+		/// The stamp of the login is kept in the session (sessions from before this check get it on their first request).
+		/// </summary>
+		private string Get_Session_End_Reason()
+		{
+			long userId = Common.LoggedUser_Id();
+
+			var obj = _context.Using<User>().GetByCondition(x => x.Id == userId).FirstOrDefault();
+
+			if (obj == null || obj.IsActive != true || obj.IsDeleted) return "na";
+
+			string stamp = Get_Security_Stamp(obj);
+			string loginStamp = Common.Get_Session(SessionKey.KEY_SECURITY_STAMP);
+
+			if (string.IsNullOrEmpty(loginStamp)) { Common.Set_Session(SessionKey.KEY_SECURITY_STAMP, stamp); return null; }
+
+			return string.Equals(loginStamp, stamp, StringComparison.Ordinal) ? null : "pc";
+		}
+
+		protected static string Get_Security_Stamp(User obj) =>
 			Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(obj.Id + "|" + obj.UserName + "|" + obj.Password)));
 
 		/// <summary>
@@ -277,6 +312,7 @@ namespace Leoz_25.Controllers
 			Common.Configure_UserMenuAccess(listMenuAccess.Where(x => x.IsActive == true && x.IsDeleted == false).ToList(), listMenuPermission.Where(x => x.IsActive == true && x.IsDeleted == false).ToList());
 
 			Common.Set_Session_Int(SessionKey.KEY_USER_ID, obj.Id);
+			Common.Set_Session(SessionKey.KEY_SECURITY_STAMP, Get_Security_Stamp(obj));
 			Common.Set_Session_Int(SessionKey.KEY_USER_ROLE_ID, obj.RoleId);
 
 			Common.Set_Session(SessionKey.KEY_USER_NAME, obj.UserName);
