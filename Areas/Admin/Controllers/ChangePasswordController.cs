@@ -92,7 +92,7 @@ namespace Leoz_25.Areas.Admin.Controllers
                         CommonViewModel.IsSuccess = true;
                         CommonViewModel.Message = "Password changed successfully!";
                         CommonViewModel.StatusCode = ResponseStatusCode.Success;
-                        CommonViewModel.RedirectURL = Url.Action("Account", "Home", new { area = "Admin" });
+                        CommonViewModel.RedirectURL = Url.Action("Logout", "Home", new { area = "Admin" }); // login again with the new password (also ends "Remember Me")
                         transaction.Commit();
                         return Json(CommonViewModel);
                     }

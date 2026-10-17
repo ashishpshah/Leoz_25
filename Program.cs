@@ -1,4 +1,5 @@
 using Leoz_25.Infra;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -66,6 +67,23 @@ internal class Program
 		// Session in SQL Server distributed cache : survives App Pool recycle / restart / re-publish
 		builder.Services.AddDistributedSqlServerSession(builder.Configuration);
 
+		// Cookie authentication ("Remember Me") : the cookie carries only the user id + a security stamp, encrypted with Data Protection (keys in SQL).
+		// The session stays the source of truth; BaseController rebuilds it from this cookie when the session has expired.
+		builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+			.AddCookie(options =>
+			{
+				options.Cookie.Name = ".Leoz.Auth";
+				options.Cookie.HttpOnly = true;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+				options.Cookie.SameSite = SameSiteMode.Lax;
+				options.Cookie.IsEssential = true;
+				options.ExpireTimeSpan = TimeSpan.FromDays(14);
+				options.SlidingExpiration = true;
+				options.LoginPath = "/Admin/Home/Account";
+				options.LogoutPath = "/Admin/Home/Logout";
+				options.AccessDeniedPath = "/Admin/Home/Account";
+			});
+
 		builder.Services.AddDbContext<DataContext>(db => db.UseSqlServer(builder.Configuration.GetConnectionString("DataConnection")), ServiceLifetime.Scoped);
 
 		builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
@@ -91,6 +109,7 @@ internal class Program
 
 		app.UseRouting();
 
+		app.UseAuthentication();
 		app.UseAuthorization();
 
 		app.UseSession();

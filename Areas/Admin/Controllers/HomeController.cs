@@ -18,9 +18,14 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return View();
 		}
 
-		public ActionResult Account()
+		public async Task<ActionResult> Account()
 		{
+			// already logged in (or restored from the "Remember Me" cookie in BaseController) : go to the dashboard
+			if (Common.IsUserLogged())
+				return RedirectToAction("Index", "Home", new { Area = "Admin" });
+
 			Common.Clear_Session();
+			await SignOut_User(); // removes a stale / invalid auth cookie
 
 			return View(new ResponseModel<LoginViewModel>());
 		}
@@ -28,7 +33,7 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 		[HttpPost]
 		//[ValidateAntiForgeryToken]
-		public JsonResult Login(LoginViewModel viewModel)
+		public async Task<JsonResult> Login(LoginViewModel viewModel)
 		{
 			try
 			{
@@ -40,16 +45,8 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 					if (obj != null && obj.IsActive == true && obj.IsDeleted == false)
 					{
-						var userRole = _context.Using<UserRoleMapping>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
-
-						obj.RoleId = userRole != null ? userRole.RoleId : 0;
-
-						List<UserMenuAccess> listMenuAccess = new List<UserMenuAccess>();
-						List<UserMenuAccess> listMenuPermission = new List<UserMenuAccess>();
-
-						Role role = _context.Using<Role>().GetByCondition(x => x.Id == obj.RoleId).FirstOrDefault();
-
-						if (role == null)
+						// session (role, menus ...) : BaseController.Load_User_Session, also used to restore a "Remember Me" login
+						if (!Load_User_Session(obj))
 						{
 							CommonViewModel.IsSuccess = false;
 							CommonViewModel.StatusCode = ResponseStatusCode.Error;
@@ -57,95 +54,9 @@ namespace Leoz_25.Areas.Admin.Controllers
 
 							return Json(CommonViewModel);
 						}
-						else if (role != null && role.Id == 1)
-						{
-							listMenuAccess = (from y in _context.Using<Menu>().GetAll().ToList()
-											  where y.IsActive == true && y.IsDeleted == false
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, Icon = y.Icon,IsCreate = true, IsUpdate = true, IsRead = true, IsDelete = true, DisplayOrder = y.DisplayOrder, IsActive = y.IsActive, IsDeleted = y.IsDeleted }).ToList();
-						}
-						else if (role != null && (role.IsAdmin || role.Name.ToUpper() == "VENDOR"))
-						{
-							listMenuAccess = (from x in _context.Using<UserMenuAccess>().GetAll().ToList()
-											  join y in _context.Using<Menu>().GetAll().ToList() on x.MenuId equals y.Id
-											  where x.UserId == obj.Id && x.RoleId == obj.RoleId
-											  && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false && y.Name != "Menu"
-											  && x.IsRead == true
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder, Icon = y.Icon, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
-						}
-						else if (role != null && !role.IsAdmin && role.IsActive && !role.IsDeleted)
-						{
-							listMenuAccess = (from x in _context.Using<UserMenuAccess>().GetAll().ToList()
-											  join y in _context.Using<Menu>().GetAll().ToList() on x.MenuId equals y.Id
-											  where x.UserId == obj.Id && x.RoleId == obj.RoleId
-											  && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false && y.Id != 1 && y.ParentId != 1 && y.Name != "Menu"
-											  && x.IsRead == true
-											  select new UserMenuAccess() { Id = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name, DisplayOrder = y.DisplayOrder,Icon = y.Icon ,IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
-						}
 
-						if (role != null && role.Id == 1)
-							listMenuPermission = listMenuAccess;
-						else
-							listMenuPermission = (from x in _context.Using<UserMenuAccess>().GetAll().ToList()
-												  join y in _context.Using<Menu>().GetAll().ToList() on x.MenuId equals y.Id
-												  where x.UserId == obj.Id && y.IsActive == true && y.IsDeleted == false && x.IsActive == true && x.IsDeleted == false
-												  && listMenuAccess.Any(z => z.Id == y.Id)
-												  select new UserMenuAccess() { MenuId = y.Id, ParentMenuId = y.ParentId, Area = y.Area, Controller = y.Controller, Url = y.Url, MenuName = y.Name,Icon = y.Icon ,IsCreate = x.IsCreate, IsUpdate = x.IsUpdate, IsRead = x.IsRead, IsDelete = x.IsDelete, IsActive = x.IsActive, IsDeleted = x.IsDeleted }).ToList();
-
-						Common.Configure_UserMenuAccess(listMenuAccess.Where(x => x.IsActive == true && x.IsDeleted == false).ToList(), listMenuPermission.Where(x => x.IsActive == true && x.IsDeleted == false).ToList());
-
-						Common.Set_Session_Int(SessionKey.KEY_USER_ID, obj.Id);
-						Common.Set_Session_Int(SessionKey.KEY_USER_ROLE_ID, obj.RoleId);
-
-						Common.Set_Session(SessionKey.KEY_USER_NAME, obj.UserName);
-						Common.Set_Session(SessionKey.KEY_USER_ROLE, role.Name);
-						Common.Set_Session_Int(SessionKey.KEY_IS_ADMIN, (role.IsAdmin || obj.RoleId == 1 ? 1 : 0));
-						Common.Set_Session_Int(SessionKey.KEY_IS_VENDOR, (role.Name.ToUpper() == "VENDOR" ? 1 : 0));
-						Common.Set_Session_Int(SessionKey.KEY_IS_CUSTOMER, (role.Name.ToUpper() == "CUSTOMER" ? 1 : 0));
-						Common.Set_Session_Int(SessionKey.KEY_IS_EMPLOYEE, (role.Name.ToUpper() == "EMPLOYEE" ? 1 : 0));
-						Common.Set_Session_Int(SessionKey.KEY_IS_SUPER_USER, (obj.RoleId == 1 ? 1 : 0));
-
-						long VendorId = 0;
-
-						if (role.Name.ToUpper() == "VENDOR")
-						{
-							var vendor = _context.Using<Vendor>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
-							VendorId = vendor != null ? vendor.Id : 0;
-
-							Common.Set_Session(SessionKey.ProjectDetailTypeAccess, "ALL");
-						}
-						else if (role.Name.ToUpper() == "CUSTOMER")
-						{
-							VendorId = 0;
-
-							var customer = _context.Using<Customer>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
-							VendorId = customer != null ? customer.VendorId : 0;
-							Common.Set_Session_Int(SessionKey.KEY_CUSTOMER_ID, customer != null ? customer.Id : 0);
-
-							Common.Set_Session(SessionKey.ProjectDetailTypeAccess, role.ProjectDetailTypeAccess ?? "");
-						}
-						else if (role.Name.ToUpper() == "EMPLOYEE")
-						{
-							VendorId = 0;
-
-							var employee = _context.Using<Employee>().GetByCondition(x => x.UserId == obj.Id).FirstOrDefault();
-							VendorId = employee != null ? employee.VendorId : 0;
-							Common.Set_Session_Int(SessionKey.KEY_EMPLOYEE_ID, employee != null ? employee.Id : 0);
-
-							if (employee != null)
-							{
-								var objUserType = _context.Using<LOV>().GetByCondition(x => x.LOV_Column == "USER_TYPE" && x.LOV_Code == employee.UserType).FirstOrDefault();
-
-								Common.Set_Session(SessionKey.ProjectDetailTypeAccess, objUserType?.ProjectDetailTypeAccess ?? "");
-								Common.Set_Session("Employee_UserType", employee.UserType);
-								Common.Set_Session(ProjectAccess.KEY_DESIGNATION, ProjectAccess.ResolveDesignation(objUserType, employee.UserType));
-								Common.Set_Session(ProjectAccess.KEY_DESIGNATION_NAME, objUserType?.LOV_Desc ?? employee.UserType ?? "");
-							}
-						}
-
-						Common.Set_Session_Int(SessionKey.KEY_VENDOR_ID, VendorId);
-
-						// Project Detail module permissions (database-driven) of this subject / tenant
-						HttpContext.RequestServices.GetRequiredService<IPermissionService>().RefreshSession(force: true);
+						// auth cookie : persistent for 14 days (sliding) only when "Remember Me" is ticked
+						await SignIn_User(obj, viewModel.RememberMe);
 
 						CommonViewModel.IsSuccess = true;
 						CommonViewModel.StatusCode = ResponseStatusCode.Success;
@@ -174,9 +85,10 @@ namespace Leoz_25.Areas.Admin.Controllers
 			return Json(CommonViewModel);
 		}
 
-		public ActionResult Logout()
+		public async Task<ActionResult> Logout()
 		{
 			Common.Clear_Session();
+			await SignOut_User(); // deletes the auth ("Remember Me") cookie
 
 			return RedirectToAction("Account", "Home", new { Area = "Admin" });
 		}

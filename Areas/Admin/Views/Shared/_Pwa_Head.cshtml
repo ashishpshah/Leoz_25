@@ -4,5 +4,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Leoz" />
+@* Logged-in user id for the service worker : offline saves are only sent back for the same user *@
+<meta name="leoz-user" content="@Common.LoggedUser_Id()" />
 <link rel="apple-touch-icon" href="~/assets/images/logo.webp" />
 <link rel="stylesheet" href="~/css/pwa-install.css" asp-append-version="true" />
