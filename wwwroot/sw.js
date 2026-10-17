@@ -14,16 +14,17 @@
  *  - Login page : a copy is kept (downloaded without cookies, it holds no user data) so the app always opens offline.
  */
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL_CACHE = 'leoz-shell-' + VERSION;
 const STATIC_CACHE = 'leoz-static-' + VERSION;
-const PAGE_CACHE = 'leoz-pages';
-const DATA_CACHE = 'leoz-data';
+const PAGE_CACHE = 'leoz-pages-2';
+const DATA_CACHE = 'leoz-data-2';
 const LOGIN_CACHE = 'leoz-login';
 const KEEP_CACHES = [SHELL_CACHE, STATIC_CACHE, PAGE_CACHE, DATA_CACHE, LOGIN_CACHE];
 
 const PAGE_CACHE_LIMIT = 300;
-const DATA_CACHE_LIMIT = 500;
+const DATA_CACHE_LIMIT = 4000;
+const WARM_MAX_BYTES = 10 * 1024 * 1024; // background download : skip bigger files (documents)
 const NETWORK_TIMEOUT_MS = 10000;
 
 const IDLE_MINUTES = 30;              // same as DistributedSession:IdleTimeoutMinutes
@@ -81,7 +82,8 @@ const SHELL_ASSETS = [
   '/common.js',
   '/js/site.js',
   '/css/pwa-install.css',
-  '/js/pwa-install.js'
+  '/js/pwa-install.js',
+  '/js/pwa-offline-warm.js'
 ];
 
 const STATIC_EXT = /\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|bmp|woff2?|ttf|eot|otf|json|mp3|mp4|webm)$/i;
@@ -143,6 +145,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // background download of a page (pwa-offline-warm.js)
+  if (request.headers.get('X-Leoz-Warm') === 'page') {
+    event.respondWith(warmPage(request, url));
+    return;
+  }
+
   if (isStatic(request, url)) {
     event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
     return;
@@ -156,13 +164,37 @@ function isStatic(request, url) {
   return ['style', 'script', 'font', 'image', 'manifest'].indexOf(request.destination) > -1 || STATIC_EXT.test(url.pathname);
 }
 
-/* jQuery `cache:false` adds ?_=<timestamp> : remove it so the same request finds its cached copy */
-function cacheKeyFor(url) {
-  const u = new URL(url.href);
-  u.searchParams.delete('_');
-  u.hash = '';
-  return u.href;
+/*
+ * Cache key : the same request is built in different ways by the pages, so the key is normalised :
+ *  - path in lower case, parameters sorted, names in lower case
+ *  - jQuery `cache:false` ?_=<timestamp> and the DataTables counter (sEcho / draw) are removed
+ *  - default values ('', undefined, null, 0, false) are removed : the actions use the same defaults
+ *  - DataTables server-side GetData : only the parameters that change the result
+ *  - extra : form fields of a read-only POST
+ */
+const IGNORE_PARAMS = ['_', 'secho', 'draw'];
+const DEFAULT_VALUES = ['', 'undefined', 'null', '0', 'false'];
+const DATATABLE_PARAMS = ['customerid', 'projectid', 'ssearch', 'isortcol_0', 'ssortdir_0', 'idisplaystart', 'idisplaylength'];
+
+function cacheKeyFor(url, extra) {
+  const u = new URL(typeof url === 'string' ? url : url.href, self.location.origin);
+  const isDataTable = /\/getdata$/i.test(u.pathname);
+  const params = [];
+  const add = (k, v) => {
+    const name = String(k).toLowerCase();
+    const value = String(v);
+    if (IGNORE_PARAMS.indexOf(name) > -1 || DEFAULT_VALUES.indexOf(value.toLowerCase()) > -1) return;
+    if (isDataTable && DATATABLE_PARAMS.indexOf(name) === -1) return;
+    params.push([name, value]);
+  };
+  u.searchParams.forEach((v, k) => add(k, v));
+  (extra || []).forEach((p) => add(p[0], p[1]));
+  params.sort((a, b) => (a[0] + '=' + a[1]) < (b[0] + '=' + b[1]) ? -1 : 1);
+  const query = params.map((p) => encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1])).join('&');
+  return u.origin + u.pathname.toLowerCase().replace(/\/+$/, '') + (query ? '?' + query : '');
 }
+
+function homeKey() { return cacheKeyFor(HOME_URL); }
 
 function isPath(url, list) {
   const p = url.pathname.toLowerCase().replace(/\/+$/, '');
@@ -203,8 +235,8 @@ async function handleNavigate(request, url) {
     // only real pages : a redirect to the login page (session expired) must not replace the cached page
     if (response.ok && response.type === 'basic' && !response.redirected) {
       await putLimited(PAGE_CACHE, key, response.clone(), PAGE_CACHE_LIMIT);
-      if (isPath(url, HOME_ALIASES) && key !== new URL(HOME_URL, self.location.origin).href)
-        await putLimited(PAGE_CACHE, HOME_URL, response.clone(), PAGE_CACHE_LIMIT);
+      if (isPath(url, HOME_ALIASES) && key !== homeKey())
+        await putLimited(PAGE_CACHE, homeKey(), response.clone(), PAGE_CACHE_LIMIT);
       await touchOfflineSession();
     }
     return response;
@@ -221,7 +253,7 @@ async function handleNavigate(request, url) {
 
     // app opened from the home screen ("/" or start_url) : show the dashboard copy
     if (isPath(url, HOME_ALIASES)) {
-      const home = await caches.match(HOME_URL, { cacheName: PAGE_CACHE });
+      const home = await caches.match(homeKey(), { cacheName: PAGE_CACHE });
       if (home) return home;
     }
     return offlinePage();
@@ -264,12 +296,42 @@ async function staleWhileRevalidate(request, cacheName) {
 async function networkFirst(request, cacheName, limit, key) {
   try {
     const response = await fetch(request);
-    if (response.ok && !response.redirected) await putLimited(cacheName, key, response.clone(), limit);
+    const tooBig = request.headers.get('X-Leoz-Warm') && Number(response.headers.get('Content-Length') || 0) > WARM_MAX_BYTES;
+    if (response.ok && !response.redirected && !tooBig) await putLimited(cacheName, key, response.clone(), limit);
     return response;
   } catch (e) {
     const cached = await caches.match(key, { cacheName: cacheName });
-    return cached || offlineResponse(request);
+    return cached ? withCurrentEcho(cached, request.url) : offlineResponse(request);
   }
+}
+
+/* DataTables ignores an answer whose sEcho / draw is older than its own counter : give the saved answer the current one */
+async function withCurrentEcho(response, url) {
+  const params = new URL(url).searchParams;
+  const echo = params.get('sEcho') || params.get('draw');
+  if (!echo || (response.headers.get('Content-Type') || '').indexOf('json') === -1) return response;
+  try {
+    const data = await response.clone().json();
+    if ('sEcho' in data) data.sEcho = echo;
+    if ('draw' in data) data.draw = Number(echo);
+    return jsonResponse(data);
+  } catch (e) { return response; }
+}
+
+/* Background download of a whole page (pwa-offline-warm.js) : stored like a visited page */
+async function warmPage(request, url) {
+  const response = await fetch(request);
+  const html = (response.headers.get('Content-Type') || '').indexOf('text/html') > -1;
+
+  if (response.ok && !response.redirected && html)
+    await putLimited(PAGE_CACHE, cacheKeyFor(url), response.clone(), PAGE_CACHE_LIMIT);
+
+  // the server sends this page somewhere else (e.g. no permission -> dashboard) : do the same offline
+  // (never for the login page : that means the session ended)
+  if (response.ok && response.redirected && html && !/\/home\/(account|login)/i.test(response.url) && new URL(response.url).origin === self.location.origin)
+    await putLimited(PAGE_CACHE, cacheKeyFor(url), Response.redirect(response.url, 302), PAGE_CACHE_LIMIT);
+
+  return response;
 }
 
 function withTimeout(promise, ms) {
@@ -315,12 +377,11 @@ async function handleNonGet(request, url) {
   const copy = request.clone();
   const lastSegment = (url.pathname.split('/').filter(Boolean).pop() || '').toLowerCase();
 
-  // Read-only POST (GetMatrix, GetProjectByCustomerId, GetProjectDetail ...) : cache by url + body
+  // Read-only POST (GetMatrix, GetProjectByCustomerId, GetProjectDetail, GetSelectList_User ...) : cache by url + form fields
   if (request.method === 'POST' && lastSegment.indexOf('get') === 0) {
-    const body = await copy.arrayBuffer();
-    const key = new URL(cacheKeyFor(url));
-    key.searchParams.set('__body', await sha256(body));
-    return networkFirst(request, DATA_CACHE, DATA_CACHE_LIMIT, key.href);
+    const fields = [['__post', '1']];
+    try { (await copy.formData()).forEach((v, k) => { if (typeof v === 'string') fields.push([k, v]); }); } catch (e) { } // not a form ({} sent as text)
+    return networkFirst(request, DATA_CACHE, DATA_CACHE_LIMIT, cacheKeyFor(url, fields));
   }
 
   try {
@@ -374,10 +435,6 @@ function queuedResponse(request) {
   return jsonResponse({ IsSuccess: true, StatusCode: 1, IsConfirm: true, IsOfflineQueued: true, Message: message, RedirectURL: back });
 }
 
-async function sha256(buffer) {
-  const hash = await crypto.subtle.digest('SHA-256', buffer);
-  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 /* ------------------------------------------------------------------ outbox replay */
 
@@ -602,30 +659,10 @@ self.addEventListener('message', (event) => {
   else if (msg.type === 'DISCARD_FAILED') {
     event.waitUntil(failedClear().then(() => notifyClients()));
   }
-  else if (msg.type === 'WARM_PAGES' && Array.isArray(msg.urls)) {
-    event.waitUntil(warmPages(msg.urls));
+  else if (msg.type === 'CACHE_LOGIN_PAGE') {
+    event.waitUntil(cacheLoginPage());
   }
 });
-
-/* Download the menu pages in the background so they also open offline */
-async function warmPages(urls) {
-  await cacheLoginPage();
-  const cache = await caches.open(PAGE_CACHE);
-  const list = urls
-    .map((u) => { try { return new URL(u, self.location.origin); } catch (e) { return null; } })
-    .filter((u) => u && u.origin === self.location.origin && !/logout|account|login|delete|remove/i.test(u.pathname));
-
-  for (const u of list) {
-    const key = cacheKeyFor(u);
-    if (await cache.match(key)) continue;
-    try {
-      const response = await fetch(u.href, { credentials: 'same-origin', headers: { 'Accept': 'text/html' } });
-      if (response.redirected) break; // session expired
-      if (response.ok && (response.headers.get('Content-Type') || '').indexOf('text/html') > -1)
-        await putLimited(PAGE_CACHE, key, response, PAGE_CACHE_LIMIT);
-    } catch (e) { break; }
-  }
-}
 
 async function clearPageCaches() {
   await caches.delete(PAGE_CACHE);

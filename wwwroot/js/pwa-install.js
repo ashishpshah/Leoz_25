@@ -158,11 +158,19 @@ window.addEventListener('appinstalled', () => {
     loginNotice.className = 'pwa-login-offline';
     if (loginForm) loginForm.parentNode.insertBefore(loginNotice, loginForm);
 
+    // background download for offline use (pwa-offline-warm.js)
+    let warming = null;
+    document.addEventListener('leoz:offline-warm', (e) => {
+        warming = e.detail.done ? null : e.detail.count;
+        render();
+    });
+
     function render() {
         const offline = !navigator.onLine;
         let text = '';
         if (offline) text = 'Offline' + (pending > 0 ? ' · ' + pending + ' change(s) saved on device' : (loginForm ? '' : ' · showing saved data'));
         else if (pending > 0 && !loginForm) text = pending + ' offline change(s) waiting · tap to sync';
+        else if (warming !== null) text = 'Saving app for offline use… ' + warming;
 
         pill.textContent = text;
         pill.classList.toggle('is-offline', offline);
@@ -220,21 +228,7 @@ window.addEventListener('appinstalled', () => {
     send({ type: 'SET_USER', userId: userId, remember: rememberMe });
     render();
 
-    // Download menu pages once per browser session, so the whole menu also works offline
-    window.addEventListener('load', () => {
-        if (!userId || !navigator.onLine) return;
-        try { if (sessionStorage.getItem('pwa_pages_warmed') === userId) return; } catch (e) { }
-
-        setTimeout(() => {
-            const urls = Array.from(document.querySelectorAll('.side-nav a[href], .logo[href]'))
-                .filter(a => !a.hasAttribute('data-bs-toggle'))
-                .map(a => a.getAttribute('href'))
-                .filter(h => h && h.charAt(0) !== '#' && h.indexOf('javascript:') !== 0);
-            if (urls.length === 0) return;
-            send({ type: 'WARM_PAGES', urls: Array.from(new Set(urls)) });
-            try { sessionStorage.setItem('pwa_pages_warmed', userId); } catch (e) { }
-        }, 3000);
-    });
+    // Menu pages, forms, data and the login page are downloaded for offline use by pwa-offline-warm.js
 
     // Logout with unsent offline changes : they can only be sent by the same user, so ask first
     document.addEventListener('click', (e) => {
