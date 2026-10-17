@@ -205,8 +205,17 @@
         }
     }
 
+    let running = false;
+
     async function run() {
+        if (running) return;
         try { if (sessionStorage.getItem(DONE_KEY) === userId) return; } catch (e) { }
+        running = true;
+        try { await download(); } finally { running = false; }
+    }
+
+    async function download() {
+        seen.clear(); tasks.length = 0; count = 0; stopped = false;
 
         await navigator.serviceWorker.ready;
         if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'CACHE_LOGIN_PAGE' });
@@ -231,7 +240,11 @@
     // after offline changes were sent, the saved copies are out of date : download again on the next page
     navigator.serviceWorker.addEventListener('message', (event) => {
         const msg = event.data || {};
-        if (msg.type === 'OUTBOX_STATUS' && msg.result && msg.result.sent > 0) { try { sessionStorage.removeItem(DONE_KEY); } catch (e) { } }
+        if (msg.type === 'OUTBOX_STATUS' && msg.result && msg.result.sent > 0) {
+            try { sessionStorage.removeItem(DONE_KEY); } catch (e) { }
+            // download the updated lists now, so the synced records are also there offline
+            if (!running && navigator.onLine) setTimeout(run, 1000);
+        }
     });
 
     window.addEventListener('load', () => {

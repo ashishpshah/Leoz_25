@@ -11,7 +11,9 @@
 		<div class="page-title-box">
 			<div class="page-title-right">
 				@* @if (Common.IsAdmin() && Model.IsCreate == true) *@
-				@{
+				@* Only a Vendor can create a Project (ProjectController.Save) : others would get "You do not have access" (also when saved offline) *@
+				@if (Common.Get_Session_Int(SessionKey.KEY_IS_VENDOR) == 1)
+				{
 					<button type="button" id="btnAddNewItem" class="btn btn-primary btn-md pull-right mr-2 divformSave_Hide"
 							onclick="fnLoadParialView('divformSave', '@Url.Action("Partial_AddEditForm", "Project", new { area = "Admin" })');">
 						<i class="fas fa-plus"></i> &nbsp; Add new

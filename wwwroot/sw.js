@@ -7,6 +7,9 @@
  *  - Read-only POST (actions named Get*) : network first, cached by url + request body.
  *  - Every other POST (Save / Delete ...) made offline is stored in IndexedDB and replayed
  *    automatically when the connection is back (outbox), for the same logged-in user only.
+ *    Each change has an operation id (header X-Leoz-Operation-Id) : the server saves it only once (OfflineOperationFilter),
+ *    so a retry never creates a duplicate. A change refused by the server is kept on the device with its reason
+ *    (status / rules : js/offline-sync-rules.js) until the user retries or discards it.
  *  - Offline login : after a successful online login a PBKDF2 hash of the password is kept on the device (never the password),
  *    so the same user can login offline. Saved pages are only shown inside a valid offline session :
  *    Remember Me = 14 days sliding, otherwise 30 minutes idle (same as the server). Logout / expired session = login screen.
@@ -14,7 +17,10 @@
  *  - Login page : a copy is kept (downloaded without cookies, it holds no user data) so the app always opens offline.
  */
 
-const VERSION = 'v8';
+importScripts('/js/offline-sync-rules.js'); // self.LeozSyncRules
+const Rules = self.LeozSyncRules;
+
+const VERSION = 'v9';
 const SHELL_CACHE = 'leoz-shell-' + VERSION;
 const STATIC_CACHE = 'leoz-static-' + VERSION;
 const PAGE_CACHE = 'leoz-pages-2';
@@ -83,7 +89,8 @@ const SHELL_ASSETS = [
   '/js/site.js',
   '/css/pwa-install.css',
   '/js/pwa-install.js',
-  '/js/pwa-offline-warm.js'
+  '/js/pwa-offline-warm.js',
+  '/js/offline-sync-rules.js'
 ];
 
 const STATIC_EXT = /\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|bmp|woff2?|ttf|eot|otf|json|mp3|mp4|webm)$/i;
@@ -114,9 +121,35 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => KEEP_CACHES.indexOf(k) === -1).map((k) => caches.delete(k))))
+      .then(() => migrateFailedStore().catch(() => { }))
       .then(() => self.clients.claim())
   );
 });
+
+/* Older versions moved refused changes to a separate "failed" list (removed with "OK, remove from list") :
+   bring them back into the outbox, marked as failed, so the user can retry or discard them */
+async function migrateFailedStore() {
+  const old = await failedAll();
+  for (const f of old) {
+    const item = Object.assign({}, f);
+    delete item.id;
+    item.operationId = item.operationId || newOperationId();
+    item.status = 'failed';
+    item.category = item.category || 'validation';
+    item.lastError = item.lastError || item.error || '';
+    item.describe = item.describe || Rules.describeChange(item.url, {});
+    await outboxAdd(item);
+  }
+  if (old.length) await failedClear();
+}
+
+function newOperationId() {
+  if (self.crypto && crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('');
+  return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+}
 
 /* ------------------------------------------------------------------ fetch routing */
 
@@ -381,6 +414,7 @@ async function handleNonGet(request, url) {
   if (request.method === 'POST' && isPath(url, CHANGE_PASSWORD_PATHS)) return handleChangePassword(request);
 
   const copy = request.clone();
+  const fieldsCopy = request.clone(); // the form fields describe the change in the "offline changes" list
   const lastSegment = (url.pathname.split('/').filter(Boolean).pop() || '').toLowerCase();
 
   // Read-only POST (GetMatrix, GetProjectByCustomerId, GetProjectDetail, GetSelectList_User ...) : cache by url + form fields
@@ -399,14 +433,24 @@ async function handleNonGet(request, url) {
       return jsonResponse({ IsSuccess: false, StatusCode: 0, Message: 'You are offline. Please connect to the internet and login again.' });
     }
 
+    const fields = {};
+    try { (await fieldsCopy.formData()).forEach((v, k) => { if (typeof v === 'string' && !(k in fields)) fields[k] = v; }); } catch (err) { }
+
+    // passwords are never part of a queued change (password change / login are not queued); only the form as the user sent it
     await outboxAdd({
+      operationId: newOperationId(),   // the server saves this change only once, however often it is sent
       url: request.url,
       method: request.method,
       headers: pickHeaders(request.headers),
       body: await copy.blob(),
       referrer: request.referrer || '',
       userId: userId,
+      describe: Rules.describeChange(request.url, fields),
+      status: 'pending',
+      category: null,
+      lastError: null,
       createdAt: Date.now(),
+      lastTriedAt: null,
       attempts: 0
     });
     await notifyClients();
@@ -444,6 +488,7 @@ function queuedResponse(request) {
 
 /* ------------------------------------------------------------------ outbox replay */
 
+/* One sync at a time for the whole origin (all tabs share this service worker) */
 let syncing = null;
 
 function replayOutbox() {
@@ -453,56 +498,86 @@ function replayOutbox() {
 
 async function doReplay() {
   const userId = await metaGet('userId');
-  const items = await outboxAll();
-  const result = { sent: 0, failed: 0, loginRequired: false, pending: 0 };
+  const result = { sent: 0, failed: 0, conflict: 0, loginRequired: false, messages: [] };
 
-  for (const item of items) {
-    // only the user who made the change may send it
-    if (!userId || item.userId !== userId) continue;
+  for (const item of await outboxAll()) {
+    // only the user who made the change may send it, and only changes that are due (failed / conflict wait for "Retry")
+    if (!userId || item.userId !== userId || !Rules.isAutoSyncable(item)) continue;
 
-    let response;
+    item.status = 'syncing';
+    item.operationId = item.operationId || newOperationId();
+    await outboxPut(item);
+
+    let response = null, networkError = false, json = null;
     try {
-      response = await fetch(item.url, { method: item.method, headers: item.headers, body: item.body, credentials: 'same-origin', redirect: 'follow' });
-    } catch (e) {
-      break; // still offline : keep the rest in order
+      response = await fetch(item.url, {
+        method: item.method,
+        headers: Object.assign({}, item.headers, { 'X-Leoz-Operation-Id': item.operationId }),
+        body: item.body,
+        credentials: 'same-origin',
+        redirect: 'follow'
+      });
+    } catch (e) { networkError = true; }
+
+    if (response) {
+      await checkServerLogout(response);
+      try { json = await response.clone().json(); } catch (e) { }
     }
 
-    // session expired : the server redirected to the login page, keep the item for after login
-    await checkServerLogout(response);
-    if (response.redirected && /\/home\/(account|login)/i.test(response.url)) {
-      result.loginRequired = true;
-      break;
-    }
+    const outcome = Rules.classifyReplay({
+      networkError: networkError,
+      redirectedToLogin: !!(response && response.redirected && /\/home\/(account|login)/i.test(response.url)),
+      httpStatus: response ? response.status : 0,
+      syncHeader: response ? response.headers.get('X-Leoz-Sync') : null,
+      json: json
+    });
 
-    let ok = response.ok;
-    let message = '';
-    try {
-      const data = await response.clone().json();
-      if (data && typeof data.StatusCode !== 'undefined') ok = ok && (data.StatusCode === 1 || data.StatusCode === 10);
-      message = data && data.Message || '';
-    } catch (e) { }
-
-    if (ok) {
+    // confirmed by the server : it is a normal server record now
+    if (outcome.status === 'synced') {
       await outboxDelete(item.id);
       result.sent++;
-    } else {
-      // the server refused it (validation ...) : move it to the failed list so the user can see it
-      item.attempts++;
-      item.error = message || ('HTTP ' + response.status);
-      await outboxDelete(item.id);
-      await failedAdd(item);
-      result.failed++;
+      continue;
     }
+
+    if (outcome.category !== 'network') item.attempts = (item.attempts || 0) + 1;
+    item.status = Rules.nextStatus(outcome, item.attempts || 0);
+    item.category = outcome.category;
+    item.lastError = outcome.message;
+    item.lastTriedAt = Date.now();
+    await outboxPut(item); // never removed because of an error : the user decides
+
+    if (item.status === 'failed') { result.failed++; result.messages.push(outcome.message); }
+    if (item.status === 'conflict') { result.conflict++; result.messages.push(outcome.message); }
+    if (item.status === 'requires_auth') result.loginRequired = true;
+
+    if (outcome.stop) break; // keep the order of the remaining changes
   }
 
   if (result.sent > 0) {
-    // data changed on the server : old copies are out of date
+    // data changed on the server : old copies are out of date (the pages download them again)
     await caches.delete(DATA_CACHE);
   }
 
-  result.pending = (await outboxAll()).length;
   await notifyClients(result);
   return result;
+}
+
+/* "Retry" from the offline changes list : failed / conflict changes become due again */
+async function retryItems(ids) {
+  const userId = await metaGet('userId');
+  for (const item of await outboxAll()) {
+    if (item.userId !== userId || (ids && ids.indexOf(item.id) === -1)) continue;
+    if (item.status !== 'pending') { item.status = 'pending'; item.attempts = 0; await outboxPut(item); }
+  }
+  return replayOutbox();
+}
+
+/* "Discard" : removes only the copy on this device (nothing on the server is deleted), only the user's own change */
+async function discardItem(id) {
+  const userId = await metaGet('userId');
+  const item = (await outboxAll()).find((i) => i.id === id);
+  if (item && item.userId === userId && item.status !== 'syncing') await outboxDelete(id);
+  await notifyClients();
 }
 
 self.addEventListener('sync', (event) => {
@@ -715,6 +790,11 @@ self.addEventListener('message', (event) => {
           await metaSet('offlineSession', { remember: !!msg.remember, expiresAt: Date.now() + sessionLength(msg.remember) });
       });
 
+      // logged in again : changes that waited for the login are due now
+      for (const item of await outboxAll()) {
+        if (item.userId === userId && item.status === 'requires_auth') { item.status = 'pending'; await outboxPut(item); }
+      }
+
       await replayOutbox();
     })());
   }
@@ -724,8 +804,11 @@ self.addEventListener('message', (event) => {
   else if (msg.type === 'GET_STATUS') {
     event.waitUntil(notifyClients());
   }
-  else if (msg.type === 'DISCARD_FAILED') {
-    event.waitUntil(failedClear().then(() => notifyClients()));
+  else if (msg.type === 'RETRY_ITEMS') {
+    event.waitUntil(retryItems(Array.isArray(msg.ids) ? msg.ids : null));
+  }
+  else if (msg.type === 'DISCARD_ITEM' && typeof msg.id === 'number') {
+    event.waitUntil(discardItem(msg.id));
   }
   else if (msg.type === 'CACHE_LOGIN_PAGE') {
     event.waitUntil(cacheLoginPage());
@@ -739,12 +822,30 @@ async function clearPageCaches() {
 
 async function notifyClients(result) {
   const account = await metaGet('account');
+  const userId = await metaGet('userId');
+
+  // only the current user's changes are shown (never another user's data); without a login only the count
+  const all = await outboxAll();
+  const mine = userId ? all.filter((i) => i.userId === userId) : [];
+  const items = mine.map((i) => ({
+    id: i.id,
+    describe: i.describe || Rules.describeChange(i.url, {}),
+    status: i.status || 'pending',
+    label: Rules.statusLabel(i),
+    category: i.category || null,
+    lastError: i.lastError || null,
+    createdAt: i.createdAt,
+    lastTriedAt: i.lastTriedAt || null,
+    attempts: i.attempts || 0
+  }));
+
   const status = {
     type: 'OUTBOX_STATUS',
-    pending: (await outboxAll()).length,
+    pending: (userId ? mine : all).filter((i) => !Rules.needsAttention(i)).length,
+    attention: mine.filter((i) => Rules.needsAttention(i)).length,
+    items: items,
     // login page offline : can the last user login with the copies on this device?
     canLoginOffline: !!(account && account.hash && !account.reset && account.fails < MAX_OFFLINE_LOGIN_FAILS),
-    failed: (await failedAll()).map((f) => ({ url: f.url, error: f.error, createdAt: f.createdAt })),
     result: result || null
   };
   const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
@@ -783,7 +884,7 @@ async function tx(store, mode, fn) {
 const outboxAdd = (item) => tx('outbox', 'readwrite', (s) => s.add(item));
 const outboxAll = () => tx('outbox', 'readonly', (s) => s.getAll()).then((r) => r || []);
 const outboxDelete = (id) => tx('outbox', 'readwrite', (s) => s.delete(id));
-const failedAdd = (item) => { const copy = Object.assign({}, item); delete copy.id; return tx('failed', 'readwrite', (s) => s.add(copy)); };
+const outboxPut = (item) => tx('outbox', 'readwrite', (s) => s.put(item));
 const failedAll = () => tx('failed', 'readonly', (s) => s.getAll()).then((r) => r || []);
 const failedClear = () => tx('failed', 'readwrite', (s) => s.clear());
 const metaGet = (key) => tx('meta', 'readonly', (s) => s.get(key)).then((v) => v || null);

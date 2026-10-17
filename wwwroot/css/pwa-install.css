@@ -321,3 +321,10 @@
     font-size: 13px;
     line-height: 1.5;
 }
+
+/* offline changes refused by the server : the user must decide (Retry / Discard) */
+.pwa-net-status.is-attention {
+    background: #dc3545;
+    color: #ffffff;
+    border: 0;
+}
