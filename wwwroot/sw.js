@@ -7,11 +7,14 @@
  *  - Read-only POST (actions named Get*) : network first, cached by url + request body.
  *  - Every other POST (Save / Delete ...) made offline is stored in IndexedDB and replayed
  *    automatically when the connection is back (outbox), for the same logged-in user only.
- *  - Logout / login page : all cached pages and data are removed (no data left for the next user).
- *  - Login page : a copy is kept (it holds no user data) so the app still opens on the login screen offline.
+ *  - Offline login : after a successful online login a PBKDF2 hash of the password is kept on the device (never the password),
+ *    so the same user can login offline. Saved pages are only shown inside a valid offline session :
+ *    Remember Me = 14 days sliding, otherwise 30 minutes idle (same as the server). Logout / expired session = login screen.
+ *  - Another user logging in online : the previous user's saved pages are removed.
+ *  - Login page : a copy is kept (downloaded without cookies, it holds no user data) so the app always opens offline.
  */
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL_CACHE = 'leoz-shell-' + VERSION;
 const STATIC_CACHE = 'leoz-static-' + VERSION;
 const PAGE_CACHE = 'leoz-pages';
@@ -22,6 +25,11 @@ const KEEP_CACHES = [SHELL_CACHE, STATIC_CACHE, PAGE_CACHE, DATA_CACHE, LOGIN_CA
 const PAGE_CACHE_LIMIT = 300;
 const DATA_CACHE_LIMIT = 500;
 const NETWORK_TIMEOUT_MS = 10000;
+
+const IDLE_MINUTES = 30;              // same as DistributedSession:IdleTimeoutMinutes
+const REMEMBER_DAYS = 14;             // same as the "Remember Me" cookie (Program.cs)
+const PBKDF2_ITERATIONS = 210000;
+const MAX_OFFLINE_LOGIN_FAILS = 5;    // then an online login is required
 
 const HOME_URL = '/Admin/Home/Index';
 const LOGIN_URL = '/Admin/Home/Account';
@@ -78,23 +86,24 @@ const SHELL_ASSETS = [
 
 const STATIC_EXT = /\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|bmp|woff2?|ttf|eot|otf|json|mp3|mp4|webm)$/i;
 
-// Pages that end the login session on the server (Account and Logout clear the session) : they wipe the per-user caches.
-// NOTE : the login page must never be pre-cached / fetched in the background, that would log the user out.
+// Login page shown / Logout : the login session has ended (saved pages stay on the device, locked until the next login)
 const LOGIN_PATHS = ['/admin/home/account', '/home/login'];
 const LOGOUT_PATHS = ['/admin/home/logout'];
-// POST that must never be queued (needs the server right now)
-const NEVER_QUEUE_PATHS = ['/admin/home/login', '/home/login'];
+// Login POST : never queued, checked against the offline account when there is no internet
+const LOGIN_POST_PATHS = ['/admin/home/login', '/home/login'];
+const HOME_ALIASES = ['', '/admin', '/admin/home', '/admin/home/index'];
 
 /* ------------------------------------------------------------------ install / activate */
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
+  event.waitUntil(Promise.all([
     caches.open(SHELL_CACHE).then((cache) =>
       // one by one, so a single failing file cannot fail the whole install
       Promise.all(SHELL_ASSETS.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {})))
-    )
-  );
+    ),
+    cacheLoginPage()
+  ]));
 });
 
 self.addEventListener('activate', (event) => {
@@ -164,8 +173,8 @@ function isPath(url, list) {
 
 async function handleNavigate(request, url) {
   if (isPath(url, LOGOUT_PATHS)) {
-    // explicit logout : remove this user's pages from the device, online or offline
-    await clearUserData();
+    // logout (online or offline) : lock the saved pages until the next login
+    await endOfflineSession();
     try { return await fetch(request); }
     catch (e) { return (await loginPage()) || offlinePage(); }
   }
@@ -173,40 +182,47 @@ async function handleNavigate(request, url) {
   if (isPath(url, LOGIN_PATHS)) {
     try {
       const response = await fetch(request);
-      // redirected : still logged in ("Remember Me") and sent on to the dashboard, keep everything
-      if (response.redirected) return response;
-      // login page shown : the server cleared the session, clear the per-user data too, keep the login page for offline
-      await clearUserData();
+      // navigations get the redirect itself (opaqueredirect) : still logged in ("Remember Me"), sent on to the dashboard
+      if (response.type === 'opaqueredirect' || response.redirected) return response;
+      // login page shown : the server has no session any more
+      await endOfflineSession();
       if (response.ok) await putLimited(LOGIN_CACHE, LOGIN_URL, response.clone(), 1);
       return response;
     } catch (e) {
-      // offline : the server session was not touched, keep the user's data (queued saves, "Continue offline")
+      // offline : same as the server, a logged-in user goes on to the dashboard
+      if (await hasOfflineSession()) return Response.redirect(HOME_URL, 302);
       return (await loginPage()) || offlinePage();
     }
   }
 
   const key = cacheKeyFor(url);
   const cached = await caches.match(key, { cacheName: PAGE_CACHE });
+  const loggedIn = await hasOfflineSession();
 
   const network = fetch(request).then(async (response) => {
-    // a redirect to the login page (session expired) must not replace the cached page
-    if (response.ok && !response.redirected) {
+    // only real pages : a redirect to the login page (session expired) must not replace the cached page
+    if (response.ok && response.type === 'basic' && !response.redirected) {
       await putLimited(PAGE_CACHE, key, response.clone(), PAGE_CACHE_LIMIT);
+      if (isPath(url, HOME_ALIASES) && key !== new URL(HOME_URL, self.location.origin).href)
+        await putLimited(PAGE_CACHE, HOME_URL, response.clone(), PAGE_CACHE_LIMIT);
+      await touchOfflineSession();
     }
     return response;
   });
 
   try {
-    return await (cached ? withTimeout(network, NETWORK_TIMEOUT_MS) : network);
+    return await (cached && loggedIn ? withTimeout(network, NETWORK_TIMEOUT_MS) : network);
   } catch (e) {
+    // offline : saved pages are only shown inside a valid offline session, otherwise the login screen
+    if (!loggedIn) return (await loginPage()) || offlinePage();
+
+    await touchOfflineSession();
     if (cached) return cached;
 
     // app opened from the home screen ("/" or start_url) : show the dashboard copy
-    if (url.pathname === '/' || url.pathname.toLowerCase() === '/admin' || url.pathname.toLowerCase() === '/admin/home') {
+    if (isPath(url, HOME_ALIASES)) {
       const home = await caches.match(HOME_URL, { cacheName: PAGE_CACHE });
       if (home) return home;
-      const login = await loginPage();
-      if (login) return login;
     }
     return offlinePage();
   }
@@ -214,6 +230,14 @@ async function handleNavigate(request, url) {
 
 function loginPage() {
   return caches.match(LOGIN_URL, { cacheName: LOGIN_CACHE });
+}
+
+/* Login page without cookies : the server sees an anonymous visitor, so this can never log anyone out */
+async function cacheLoginPage() {
+  try {
+    const response = await fetch(LOGIN_URL, { credentials: 'omit', cache: 'no-store' });
+    if (response.ok && !response.redirected) await putLimited(LOGIN_CACHE, LOGIN_URL, response, 1);
+  } catch (e) { }
 }
 
 async function offlinePage() {
@@ -286,6 +310,8 @@ function jsonResponse(obj, status) {
 /* ------------------------------------------------------------------ POST / non GET */
 
 async function handleNonGet(request, url) {
+  if (request.method === 'POST' && isPath(url, LOGIN_POST_PATHS)) return handleLogin(request);
+
   const copy = request.clone();
   const lastSegment = (url.pathname.split('/').filter(Boolean).pop() || '').toLowerCase();
 
@@ -301,10 +327,6 @@ async function handleNonGet(request, url) {
     return await fetch(request);
   } catch (e) {
     // offline
-    if (isPath(url, NEVER_QUEUE_PATHS)) {
-      return jsonResponse({ IsSuccess: false, StatusCode: 0, Message: 'You are offline. Login needs an internet connection.' });
-    }
-
     const userId = await metaGet('userId');
     if (!userId) {
       return jsonResponse({ IsSuccess: false, StatusCode: 0, Message: 'You are offline. Please connect to the internet and login again.' });
@@ -423,6 +445,126 @@ self.addEventListener('sync', (event) => {
   if (event.tag === SYNC_TAG) event.waitUntil(replayOutbox());
 });
 
+/* ------------------------------------------------------------------ login : online + offline */
+
+async function handleLogin(request) {
+  let userName = '', password = '', remember = false;
+  try {
+    const form = await request.clone().formData();
+    userName = String(form.get('UserName') || '');
+    password = String(form.get('Password') || '');
+    remember = String(form.get('RememberMe') || '').toLowerCase() === 'true';
+  } catch (e) { }
+
+  let response;
+  try {
+    response = await fetch(request);
+  } catch (e) {
+    return offlineLogin(userName, password, remember);
+  }
+
+  try {
+    const data = await response.clone().json();
+    if (data && data.StatusCode === 1 && userName && password) await saveOfflineAccount(userName, password, remember);
+  } catch (e) { }
+  return response;
+}
+
+/* Successful online login : keep only a salted PBKDF2 hash of the password (never the password itself) */
+async function saveOfflineAccount(userName, password, remember) {
+  const name = userName.trim().toLowerCase();
+  const previous = await metaGet('account');
+
+  // another user on this device : never show the previous user's pages
+  if (previous && previous.userName !== name) await clearPageCaches();
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  await metaSet('account', {
+    userName: name,
+    salt: toHex(salt),
+    hash: await pbkdf2(password, salt, PBKDF2_ITERATIONS),
+    iterations: PBKDF2_ITERATIONS,
+    fails: 0
+  });
+  await startOfflineSession(remember);
+}
+
+async function offlineLogin(userName, password, remember) {
+  const fail = (message) => jsonResponse({ IsSuccess: false, StatusCode: 0, Message: message });
+  const account = await metaGet('account');
+
+  if (!account || account.userName !== userName.trim().toLowerCase())
+    return fail('You are offline. This user has not logged in on this device before, please connect to the internet to login.');
+
+  if (account.fails >= MAX_OFFLINE_LOGIN_FAILS)
+    return fail('Too many wrong attempts. Please connect to the internet to login.');
+
+  const hash = await pbkdf2(password, fromHex(account.salt), account.iterations);
+  if (!sameHex(hash, account.hash)) {
+    account.fails++;
+    await metaSet('account', account);
+    return fail('User Id and Password does not Match');
+  }
+
+  account.fails = 0;
+  await metaSet('account', account);
+  await startOfflineSession(remember);
+
+  // same shape as the server JsonResult : common.js goes to RedirectURL
+  return jsonResponse({ IsSuccess: true, StatusCode: 1, IsOfflineLogin: true, Message: 'Logged in offline', RedirectURL: HOME_URL });
+}
+
+async function pbkdf2(password, salt, iterations) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' }, key, 256);
+  return toHex(new Uint8Array(bits));
+}
+
+function toHex(bytes) { return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join(''); }
+function fromHex(hex) { return new Uint8Array((hex.match(/.{2}/g) || []).map((h) => parseInt(h, 16))); }
+function sameHex(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/* Offline session : saved pages are shown only while it is valid. Remember Me = 14 days, else 30 minutes idle (both sliding) */
+function sessionLength(remember) { return remember ? REMEMBER_DAYS * 86400000 : IDLE_MINUTES * 60000; }
+
+/* Session changes run one after another, in the order the events arrived :
+   a late "touch" / SET_USER must never bring back a session that a Logout has just ended */
+let sessionQueue = Promise.resolve();
+function withSessionLock(fn) {
+  const run = sessionQueue.then(fn, fn);
+  sessionQueue = run.catch(() => { });
+  return run;
+}
+
+function startOfflineSession(remember) {
+  return withSessionLock(() => metaSet('offlineSession', { remember: !!remember, expiresAt: Date.now() + sessionLength(remember) }));
+}
+
+async function hasOfflineSession() {
+  const s = await metaGet('offlineSession');
+  return !!(s && s.expiresAt > Date.now());
+}
+
+function touchOfflineSession() {
+  return withSessionLock(async () => {
+    const s = await metaGet('offlineSession');
+    if (s && s.expiresAt > Date.now()) await metaSet('offlineSession', { remember: s.remember, expiresAt: Date.now() + sessionLength(s.remember) });
+  });
+}
+
+async function endOfflineSession() {
+  await withSessionLock(async () => {
+    await metaSet('offlineSession', null);
+    await metaSet('userId', null);
+  });
+  await notifyClients();
+}
+
 /* ------------------------------------------------------------------ messages from pages */
 
 self.addEventListener('message', (event) => {
@@ -434,9 +576,20 @@ self.addEventListener('message', (event) => {
       // (an offline copy of the login page must not forget the user, or the queued saves could never be sent)
       const userId = msg.userId && Number(msg.userId) > 0 ? String(msg.userId) : null;
       if (!userId) return notifyClients();
-      const previous = await metaGet('userId');
-      if (previous && previous !== userId) await clearPageCaches();
-      await metaSet('userId', userId);
+
+      await withSessionLock(async () => {
+        // saved pages belong to one user : another user -> remove them
+        const owner = await metaGet('cacheOwner');
+        if (owner && owner !== userId) await clearPageCaches();
+        await metaSet('cacheOwner', userId);
+        await metaSet('userId', userId);
+
+        // logged-in page (e.g. restored on the server from the "Remember Me" cookie) : keep an offline session too
+        const s = await metaGet('offlineSession');
+        if (!s || s.expiresAt <= Date.now() || (msg.remember && !s.remember))
+          await metaSet('offlineSession', { remember: !!msg.remember, expiresAt: Date.now() + sessionLength(msg.remember) });
+      });
+
       await replayOutbox();
     })());
   }
@@ -456,6 +609,7 @@ self.addEventListener('message', (event) => {
 
 /* Download the menu pages in the background so they also open offline */
 async function warmPages(urls) {
+  await cacheLoginPage();
   const cache = await caches.open(PAGE_CACHE);
   const list = urls
     .map((u) => { try { return new URL(u, self.location.origin); } catch (e) { return null; } })
@@ -478,18 +632,13 @@ async function clearPageCaches() {
   await caches.delete(DATA_CACHE);
 }
 
-async function clearUserData() {
-  await clearPageCaches();
-  await metaSet('userId', null);
-  await notifyClients();
-}
-
 async function notifyClients(result) {
+  const account = await metaGet('account');
   const status = {
     type: 'OUTBOX_STATUS',
     pending: (await outboxAll()).length,
-    // login page offline : can the last user keep working with the copies on this device?
-    canContinueOffline: !!(await metaGet('userId')) && !!(await caches.match(HOME_URL, { cacheName: PAGE_CACHE })),
+    // login page offline : can the last user login with the copies on this device?
+    canLoginOffline: !!(account && account.fails < MAX_OFFLINE_LOGIN_FAILS),
     failed: (await failedAll()).map((f) => ({ url: f.url, error: f.error, createdAt: f.createdAt })),
     result: result || null
   };

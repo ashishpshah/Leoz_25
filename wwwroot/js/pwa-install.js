@@ -138,6 +138,8 @@ window.addEventListener('appinstalled', () => {
 
     const userMeta = document.querySelector('meta[name="leoz-user"]');
     const userId = userMeta && Number(userMeta.content) > 0 ? userMeta.content : null;
+    const rememberMeta = document.querySelector('meta[name="leoz-remember"]');
+    const rememberMe = !!(rememberMeta && rememberMeta.content === '1');
     let pending = 0;
     let lastFailedCount = 0;
 
@@ -149,9 +151,9 @@ window.addEventListener('appinstalled', () => {
     const addPill = () => document.body && document.body.appendChild(pill);
     if (document.body) addPill(); else document.addEventListener('DOMContentLoaded', addPill);
 
-    // Login page : login needs the server, offer "Continue offline" to the last user while their pages are on this device
+    // Login page : offline, the user who last logged in on this device can login again (checked by the service worker)
     const loginForm = document.getElementById('formLogin');
-    let canContinueOffline = false;
+    let canLoginOffline = false;
     const loginNotice = document.createElement('div');
     loginNotice.className = 'pwa-login-offline';
     if (loginForm) loginForm.parentNode.insertBefore(loginNotice, loginForm);
@@ -168,9 +170,9 @@ window.addEventListener('appinstalled', () => {
 
         if (loginForm) {
             loginNotice.style.display = offline ? 'block' : 'none';
-            loginNotice.innerHTML = '<strong>You are offline.</strong> Login needs an internet connection.' +
-                (pending > 0 ? '<br>' + pending + ' offline change(s) will be sent after you login.' : '') +
-                (canContinueOffline ? '<a class="btn btn-sm btn-primary w-100 mt-2" href="/Admin/Home/Index">Continue offline with saved data</a>' : '');
+            loginNotice.innerHTML = '<strong>You are offline.</strong> ' +
+                (canLoginOffline ? 'You can login with the account last used on this device and work with the saved data.' : 'Login needs an internet connection.') +
+                (pending > 0 ? '<br>' + pending + ' offline change(s) will be sent when the internet is back.' : '');
         }
     }
 
@@ -188,7 +190,7 @@ window.addEventListener('appinstalled', () => {
         if (msg.type !== 'OUTBOX_STATUS') return;
 
         pending = msg.pending || 0;
-        canContinueOffline = !!msg.canContinueOffline;
+        canLoginOffline = !!msg.canLoginOffline;
         render();
 
         const r = msg.result;
@@ -215,7 +217,7 @@ window.addEventListener('appinstalled', () => {
     window.addEventListener('offline', render);
 
     // who is logged in : also triggers sending of pending offline saves (the login page sends null, which only asks for the status)
-    send({ type: 'SET_USER', userId: userId });
+    send({ type: 'SET_USER', userId: userId, remember: rememberMe });
     render();
 
     // Download menu pages once per browser session, so the whole menu also works offline

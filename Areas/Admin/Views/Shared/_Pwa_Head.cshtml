@@ -6,5 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="Leoz" />
 @* Logged-in user id for the service worker : offline saves are only sent back for the same user *@
 <meta name="leoz-user" content="@Common.LoggedUser_Id()" />
+@* "Remember Me" login : offline the app keeps the user logged in for 14 days, otherwise 30 minutes idle *@
+<meta name="leoz-remember" content="@(Common.Get_Session_Int(SessionKey.KEY_REMEMBER_ME) == 1 ? 1 : 0)" />
 <link rel="apple-touch-icon" href="~/assets/images/logo.webp" />
 <link rel="stylesheet" href="~/css/pwa-install.css" asp-append-version="true" />
